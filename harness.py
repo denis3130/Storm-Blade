@@ -1,6 +1,6 @@
 import asyncio, sys, json, os
 from playwright.async_api import async_playwright
-SB='/tmp/claude-0/-home-claude/87e4b3c4-13c4-523f-a8b2-f05631bc7237/scratchpad/sb'
+SB=os.path.dirname(os.path.abspath(__file__))
 # usage: harness.py page.html script.json
 async def main():
     page_file=sys.argv[1]; steps=json.load(open(sys.argv[2]))

@@ -1,6 +1,6 @@
 # Brief per la sessione Meshy — Stormblade, Tappa 3 (personaggi)
 
-**Obiettivo.** Generare con Meshy, usando l'account e i crediti di Denis, i modelli 3D dei personaggi umani del pezzo completo. I modelli devono essere riggati e pronti per il gioco, e vanno salvati in questo repository. Qui **non si tocca il codice del gioco**: il caricamento dei GLB e il trasferimento delle animazioni li fa la conversazione principale dell'app Claude. Il contesto completo è nel design, `docs/superpowers/specs/2026-11-03-stormblade-aaa-design.md`, sezione 5.
+**Obiettivo.** Generare con Meshy, usando l'account e i crediti di Denis, i modelli 3D dei personaggi umani del pezzo completo. I modelli devono essere riggati e pronti per il gioco, e vanno salvati in questo repository. Questo brief copre solo la **generazione**. L'integrazione nel gioco (caricamento GLB, trasferimento delle animazioni sullo scheletro attuale) è il resto della Tappa 3 e va pianificata a parte. Il contesto completo è nel design, `docs/superpowers/specs/2026-11-03-stormblade-aaa-design.md`, sezioni 5 e 9.
 
 ## Regole (obbligatorie)
 1. Scrivi a Denis in italiano, con messaggi brevi.
@@ -44,4 +44,5 @@ Per gli abitanti (Selin, Maren, Ulrik, Livia, Tobi, guardia) proponi anche, a pa
   {"id":"hero","prompt":"…","task_ids":{"preview":"…","refine":"…","rigging":"…"},"triangles":0,"texture":"1024","bytes":0,"credits":0,"date":"…"}
   ```
 - Fai il commit e il push sul ramo della sessione e scrivi a Denis il nome del ramo.
-- Messaggio finale a Denis: anteprima, triangoli, peso del file e crediti usati. Poi digli di tornare nella conversazione principale dell'app Claude e scrivere **"modelli pronti sul ramo <nome>"**.
+- Per ogni modello finito, mostra a Denis anteprima, triangoli, peso del file e crediti usati.
+- Piano B (design 5.6): se un modello non convince, o Meshy non è raggiungibile, resta il personaggio procedurale attuale e il resto del lavoro va avanti.
