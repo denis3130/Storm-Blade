@@ -43,7 +43,7 @@ function spawnEnemy(type,x,z,o={}){
   e.pers={aggr:rr(.75,1.3),caution:rr(.5,1.5),ring:rr(3.5,4.6)};e.spd*=rr(.94,1.06);e.pace={a:0,r:0,t:0};e.appOff=rr(-.55,.55);
   Object.assign(e,{mode:'wait',modeT:0,taunt:0,evadeT:0,evCD:0,evx:0,evz:0,avT:0,avA:0,avS:1,blinkCD:0,combo:0,wxt:0,losT:0,los:true,fled:0});
   e.maxHp=Math.round(d.hp*(1+tier*.55)*(o.boss?1+tier*.2:1));e.hp=e.maxHp;e.maxPoise=d.poise*(o.boss?1+tier*.25:1);e.poise=e.maxPoise;
-  e.xp=Math.round(d.xp*(1+tier*.4)*(o.boss?1+tier*.35:1));
+  e.braci=Math.round(d.braci*(1+tier*.4)*(o.boss?1+tier*.35:1));
   if(type==='goblin'||type==='archer'){const mats=cloneMats(BASEM.gob);const rig=buildHuman({d:GOB_D,s:sc,mats,build:goblinBuild(type==='archer')});e.rig=rig;e.mats=mats;
     if(type==='archer'){const bw=gobWeapon('bow');bw.position.set(0,-.06,0);rig.P.wrL.add(bw);e.bow=bw;}else{const w=gobWeapon(Math.random()<.5?'cleaver':'club');w.position.set(0,-.06,0);rig.P.wrR.add(w);}}
   else if(type==='troll'){const mats=cloneMats(BASEM.troll);const rig=buildHuman({d:TROLL_D,s:sc,mats,build:trollBuild(o.king)});e.rig=rig;e.mats=mats;const w=trollWeapon(o.king);w.position.set(0,-.2,0);rig.P.wrR.add(w);}

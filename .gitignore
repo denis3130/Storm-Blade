@@ -7,3 +7,4 @@
 !/harness.py
 !/wrap.py
 !/.gitignore
+__pycache__/

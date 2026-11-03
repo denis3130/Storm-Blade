@@ -1,7 +1,7 @@
 /* ============================== CFG — every balance number in one place ==============================
    Speeds in m/s, times in seconds, angles in radians unless noted. Change values here, not in the systems. */
 const CFG={
-  ver:3,                       // save-data version
+  ver:4,                       // save-data version
   move:{
     walk:1.9, jog:5.4, sprint:8.1,       // free movement (analog: walk below 60% stick)
     lock:4.3, lockBack:3.3,              // locked-on strafe / backpedal
@@ -19,7 +19,9 @@ const CFG={
   st:{regen:40, regenPerEnd:2.5, guardRegen:10, delay:.7},
   hp:{base:100, perVig:14}, stam:{base:100, perEnd:9}, str:{per:.09},
   flask:{heal:.5, start:3, max:7},
-  prog:{xp0:70, xpL:55, chestXp:90},
+  prog:{chestBraci:90},                // braci from a camp chest = chestBraci × (camp index + 1)
+  // braci (the souls of this world): level cost = lvlBase + lvlLin·(lvl−1) + lvlQuad·(lvl−1)²; pickR = pick-up radius of the pile left at death
+  braci:{lvlBase:60, lvlLin:30, lvlQuad:4, pickR:1.3},
   swordDmg:[16,24,34,46,62],
   parry:{window:.28, guardTap:.25},
   block:{stMul:1.3, chip:.12, breakDmg:.6},
@@ -50,13 +52,13 @@ const CFG={
     perfectWin:.2, perfectSlow:.45, perfectBonus:1.4, perfectSt:15,
     glintLead:.26,           // parry cue appears this long before an enemy blow lands (inside the parry window)
   },
-  // enemy stats (r = body radius, mass for pushing, sight = alert distance)
+  // enemy stats (r = body radius, mass for pushing, sight = alert distance, braci = reward before tier scaling)
   enemy:{
-    goblin:{hp:58,dmg:13,spd:4.5,r:.42,mass:.8,poise:22,xp:22,h:1.25,sight:17},
-    archer:{hp:42,dmg:11,spd:4.0,r:.42,mass:.7,poise:16,xp:26,h:1.25,sight:28},
-    wolf:{hp:46,dmg:10,spd:7.4,r:.55,mass:.9,poise:14,xp:18,h:1.0,sight:20},
-    troll:{hp:300,dmg:30,spd:2.8,r:1.2,mass:9,poise:140,xp:260,h:3.6,sight:16},
-    spirit:{hp:34,dmg:12,spd:5.2,r:.5,mass:.5,poise:10,xp:30,h:1.9,sight:999}},
+    goblin:{hp:58,dmg:13,spd:4.5,r:.42,mass:.8,poise:22,braci:22,h:1.25,sight:17},
+    archer:{hp:42,dmg:11,spd:4.0,r:.42,mass:.7,poise:16,braci:26,h:1.25,sight:28},
+    wolf:{hp:46,dmg:10,spd:7.4,r:.55,mass:.9,poise:14,braci:18,h:1.0,sight:20},
+    troll:{hp:300,dmg:30,spd:2.8,r:1.2,mass:9,poise:140,braci:260,h:3.6,sight:16},
+    spirit:{hp:34,dmg:12,spd:5.2,r:.5,mass:.5,poise:10,braci:30,h:1.9,sight:999}},
   // enemy attacks: w = wind-up (telegraph), a = active, r = recovery
   eatk:{
     goblin:[{k:'chop',w:.62,a:.12,r:.55,range:1.95,cos:.35,dmg:1,parry:true,W:'chopW',S:'chopS',lunge:1.4},
