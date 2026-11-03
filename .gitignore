@@ -18,3 +18,5 @@ __pycache__/
 assets/meshy/*/_meshy_source/*.glb
 assets/meshy/*/_meshy_source/*.json
 assets/meshy/history.json
+assets/meshy/hero/anims/
+assets/meshy/hero/hero_rigged.fbx
