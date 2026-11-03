@@ -9,7 +9,7 @@ Trasformare Stormblade (v5: movimento, collisioni, combattimento e IA già rifat
 Il lavoro è riuscito quando:
 - il capitolo 1 dura circa **45 minuti** per un giocatore normale, dal filmato d'apertura alla schermata di fine capitolo;
 - il **pezzo completo** (prima consegna, circa 15 minuti) è rifinito al livello finale, non provvisorio;
-- su un telefono medio, in orizzontale, il gioco tiene **60 FPS** nel villaggio e nei combattimenti (misurati col contatore interno);
+- su un telefono di fascia media (un Android recente da circa 300 €), in orizzontale, il gioco tiene **60 FPS** nel villaggio e nei combattimenti (misurati col contatore interno);
 - ogni tappa pubblicata è giocabile dall'inizio alla fine della parte che contiene, senza errori nella console;
 - gli effetti nuovi non allungano le lotte (stessa misura di durata usata per la v5).
 
@@ -73,10 +73,10 @@ Cresta della Statua, Borgo Cenere e Bosco dei Lupi rifiniti; Rovine e Fortezza p
 5. Titolo: "Capitolo I · La Valle di Cenere".
 
 ### 4.2 Borgo Cenere
-- Arrivo durante un assalto dei goblin al cancello; si combatte accanto a due guardie (alleati con IA semplice).
+- Arrivo durante un assalto dei goblin al cancello; si combatte accanto a due guardie. Ogni guardia è in **duello** con un goblin (si colpiscono solo tra loro, scena preparata); gli altri goblin attaccano il giocatore. Nessuna IA alleata generale.
 - **Maren** (l'anziana): racconta di **Grakk**, signore della guerra nella Fortezza del Fango, che custodisce il primo frammento; le tempeste peggiorano da quando i goblin l'hanno preso.
 - **Ulrik** (fabbro): potenzia e forgia le spade con braci e ferro dei goblin.
-- **Livia** (mercante): vende fiaschette e oggetti; è la madre di Tobi.
+- **Livia** (mercante): vende fiaschette, **Resina ardente** (fuoco sulla lama per 60 s, più danno) e **Osso del ritorno** (riporta all'ultimo santuario dove hai riposato); è la madre di Tobi.
 - **Guardie**: due al cancello, una in piazza.
 
 ### 4.3 Missioni
@@ -84,8 +84,8 @@ Cresta della Statua, Borgo Cenere e Bosco dei Lupi rifiniti; Rovine e Fortezza p
 | Missione | Tipo | Dove | Come si completa | Ricompensa |
 |---|---|---|---|---|
 | Il frammento nel fango | principale | Bosco o Rovine, poi Fortezza | raggiungere la fortezza per una delle due vie, sconfiggere Grakk | primo frammento, fine capitolo |
-| Tobi è sparito | secondaria | Bosco dei Lupi | trovare Tobi su una sporgenza, abbattere l'albero per riportarlo a casa | braci, sconto da Livia |
-| Zannagrigia | secondaria (mini-boss) | tana nel Bosco | sconfiggere il lupo capobranco | braci, oggetto del cacciatore |
+| Tobi è sparito | secondaria | Bosco dei Lupi | trovare Tobi su una sporgenza, abbattere l'albero per riportarlo a casa | braci, sconto del 20% da Livia |
+| Zannagrigia | secondaria (mini-boss) | tana nel Bosco | sconfiggere il lupo capobranco | braci, 2 Ossa del ritorno |
 | La memoria dei Custodi | secondaria | Rovine | trovare tre tavolette | Selin: +1 fiaschetta massima |
 | Il ferro di Ulrik | secondaria | ovunque | portare ferro dei goblin scelti a Ulrik | spada migliore forgiata |
 
@@ -94,7 +94,7 @@ Le due vie verso la fortezza:
 - **Ovest**: dalle Rovine, per un passaggio dei Custodi che sbuca sotto la fortezza.
 
 ### 4.4 Finale del capitolo
-Grakk in cima alla fortezza (boss con due fasi). Alla vittoria il frammento si unisce alla spada, che si illumina; Selin: *"Ne restano tre."* Schermata di fine capitolo con statistiche e anticipazione del capitolo 2.
+Grakk in cima alla fortezza (boss con due fasi). Alla vittoria il frammento si unisce alla spada, che si illumina; Selin: *"Ne restano tre."* Schermata di fine capitolo con statistiche (tempo, nemici sconfitti, morti, segreti trovati) e anticipazione del capitolo 2.
 
 ### 4.5 Dialoghi e diario
 - Riquadro in basso con nome di chi parla, ritratto e testo che scorre; tocco o tasto per accelerare e andare avanti.
@@ -175,7 +175,7 @@ Tenere premuto "Salta" per un secondo, su PC (tasto e clic) e su telefono (pulsa
 ### 7.1 Braci
 - Lasciate dai nemici e trovate nel mondo.
 - Si spendono: ai santuari per salire di livello (vita, vigore, forza, con costo crescente), da Livia per fiaschette e oggetti, da Ulrik per forgiare spade insieme al ferro dei goblin.
-- Alla morte restano a terra in un mucchio luminoso dove si è caduti; toccandolo si recuperano; morendo di nuovo prima di arrivarci si perdono.
+- Alla morte restano a terra in un mucchio luminoso dove si è caduti (se si muore in acqua profonda o fuori dai percorsi, nell'ultimo punto di terreno sicuro calpestato); toccandolo si recuperano; morendo di nuovo prima di arrivarci si perdono.
 - Sostituiscono l'esperienza attuale (la barra dei livelli diventa il contatore delle braci).
 
 ### 7.2 Spade
@@ -236,13 +236,15 @@ Scelte tecniche:
 
 | Tappa | Contenuto | Uscita |
 |---|---|---|
-| 1. Basi | orizzontale, salvataggio v4, braci e mucchio alla morte, scelta del personaggio (modelli attuali), sistemi di dialogo, missioni e diario | versione giocabile con il mondo attuale |
+| 1. Basi | orizzontale, salvataggio v4, braci e mucchio alla morte, scelta del personaggio (eroe attuale ed **eroina procedurale provvisoria** con proporzioni e capelli suoi, finché arriva quella Meshy), sistemi di dialogo, missioni e diario | versione giocabile con il mondo attuale |
 | 2. Mondo | 5 zone a strati; Cresta, Borgo Cenere e Bosco rifiniti; scorciatoia dell'albero; mappa a pergamena con nebbia; bussola nuova | versione giocabile nel nuovo mondo |
 | 3. Personaggi Meshy | eroe, eroina, Selin, abitanti, guardia, goblin con le animazioni trasferite | parte appena Meshy è raggiungibile; le altre tappe non aspettano |
 | 4. Storia | prologo, assalto al cancello, dialoghi di Maren, Ulrik, Livia, "Tobi è sparito", "Zannagrigia" | pezzo completo giocabile dall'inizio |
 | 5. Filmati e audio | filmato d'apertura, stacchi di camera, inquadrature dei dialoghi, temi musicali, voci | pezzo completo finito |
 
 Dopo il pezzo completo: Rovine dei Custodi, Fortezza del Fango, troll e Grakk, "La memoria dei Custodi", "Il ferro di Ulrik", finale del capitolo.
+
+Il piano di implementazione si scrive **una tappa alla volta**: prima il piano della tappa 1, poi, dopo la sua consegna, quello della tappa successiva.
 
 ## 12. Rischi e contromisure
 
