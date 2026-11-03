@@ -73,7 +73,7 @@ function createPlayer(){
   const fn=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,.06,6),new THREE.MeshStandardMaterial({color:col(0x8a7a5a),roughness:.6}));fn.position.y=.06;flask.add(fb,fn);flask.position.set(0,-.08,-.02);flask.visible=false;rig.P.wrL.add(flask);
   PL={rig,mats,cape:new Cape(rig),trail:new Trail(30),flask,sw:null};
   setSword(0);}
-function setSword(t){if(PL.sw)PL.rig.P.wrR.remove(PL.sw.g);PL.sw=buildSword(t);PL.sw.g.position.set(0,-.072,-.004);PL.rig.P.wrR.add(PL.sw.g);
+function setSword(t){if(PL.sw&&PL.sw.g.parent)PL.sw.g.parent.remove(PL.sw.g);PL.sw=buildSword(t);PL.sw.g.position.set(0,-.072,-.004);(MESHY.on?MESHY.proxR:PL.rig.P.wrR).add(PL.sw.g);
   const gl=SWORDS[t].glow;PL.trail.u.uC.value.copy(gl?new THREE.Color(gl[0],gl[1],gl[2]).multiplyScalar(.8):new THREE.Color(1.9,1.75,1.45));$('swordName').textContent=SWORDS[t].name;}
 function setView(fp){G.fp=fp;PL.rig.P.head.scale.setScalar(fp?.001:1);PL.cape.mesh.visible=!fp;$('fpCross').hidden=!fp||G.state!=='play';camera.near=fp?.05:.08;camera.updateProjectionMatrix();}
 function useSt(n){P.st=Math.max(-12,P.st-n);P.stDelay=CFG.st.delay;}
@@ -243,7 +243,7 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   // stepping onto a raised floor eases up instead of popping
   const fo=P.pos.y-gH(P.pos.x,P.pos.z);P.fo=Math.abs(fo-P.fo)>1.2?fo:damp(P.fo,fo,16,dt);
   let ry=P.yaw+P.spinYaw;if(a&&a.rollYaw!==undefined&&(k==='dodge'))ry=a.rollYaw;
-  R.root.position.set(P.pos.x,P.pos.y-fo+P.fo,P.pos.z);R.root.rotation.y=ry;R.root.updateMatrixWorld(true);
+  R.root.position.set(P.pos.x,P.pos.y-fo+P.fo,P.pos.z);R.root.rotation.y=ry;R.root.updateMatrixWorld(true);meshySync();
   PL.sw.base.getWorldPosition(_v1);PL.sw.tip.getWorldPosition(_v2);if(G.fp)PL.trail.on=false;PL.trail.update(dt,_v1,_v2);PL.trail.mesh.visible=!G.fp;
   if(!G.fp)PL.cape.update(dt,U.wind.value*(.6+U.storm.value*1.4),_v3.set(.8,0,.5));
   const sw=SWORDS[P.sword];if(sw.glow){PL.sw.bm.emissiveIntensity=k==='charge'?1.6+Math.sin(G.t*30)*.4:1;}else{PL.sw.bm.emissive.setRGB(k==='charge'?Math.min(.6,a.t*.6):0,k==='charge'?Math.min(.35,a.t*.35):0,0);}
