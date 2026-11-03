@@ -5,7 +5,8 @@ SB=os.path.dirname(os.path.abspath(__file__))
 async def main():
     page_file=sys.argv[1]; steps=json.load(open(sys.argv[2]))
     async with async_playwright() as p:
-        b=await p.chromium.launch(executable_path='/usr/bin/google-chrome',args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--enable-webgl','--no-sandbox'])
+        exe=os.environ.get('SB_CHROME') or next((c for c in ('/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser') if os.path.exists(c)),None)
+        b=await p.chromium.launch(executable_path=exe,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--enable-webgl','--no-sandbox'])
         vp=steps.get('viewport',{'width':1280,'height':720})
         ctx=await b.new_context(viewport=vp,has_touch=steps.get('touch',False),is_mobile=steps.get('mobile',False),device_scale_factor=1)
         pg=await ctx.new_page()

@@ -22,11 +22,21 @@ INIT = ("try{localStorage.setItem('stormblade.settings',%s);"
         % json.dumps(json.dumps(SETTINGS)))
 
 
+def chrome_path():
+    """System Chrome/Chromium if present (or $SB_CHROME); None = Playwright's own Chromium."""
+    if os.environ.get('SB_CHROME'):
+        return os.environ['SB_CHROME']
+    for c in ('/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'):
+        if os.path.exists(c):
+            return c
+    return None
+
+
 async def main(a):
     w, h = (int(v) for v in a.viewport.lower().split('x'))
     errors = []
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=CHROME_ARGS)
+        b = await p.chromium.launch(executable_path=chrome_path(), args=CHROME_ARGS)
         ctx = await b.new_context(viewport={'width': w, 'height': h}, has_touch=a.touch,
                                   is_mobile=a.mobile, device_scale_factor=1)
         pg = await ctx.new_page()

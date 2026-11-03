@@ -63,7 +63,7 @@ Esecuzione dei test, valida per tutti i task: `cd sb && bash mk.sh >/dev/null &&
 **Interfaces:**
 - Produces: CLI `python3 tests/run.py <file> [--viewport WxH] [--touch] [--mobile]`; nella pagina `T.test(name, fn)`, `T.eq(a,b,msg)`, `T.ok(v,msg)`, `T.near(a,b,eps,msg)`, `T.newGame({hero='m'}={})` (chiama `__SB.startGame(false, hero)`), `T.clearEnemies()` (toglie tutti i nemici dalla scena e svuota `__SB.TOK`), `T.sim(n)`, `T.key(code, down=true)` (evento `keydown`/`keyup` su `window` con `{code}`).
 
-- [ ] **Step 1: Scrivere i test di fumo e di regressione**
+- [x] **Step 1: Scrivere i test di fumo e di regressione**
 
 ```js
 // tests/smoke.test.js
@@ -85,16 +85,16 @@ T.test('death then respawn', () => {
 T.test('pause and resume', () => { __SB.IN.pauseP = true; T.sim(1); T.eq(__SB.G.state, 'pause'); document.getElementById('pResume').click(); T.sim(1); T.eq(__SB.G.state, 'play'); });
 ```
 
-- [ ] **Step 2: Eseguire e verificare che fallisca** — `python3 tests/run.py tests/smoke.test.js` → errore "No such file" o `T is not defined`.
+- [x] **Step 2: Eseguire e verificare che fallisca** — `python3 tests/run.py tests/smoke.test.js` → errore "No such file" o `T is not defined`.
 
-- [ ] **Step 3: Scrivere `tests/run.py` e `tests/lib.js`**
+- [x] **Step 3: Scrivere `tests/run.py` e `tests/lib.js`**
   - `run.py` riusa da `sb/harness.py` gli argomenti di Chrome, la route di `three.min.js` verso `sb/three.min.js` e l'aborto delle altre richieste; script d'avvio che imposta `stormblade.settings` a `{quality:'low',music:0,sfx:0,sens:1,invertY:false,fp:false,nums:true}` e cancella `stormblade.save.v2` e `stormblade.save.v4`; viewport predefinita 640×360.
   - Attende fino a 60 s `window.__SB && __SB.G.state==='title'`, inietta `lib.js` e il file di test, esegue `await T.run()`, stampa `PASS nome` o `FAIL nome: messaggio` e ogni `PAGEERROR`; ignora i messaggi `Failed to load resource` (font bloccati). Esce con codice 1 se c'è un FAIL o un PAGEERROR.
   - `T.run()` esegue i test in ordine nello stesso stato di pagina (i test di un file possono dipendere dai precedenti) e restituisce `[{name, ok, msg}]`.
 
-- [ ] **Step 4: Aggiungere le esportazioni a `window.__SB`** (elenco sopra) e verificare: `bash mk.sh && python3 tests/run.py tests/smoke.test.js && python3 tests/run.py tests/regression.test.js` → tutti PASS, codice 0.
+- [x] **Step 4: Aggiungere le esportazioni a `window.__SB`** (elenco sopra) e verificare: `bash mk.sh && python3 tests/run.py tests/smoke.test.js && python3 tests/run.py tests/regression.test.js` → tutti PASS, codice 0.
 
-- [ ] **Step 5: Commit** — `git add tests src/k_game.js && git commit -m "test: in-page test runner and v5 regression suite"`
+- [x] **Step 5: Commit** — `git add tests src/k_game.js && git commit -m "test: in-page test runner and v5 regression suite"`
 
 ### Task 2: Braci al posto dell'esperienza, livelli al santuario
 
@@ -111,7 +111,7 @@ T.test('pause and resume', () => { __SB.IN.pauseP = true; T.sim(1); T.eq(__SB.G.
 - La medaglia del livello pulsa una volta quando le braci superano `levelCost(P.lvl)`.
 - `#shrineMenu` entra nell'elenco `SCREENS`; negli stati `shrine`, `levelup`, `pause` e `title` il mondo è fermo e `padMenu` è attivo.
 
-- [ ] **Step 1: Scrivere i test**
+- [x] **Step 1: Scrivere i test**
 
 ```js
 // tests/braci.test.js  (viewport 640x360)
@@ -135,10 +135,10 @@ T.test('gamepad navigates shrine menu', () => {
 });
 ```
 
-- [ ] **Step 2: Eseguire** — `python3 tests/run.py tests/braci.test.js` → FAIL (`__SB.levelCost is not a function`).
-- [ ] **Step 3: Implementare** le funzioni e i cambi elencati in Interfaces; esportare in `__SB` `levelCost`, `addBraci`, `spendBraci`, `levelUp`, `openShrineMenu`. Il focus iniziale del menu del santuario va su `#smLeave` quando le braci non bastano, altrimenti su `#smLevel`.
-- [ ] **Step 4: Verificare** — `braci.test.js`, `smoke.test.js` e `regression.test.js` tutti PASS.
-- [ ] **Step 5: Commit** — `git commit -am "feat: braci currency, shrine level-up menu, gamepad menu navigation"`
+- [x] **Step 2: Eseguire** — `python3 tests/run.py tests/braci.test.js` → FAIL (`__SB.levelCost is not a function`).
+- [x] **Step 3: Implementare** le funzioni e i cambi elencati in Interfaces; esportare in `__SB` `levelCost`, `addBraci`, `spendBraci`, `levelUp`, `openShrineMenu`. Il focus iniziale del menu del santuario va su `#smLeave` quando le braci non bastano, altrimenti su `#smLevel`.
+- [x] **Step 4: Verificare** — `braci.test.js`, `smoke.test.js` e `regression.test.js` tutti PASS.
+- [x] **Step 5: Commit** — `git commit -am "feat: braci currency, shrine level-up menu, gamepad menu navigation"`
 
 ### Task 3: Braci a terra alla morte
 
