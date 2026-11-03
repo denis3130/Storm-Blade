@@ -20,9 +20,12 @@ Rispondi sempre a Denis **in italiano**, con messaggi brevi e chiari (spesso usa
   - `three.min.js` (r128, licenza MIT) è nel repository: i test lo usano al posto del CDN.
 
 ## Pubblicare una versione giocabile
-- Lancia `bash mk.sh`, fai il commit di `index.html` e il push su `main`. GitHub Pages pubblica il gioco su https://denis3130.github.io/Storm-Blade/. Denis attiva Pages una volta sola: Settings → Pages → Deploy from a branch → `main`, cartella `/ (root)`.
+- **La versione giocabile è la pagina Claude "Stormblade"**: https://claude.ai/artifact/F1UdPywZreUDQFCw9NxgU4 (scelta di Denis, 3/11/2026). Si continua a pubblicare lì.
+  - Lancia `bash mk.sh`, poi pubblica `index.html` con lo strumento Artifact su quell'URL, insieme ai file del modello: `assets/meshy/hero/hero.json` e `hero_tex0.jpg`, `hero_tex1.jpg`, `hero_tex2.jpg`.
+  - Le pagine Claude non servono i `.glb`: il gioco carica `hero.json`, generato con `python3 assets/meshy/glb2json.py <in.glb> <out.json>`.
+  - GLTFLoader (r128) arriva da jsdelivr con una versione esatta, vedi `build.py`.
 - Prima di pubblicare: tutti i test verdi e nessun errore nella console.
-- Il lavoro di una tappa resta sul suo ramo finché la tappa non è finita e revisionata; poi si unisce a `main` e si pubblica.
+- GitHub Pages da `main` (https://denis3130.github.io/Storm-Blade/) resta disponibile come copia; il lavoro di una tappa si unisce a `main` solo a tappa finita e revisionata.
 
 ## Regole di lavoro di Denis
 - Giochi completi e curati: niente emoji al posto della grafica, niente combattimenti fatti solo di numeri.

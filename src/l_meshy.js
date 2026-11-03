@@ -1,10 +1,10 @@
 /* ============================== Meshy hero (preview) ==============================
-   Loads assets/meshy/hero/hero.glb and drives its skeleton from the procedural hero rig every frame,
+   Loads assets/meshy/hero/hero.json (the GLB converted by assets/meshy/glb2json.py) and drives its skeleton from the procedural hero rig every frame,
    so every existing animation (gait, attacks, block, dodge, rest) plays on the Meshy model.
    Retarget: per bone, world rotation = (proc joint world rot · proc rest⁻¹) · C · meshy bind rot,
    where C turns the meshy bind bone direction (A-pose) onto the procedural rest direction.
    If the file cannot be loaded (tests on file://, offline) the procedural hero stays. */
-const MESHY={on:false,url:'assets/meshy/hero/hero.glb'};
+const MESHY={on:false,url:'assets/meshy/hero/hero.json'};
 // meshy bone, procedural joint for the rotation delta (b = optional second joint, w = blend), procedural direction pair, meshy child for direction
 const MESHY_MAP=[
   {m:'Hips',p:'pel',pd:['pel','spi'],mc:'Spine02'},

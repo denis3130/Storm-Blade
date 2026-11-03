@@ -1,5 +1,5 @@
 cd "$(dirname "$0")"
-FILES="a0_cfg.js v_gltf.js a_core.js b_tex.js c_geo.js d_world.js e_chars.js f_fx.js g_props.js h_audio.js i_player.js j_enemies.js l_meshy.js k_game.js"
+FILES="a0_cfg.js a_core.js b_tex.js c_geo.js d_world.js e_chars.js f_fx.js g_props.js h_audio.js i_player.js j_enemies.js l_meshy.js k_game.js"
 # game_w.html = test build (keeps window.__SB); index.html = playable build published with GitHub Pages
 python3 build.py game_w.html 1 $FILES >/dev/null
 python3 build.py index.html 0 $FILES
