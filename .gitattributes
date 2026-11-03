@@ -1,0 +1,7 @@
+# File binari di Unreal e asset pesanti in Git LFS
+unreal/**/*.uasset filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.umap filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.png filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.wav filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.glb filter=lfs diff=lfs merge=lfs -text

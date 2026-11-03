@@ -12,6 +12,8 @@
 !/wrap.py
 !/.gitignore
 !/assets/
+!/unreal/
+!/.gitattributes
 __pycache__/
 
 # Meshy: sorgenti pesanti (rigenerabili dagli ID dei task)
@@ -21,3 +23,12 @@ assets/meshy/history.json
 assets/meshy/hero/anims/
 assets/meshy/hero/hero_rigged.fbx
 assets/meshy/*/_meshy_source/anims/
+
+# Unreal: cartelle generate (si ricreano da sole)
+unreal/**/Binaries/
+unreal/**/Intermediate/
+unreal/**/Saved/
+unreal/**/DerivedDataCache/
+unreal/**/.vs/
+unreal/**/*.sln
+unreal/**/*.VC.db
