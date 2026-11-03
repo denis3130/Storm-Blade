@@ -2,7 +2,7 @@
 
 Rispondi sempre a Denis **in italiano**, con messaggi brevi e chiari (spesso usa il telefono).
 
-**Leggi per primo `docs/HANDOFF.md`**: lì ci sono lo stato del lavoro, le decisioni già prese e il prossimo passo.
+**Leggi per primo `docs/HANDOFF_UNREAL.md`** (si lavora in Unreal; la versione web è ferma), poi `docs/HANDOFF.md`: lì ci sono lo stato del lavoro, le decisioni già prese e il prossimo passo.
 
 ## Il progetto
 - Gioco d'azione 3D dark fantasy in **Three.js r128**, JavaScript vanilla, personaggi e mondo costruiti in codice. Gira su PC, telefono (**solo in orizzontale**) e controller.
