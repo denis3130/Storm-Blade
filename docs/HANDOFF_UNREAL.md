@@ -9,7 +9,7 @@ Denis ha deciso di portare Stormblade su **Unreal Engine 5.8**, con Blender per 
 - Messaggi a Denis: italiano, **brevissimi**, e le scelte sempre come **domande con risposte** (AskUserQuestion).
 
 ## PC di Denis
-Windows 11, RTX 3060 12 GB, 32 GB RAM, Unreal 5.8, Visual Studio 2022. Il progetto Third Person C++ "StormBlade" va in `unreal/StormBlade/` di questo repository (ramo `unreal`; LFS e esclusioni già pronti).
+Windows 11, RTX 3060 12 GB, 32 GB RAM, Unreal 5.8, Visual Studio 2022. Il progetto Third Person C++ "StormBlade" sta in `StormBlade/` alla radice di questo repository (ramo `unreal`; cartella locale `C:\StormBlade`, scelta di Denis 3/11/2026; LFS e esclusioni già pronti).
 
 ## Obiettivo della prima prova (scelte di Denis)
 - Una **piccola area del Borgo Cenere** (villaggio bruciato, case di legno e pietra, braci nell'aria): niente da cercare, serve solo a giudicare l'ambientazione.

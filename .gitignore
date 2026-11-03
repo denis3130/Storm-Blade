@@ -13,6 +13,7 @@
 !/.gitignore
 !/assets/
 !/unreal/
+!/StormBlade/
 !/.gitattributes
 __pycache__/
 
@@ -32,3 +33,14 @@ unreal/**/DerivedDataCache/
 unreal/**/.vs/
 unreal/**/*.sln
 unreal/**/*.VC.db
+
+# Progetto Unreal in StormBlade/ (scelta di Denis, 3/11/2026)
+StormBlade/Binaries/
+StormBlade/Intermediate/
+StormBlade/Saved/
+StormBlade/DerivedDataCache/
+StormBlade/.vs/
+StormBlade/*.sln
+StormBlade/*.slnx
+StormBlade/*.VC.db
+StormBlade/.mcp.json
