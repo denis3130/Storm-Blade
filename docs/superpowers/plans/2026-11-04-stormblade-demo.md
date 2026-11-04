@@ -50,6 +50,18 @@ Tappe 1-5 fatte sul ramo `demo`; la pagina è pubblicata a parte (vedi `docs/HAN
   - a destra della strada il terreno scende subito nella gola, come nella foto: lì non si cammina più (c'era un recinto).
   - il sole sta nello squarcio di nuvole sopra il palazzo (più a destra), da cui scendono i raggi; montagne più scure.
   - ogni costruttore della demo ha il suo seme: cambiarne uno non rimescola gli altri.
+- Terza passata (Denis: "la luce a volte troppa, a volte troppo poca"; collisioni; impugnatura):
+  - adattamento dell'esposizione come nei giochi AAA: la luminosità media della vista (misurata sulla GPU) guida l'esposizione
+    entro -1/+1,2 stop (`CFG.light`); il contrasto della demo lavora sui valori mostrati, così l'ombra non diventa nera.
+    Su 48 viste lo scarto di luminosità tra la vista più chiara e la più scura passa da 156 volte a meno di 2 (`dbg/lightprobe.py`, fuori dal repo).
+  - ogni blocco solido della mappa (pietra, roccia, legno) che attraversa l'altezza del corpo ha la sua collisione: prima se ne
+    attraversavano 281 su 416. La camera controlla il terreno in 12 punti invece di 6.
+  - la spada dell'eroe Meshy: l'impugnatura passava attraverso il palmo; ora la mano ruota sul polso, la spada scivola di 3,8 cm
+    e le dita si chiudono intorno al manico (il modello non ha ossa delle dita: si piega la mesh del guanto una volta al caricamento).
+  - Meshy non è raggiungibile da questa sessione (api.meshy.ai rifiutato dal proxy, 403): le clip di attacco restano da scaricare.
+  - Denis ha detto di usare per la mappa i modelli fatti per la prova Unreal: sono sul suo PC in `C:\StormBlade\assets\meshy\valle`
+    (acero, falò, case, cattedrale, rovine, rupi, montagne, ponte, portale, grotta, padiglione, sala, statua...). Servono la cartella
+    collegata alla conversazione o i file nel repo.
 
 **Misure** (640×360, qualità media, Chromium software): nella lotta al villaggio la demo disegna 150 chiamate e 680k triangoli
 contro 413 e 1,67M del gioco al primo accampamento; logica per frame 0,31-0,69 ms contro 0,47-0,99 ms (`tests/probes/demo_perf.json`).
