@@ -162,7 +162,8 @@ function runAction(a,D,dt){const k=a.k;
   else if(k==='hurt'||k==='stagger'){if(a.t<.2){P.amx+=a.dx*2.5*dt;P.amz+=a.dz*2.5*dt;}}
 }
 // gradient of the terrain (rise per metre)
-function slopeAt(x,z,o){o.x=(gH(x+.35,z)-gH(x-.35,z))/.7;o.z=(gH(x,z+.35)-gH(x,z-.35))/.7;return o;}
+// the demo's bridge and cliff stairs are floors over steep rock: there the slope is the floor's
+function slopeAt(x,z,o){const g=DEMO?gY:gH;o.x=(g(x+.35,z)-g(x-.35,z))/.7;o.z=(g(x,z+.35)-g(x,z-.35))/.7;return o;}
 const _sl={x:0,z:0};
 function updPlayer(dt){
   const M=CFG.move;

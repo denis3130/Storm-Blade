@@ -123,16 +123,16 @@ void main(){
   c=mix(c,uHorizon*0.82,clamp(-y*3.0,0.0,1.0));
   float sd=max(dot(d,uSunDir),0.0);float clear=1.0-uStorm*0.9;
   c+=uSunCol*(pow(sd,7.0)*0.32+pow(sd,48.0)*0.9)*clear;
-  c+=uSunCol*smoothstep(0.99945,0.99975,sd)*14.0*clear;
+  c+=uSunCol*smoothstep(0.99945,0.99975,sd)*${DEMO?'1.2':'14.0'}*clear;
   ${clouds?`if(y>-0.02){
     vec2 cp=d.xz/(max(y,0.0)+0.11)*1.15+vec2(uTime*0.010,uTime*0.004)*(1.0+uStorm*4.0);
     float n=fbm(cp*1.1)*0.75+fbm(cp*3.1+vec2(uTime*0.02,0.0))*0.25;
-    float cov=mix(0.36,0.12,uStorm);
-    float cl=smoothstep(cov-0.12,cov+0.42,n);
+    float cov=mix(${DEMO?DEMO.cloud.toFixed(2):'0.36'},0.12,uStorm);
+    float cl=smoothstep(cov-0.12,cov+0.42,n)${DEMO?'*(1.0-0.75*smoothstep(0.86,0.985,sd))':''};
     float sh=fbm(cp*1.1+uSunDir.xz*0.1);
     vec3 cc=mix(uCloud*1.08,uCloud*0.5,clamp((n-sh)*4.0+0.5,0.0,1.0));
     cc+=uSunCol*pow(sd,6.0)*0.32*clear;
-    float fade=smoothstep(0.0,0.32,y);
+    float fade=smoothstep(${DEMO?'-0.03,0.14':'0.0,0.32'},y);
     c=mix(c,cc,cl*fade*0.9);
   }`:''}
   c+=uFlash*vec3(0.75,0.72,1.0)*(0.55+0.45*clamp(y,0.0,1.0));
@@ -184,7 +184,7 @@ const Post=(()=>{
     for(int i=0;i<30;i++){uv-=d;acc+=texture2D(tex,uv).rgb*dec*exp(-length(uv-sun)*3.2);dec*=0.962;}
     gl_FragColor=vec4(acc*(str/30.0),1.0);}`,{tex:{value:null},sun:{value:new THREE.Vector2(.5,.5)},str:{value:0}});
   const cu={tS:{value:null},tB:{value:null},tR:{value:null},bloom:{value:.62},rays:{value:0},exposure:{value:1},time:U.time,res:{value:new THREE.Vector2(1,1)},
-    hurt:{value:0},storm:{value:0},lowhp:{value:0},flash:{value:0},sat:{value:.88},contrast:{value:1.06},vig:{value:.4},grain:{value:.03},aberr:{value:.0022},fade:{value:0},desat:{value:0},ward:{value:0}};
+    hurt:{value:0},storm:{value:0},lowhp:{value:0},flash:{value:0},sat:{value:DEMO?.74:.88},contrast:{value:DEMO?1.16:1.06},vig:{value:DEMO?.55:.4},grain:{value:.03},aberr:{value:.0022},fade:{value:0},desat:{value:0},ward:{value:0}};
   const mC=mk(`uniform sampler2D tS,tB,tR;uniform float bloom,rays,exposure,time,hurt,storm,lowhp,flash,sat,contrast,vig,grain,aberr,fade,desat,ward;uniform vec2 res;varying vec2 vUv;
     vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}
     float hh(vec2 p){p=fract(p*vec2(443.897,441.423));p+=dot(p,p.yx+19.19);return fract((p.x+p.y)*p.x);}

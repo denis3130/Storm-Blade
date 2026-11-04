@@ -69,7 +69,7 @@ function terrainMaterial(){
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D tG;\nuniform sampler2D tD;\nuniform sampler2D tR;\nuniform sampler2D tM;\nuniform float uWet;\nvarying vec4 vSplat;\nvarying vec3 vTW;\nvarying vec3 vTN;')
       .replace('#include <map_fragment>',`
         vec2 tuv=vTW.xz;
-        vec3 cG=mix(texture2D(tG,tuv*0.21).rgb,texture2D(tG,tuv*0.051+0.37).rgb,0.38);
+        vec3 cG=mix(texture2D(tG,tuv*0.21).rgb,texture2D(tG,tuv*0.051+0.37).rgb,0.38);${DEMO?'cG=mix(vec3(dot(cG,vec3(0.36,0.42,0.22))),cG,0.42)*vec3(1.02,0.98,0.86);':''}
         vec3 cM=texture2D(tM,tuv*0.19).rgb;
         vec3 cD=mix(texture2D(tD,tuv*0.17).rgb,texture2D(tD,tuv*0.043+0.61).rgb,0.3);
         vec3 an=abs(normalize(vTN));an=pow(an,vec3(3.0));an/=(an.x+an.y+an.z);

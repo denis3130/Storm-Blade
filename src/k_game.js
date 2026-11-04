@@ -144,7 +144,7 @@ function updStorm(dt){if(!DEMO)ST.t-=dt;if(ST.t<=0){setStormPhase(ST.phase==='ca
   ST.flash=Math.max(0,ST.flash-dt*3.2);
   const C=SKYC.calm,S=SKYC.storm;skyU.uHorizon.value.copy(C.hor).lerp(S.hor,k);skyU.uZenith.value.copy(C.zen).lerp(S.zen,k);skyU.uCloud.value.copy(C.cloud).lerp(S.cloud,k);skyU.uSunCol.value.copy(C.sun).lerp(S.sun,k);
   skyU.uFlash.value=ST.flash;scene.fog.color.copy(C.fog).lerp(S.fog,k).multiplyScalar(1+ST.flash*1.4);scene.fog.near=lerp(DEMO?DEMO.fog[0]:.0085,.0165,k);scene.fog.far=lerp(DEMO?DEMO.fog[1]:.55,.95,k);FOGU.uFogD.value=scene.fog.near;FOGU.uFogH.value=scene.fog.far;
-  hemi.color.copy(C.hemiS).lerp(S.hemiS,k);hemi.groundColor.copy(C.hemiG).lerp(S.hemiG,k);hemi.intensity=lerp(.5,.34,k)+ST.flash*2.6;sun.intensity=lerp(2.6,.22,k);
+  hemi.color.copy(C.hemiS).lerp(S.hemiS,k);hemi.groundColor.copy(C.hemiG).lerp(S.hemiG,k);hemi.intensity=lerp(DEMO?DEMO.light[0]:.5,.34,k)+ST.flash*2.6;sun.intensity=lerp(DEMO?DEMO.light[1]:2.6,.22,k);
   const env=k>.5?ENV_STORM:ENV_CALM;if(scene.environment!==env)scene.environment=env;
   if(vortex){vortex.visible=k>.04;vortex.material.uniforms.uA.value=k;if(ST.vx!==undefined){const dx=ST.vx-P.pos.x,dz=ST.vz-P.pos.z,d=Math.hypot(dx,dz);if(d<95){ST.vx=P.pos.x+dx/d*95;ST.vz=P.pos.z+dz/d*95;}
     ST.vx+=Math.sin(G.t*.05)*dt*2;vortex.position.set(ST.vx,gH(clamp(ST.vx,-200,200),clamp(ST.vz,-200,200))-10,ST.vz);}}
@@ -415,11 +415,11 @@ function tick(rdt,doRender){
   const tg=P.pos;const tex=(SHR*2)/(Q.shadow||1024);_v1.copy(tg);_v2.copy(SUN_DIR).negate();_v3.crossVectors(_v2,_up).normalize();_v4.crossVectors(_v3,_v2);
   const sx=Math.round(_v1.dot(_v3)/tex)*tex,sy=Math.round(_v1.dot(_v4)/tex)*tex,sz=_v1.dot(_v2);
   sun.target.position.set(0,0,0).addScaledVector(_v3,sx).addScaledVector(_v4,sy).addScaledVector(_v2,sz);sun.position.copy(sun.target.position).addScaledVector(SUN_DIR,110);sun.target.updateMatrixWorld();
-  updMountains();updCells(rdt);updGrass();updLights(G.t);updFires(dt);FXA.update(dt);FXN.update(dt);updRain(dt,ST.k,U.wind.value*1.6,U.wind.value*.6);updBolts(dt);updRings(dt);updShrines(dt,ST.k);updAmbient(dt,ST.k);
+  updMountains();updCells(rdt);updGrass();updLights(G.t);updFires(dt);if(DEMO)demoUpdate(dt);FXA.update(dt);FXN.update(dt);updRain(dt,ST.k,U.wind.value*1.6,U.wind.value*.6);updBolts(dt);updRings(dt);updShrines(dt,ST.k);updAmbient(dt,ST.k);
   for(const c of CAMPS){const ch=c.chest;if(ch.open&&ch.t<1){ch.t=Math.min(1,ch.t+dt*1.6);ch.lid.rotation.x=-eOut(ch.t)*1.9;ch.light.i=2.4*(1-ch.t);}else if(!ch.open&&ch.light.i>0){ch.light.i=2.4*(.8+.2*Math.sin(G.t*3));}}
   const pu=Post.u;pu.hurt.value=Math.max(0,pu.hurt.value-rdt*1.6);pu.lowhp.value=damp(pu.lowhp.value,P.hp/P.maxHp<.3&&!P.dead&&playing?1:0,3,rdt);pu.storm.value=ST.k*(P.inWard?.35:1);
   pu.flash.value=Math.max(0,pu.flash.value-rdt*2)+ST.flash*.18;pu.desat.value=damp(pu.desat.value,P.dead?.85:0,1.5,rdt);pu.ward.value=damp(pu.ward.value,P.inWard&&ST.k>.3?1:0,3,rdt);
-  pu.exposure.value=lerp(1.0,.92,ST.k);
+  pu.exposure.value=lerp(DEMO?.86:1.0,.92,ST.k);
   if(pu.lowhp.value>.5&&playing&&!P.dead){P.hbT=(P.hbT||0)-rdt;if(P.hbT<=0){P.hbT=.95;sfx('heart');}}
   renderer.getDrawingBufferSize(_db);PSCALE.value=_db.y/(2*Math.tan(camera.fov*DEG/2));
   dlgTick(rdt);
@@ -428,10 +428,10 @@ function tick(rdt,doRender){
   MUS.combat=damp(MUS.combat,playing&&E.some(e=>!e.dead&&e.aggro&&!e.boss&&e.dist<26)?1:0,.6,rdt);MUS.boss=damp(MUS.boss,playing&&E.some(e=>!e.dead&&e.aggro&&e.boss&&e.dist<40)?1:0,.5,rdt);
   MUS.storm=damp(MUS.storm,ST.k,.5,rdt);MUS.calm=1-Math.max(MUS.combat,MUS.boss)*.8;
   clearPresses();
-  if(doRender)Post.render(Q.rays?(1-ST.k)*.9:0);}
+  if(doRender)Post.render(Q.rays?(1-ST.k)*(DEMO?1.4:.9):0);}
 async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('loadTxt').textContent=t;};
   applyOrient();
-  try{L(.04,'Forgiando le texture');await nextFrame();makeTextures();makeMaterials();makeWardMat();if(DEMO)makeDemoTextures();
+  try{L(.04,'Forgiando le texture');await nextFrame();makeTextures();makeMaterials();makeWardMat();if(DEMO){makeDemoTextures();U.wet.value=DEMO.wet;}
     L(.16,'Modellando la valle');await nextFrame();buildPaths();setupFlats();buildTerrain();buildMountains();
     L(.34,'Riempiendo il lago');await nextFrame();buildWater();initShore();
     L(.42,'Piantando la foresta');await nextFrame();buildForest();initGrass();initFX();initRain();initVortex();

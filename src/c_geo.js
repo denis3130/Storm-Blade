@@ -56,7 +56,7 @@ function windMat(opts,wk=1,fl=0,noFlip=false){
       .replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nfloat camD=length(vViewPosition);if(camD<2.6){float dth=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);if(dth>(camD-0.7)/1.9)discard;}');
   };
   return m;}
-function stoneMat(hex,moss=.65,rough=.92){
+function stoneMat(hex,moss=.65,rough=.92,sc=.36){const S=sc.toFixed(3);
   const m=new THREE.MeshStandardMaterial({color:col(hex),roughness:rough,metalness:0,vertexColors:true});
   m.onBeforeCompile=sh=>{sh.uniforms.tR={value:TEX.rock};sh.uniforms.tM={value:TEX.moss};sh.uniforms.uWet=U.wet;sh.uniforms.uMoss={value:moss};
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vSW;\nvarying vec3 vSN;')
@@ -69,7 +69,7 @@ function stoneMat(hex,moss=.65,rough=.92){
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D tR;\nuniform sampler2D tM;\nuniform float uWet;\nuniform float uMoss;\nvarying vec3 vSW;\nvarying vec3 vSN;')
       .replace('#include <map_fragment>',`
         vec3 an=abs(vSN);an=pow(an,vec3(4.0));an/=(an.x+an.y+an.z);
-        vec3 rk=texture2D(tR,vSW.zy*0.36).rgb*an.x+texture2D(tR,vSW.xz*0.36).rgb*an.y+texture2D(tR,vSW.xy*0.36).rgb*an.z;
+        vec3 rk=texture2D(tR,vSW.zy*${S}).rgb*an.x+texture2D(tR,vSW.xz*${S}).rgb*an.y+texture2D(tR,vSW.xy*${S}).rgb*an.z;
         rk=pow(rk,vec3(2.2))*1.3;
         vec3 ms=pow(texture2D(tM,vSW.xz*0.23).rgb,vec3(2.2))*1.2;
         float mk=smoothstep(0.5,0.85,vSN.y+(texture2D(tM,vSW.xz*0.05).g-0.45)*0.7)*uMoss;
