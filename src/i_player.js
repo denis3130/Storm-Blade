@@ -57,7 +57,7 @@ function initHeroPoses(){
 const PA=CFG.moves;
 const ATTACKS=new Set(['light1','light2','light3','light4','heavy','runatk','spin','riposte']);
 const MOVE_ACTS=new Set(['block','charge','drink','parry']);
-const P={pos:V3(0,0,4),vel:V3(),av:V3(),yaw:0,hp:100,maxHp:100,st:100,maxSt:100,chip:100,stats:{vig:1,end:1,str:1},lvl:1,braci:0,sword:0,flasks:3,flaskMax:3,dmgMul:1,
+const P={pos:V3(0,0,4),vel:V3(),av:V3(),yaw:0,hp:100,maxHp:100,st:100,maxSt:100,chip:100,stats:{vig:1,end:1,str:1},lvl:1,braci:0,drop:null,safe:{x:0,z:4},safeT:0,sword:0,flasks:3,flaskMax:3,dmgMul:1,
   act:null,buf:null,blockPress:-9,iframe:0,stDelay:0,dead:false,lock:null,sprinting:false,spinYaw:0,combatK:0,lastAtk:null,heal:0,shrine:0,inWard:false,lastHit:-9,flinch:0,flinchV:0,kills:0,hyperT:0,
   cleared:[false,false,false,false],chests:[false,false,false,false],
   amx:0,amz:0,gait:{ph:0,w:0,seed:1.3},roll:0,pitchL:0,fo:0,yawRate:0,wade:0,accF:0,lastVF:0,stepSide:0};
@@ -158,6 +158,8 @@ function slopeAt(x,z,o){o.x=(gH(x+.35,z)-gH(x-.35,z))/.7;o.z=(gH(x,z+.35)-gH(x,z
 const _sl={x:0,z:0};
 function updPlayer(dt){
   const M=CFG.move;
+  // last safe ground (dry land) every 0.5 s: where the braci land if the player dies in deep water
+  P.safeT-=dt;if(P.safeT<=0){P.safeT=.5;if(!P.dead&&wadeDepth(P.pos.x,P.pos.z)<.3){P.safe.x=P.pos.x;P.safe.z=P.pos.z;}}
   const cy=CAM.yaw,fx=-Math.sin(cy),fz=-Math.cos(cy),rx=Math.cos(cy),rz=-Math.sin(cy);
   let ix=IN.mx,iz=IN.mz,il=Math.hypot(ix,iz);if(il>1){ix/=il;iz/=il;il=1;}
   P.moveX=rx*ix+fx*iz;P.moveZ=rz*ix+fz*iz;P.moveLen=il;
@@ -270,7 +272,7 @@ function applyDmg(dmg,dx,dz,d,o,chip){dmg=Math.max(1,Math.round(dmg));P.hp-=dmg;
     const k=P.act?P.act.k:null;
     if(P.hp>0&&G.t>P.hyperT){if(o.knock||dmg>=P.maxHp*.28){startAct('knock',{dx:-dx/d,dz:-dz/d});PL.flask.visible=false;P.hyperT=G.t+1.9;}else if(!ATTACKS.has(k)||k==='light1'||k==='light2'){startAct('hurt',{dx:-dx/d,dz:-dz/d});PL.flask.visible=false;P.hyperT=G.t+.75;}}}
   if(P.hp<=0)playerDie();}
-function playerDie(){if(P.dead)return;P.dead=true;P.hp=0;P.act={k:'death',t:0,hit:new Set()};P.lock=null;G.state='dying';G.slow=1.2;G.slowS=.35;sfx('death');setTimeout(()=>{if(G.state!=='dying')return;showScreen('death');if(document.pointerLockElement)document.exitPointerLock();},2300);}
+function playerDie(){if(P.dead)return;P.dead=true;P.hp=0;dropBraci();P.act={k:'death',t:0,hit:new Set()};P.lock=null;G.state='dying';G.slow=1.2;G.slowS=.35;sfx('death');setTimeout(()=>{if(G.state!=='dying')return;showScreen('death');if(document.pointerLockElement)document.exitPointerLock();},2300);}
 
 /* ============================== camera ============================== */
 const CAM={yaw:0,pitch:-.2,dist:4.5,cur:4.5,piv:V3(),trauma:0,fov:60,init:false,idle:0};

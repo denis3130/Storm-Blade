@@ -80,6 +80,30 @@ function pickStat(s){if(levelUp(s))toast('Livello <em>'+P.lvl+'</em>');openShrin
 function restAtShrine(s){P.hp=P.maxHp;P.flasks=P.flaskMax;P.st=P.maxSt;P.shrine=s.id;sfx('rest');healFx(P.pos);magic(V3(s.x,s.y+2.3,s.z),40,[.5,1.4,2.6],2.5,1.2);
   if(ST.phase!=='storm'&&ST.phase!=='warn')spawnWorld(true);save();toast('Hai riposato a <em>'+s.name+'</em>. I nemici sono tornati.');
   openShrineMenu(s);}
+/* ---------- braci left where the player fell (last safe ground); touching the pile takes them back, dying first loses them ---------- */
+let PILE=null;
+// emissive map of the pile: thin glowing cracks plus scattered hot spots on black (only these glow, the ash stays dark)
+function pileTex(){const c=mkC(64,64);pxFill(c,(u,v,o)=>{const n=tn2(u*5,v*5,5,5,11),s=tn2(u*13,v*13,13,13,29);
+    const k=Math.min(1,sstep(.06,0,Math.abs(n-.5))*.85+sstep(.68,.86,s));o[0]=255*k;o[1]=(70+90*k)*k;o[2]=18*k*k;});return toTex(c);}
+function pileMesh(){if(PILE)return PILE;const g=new THREE.Group();
+  // lumpy ash mound: jitter keyed on the vertex position keeps the faces closed; the bottom half is flattened onto the ground
+  const m=new THREE.Mesh(geo('pile',()=>{const q=new THREE.IcosahedronGeometry(.34,1),p=q.attributes.position;
+      for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),h=Math.sin(x*91.7+y*47.3+z*63.1)*43758.5453,j=1+(h-Math.floor(h)-.5)*.3;
+        p.setXYZ(i,x*j,Math.max(y,-.02)*j*.42,z*j);}q.computeVertexNormals();return q;}),
+    new THREE.MeshStandardMaterial({color:col(0x2b221d),roughness:1,flatShading:true,emissive:new THREE.Color(1,1,1),emissiveIntensity:1.2,emissiveMap:pileTex()}));
+  m.position.y=.07;g.add(m);g.visible=false;scene.add(g);PILE={g,m,t:0,fx:0};return PILE;}
+function syncDrop(){const d=P.drop;if(!d){if(PILE)PILE.g.visible=false;return;}const p=pileMesh();p.g.visible=true;p.g.position.set(d.x,gY(d.x,d.z),d.z);}
+function dropBraci(){if(P.braci>0){P.drop={x:P.safe.x,z:P.safe.z,amount:P.braci};P.braci=0;}else P.drop=null;syncDrop();
+  if(P.drop){_v1.set(P.drop.x,gY(P.drop.x,P.drop.z)+.3,P.drop.z);magic(_v1,18,[2.6,1.1,.3],1.2,.8,.1);}save();}
+function recoverBraci(){const d=P.drop;if(!d)return;P.drop=null;syncDrop();addBraci(d.amount);sfx('level');
+  _v1.set(d.x,gY(d.x,d.z)+.4,d.z);magic(_v1,30,[2.6,1.1,.3],2.2,.9,.12);orbBurst(_v1,6);toast('Braci recuperate: <em>'+d.amount+'</em>');save();}
+function updDrop(dt){const d=P.drop;if(!d||!PILE)return;const p=PILE;p.t+=dt;p.m.material.emissiveIntensity=1+Math.sin(p.t*3)*.35;p.m.rotation.y+=dt*.3;
+  p.fx-=dt;if(p.fx<=0){p.fx=.07;FXA.emit(d.x+rr(-.25,.25),p.g.position.y+.15,d.z+rr(-.25,.25),rr(-.1,.1),rr(.5,1.1),rr(-.1,.1),rr(.8,1.6),.06,.01,2.6,1,.25,1,-.1,.6,1);}
+  if(!P.dead&&G.state==='play'&&Math.hypot(P.pos.x-d.x,P.pos.z-d.z)<CFG.braci.pickR)recoverBraci();}
+// decorative embers flying to the counter (no value: the braci were already added)
+function orbBurst(p,n){if(G.state!=='play'||!toScreen(p,_sp))return;
+  for(let i=0;i<n;i++){const d=document.createElement('i');d.className='orb';$('nums').appendChild(d);
+    ORBS.push({d,x0:_sp.x+rr(-18,18),y0:_sp.y+rr(-14,14),t:-i*.045,dur:rr(.55,.75),bx:rr(-90,90),by:rr(-120,-50),v:0});}}
 function victory(){if(G.won)return;G.won=true;G.state='victory';showScreen('victory');if(document.pointerLockElement)document.exitPointerLock();
   const m=Math.floor(G.playTime/60),s=Math.floor(G.playTime%60);
   $('winStats').innerHTML=`<div><b>${P.lvl}</b><span>Livello</span></div><div><b>${P.kills}</b><span>Nemici</span></div><div><b>${m}:${String(s).padStart(2,'0')}</b><span>Tempo</span></div>`;}
@@ -98,7 +122,7 @@ function spawnWorld(keepNear){
   [[-62,22,0],[36,78,1],[104,-8,1]].forEach(([x,z,t])=>{for(let k=0;k<2;k++)spawnEnemy('goblin',x+rr(-2,2),z+rr(-2,2),{tier:t});});}
 function placeAtShrine(id){const s=SHRINES[id]||SHRINES[0];const a=Math.atan2(-s.z,-s.x)+PI+.6;P.pos.set(s.x+Math.cos(a)*3,0,s.z+Math.sin(a)*3);P.pos.y=gH(P.pos.x,P.pos.z);
   P.yaw=yawTo(P.pos.x-s.x,P.pos.z-s.z);if(id===0){P.pos.set(1.5,0,5.5);P.pos.y=gH(1.5,5.5);P.yaw=yawTo(CAMPS[0].x-1.5,CAMPS[0].z-5.5);}
-  CAM.yaw=P.yaw;CAM.pitch=-.18;CAM.init=false;P.vel.set(0,0,0);if(PL)PL.cape.reset();}
+  CAM.yaw=P.yaw;CAM.pitch=-.18;CAM.init=false;P.vel.set(0,0,0);if(PL)PL.cape.reset();P.safe.x=P.pos.x;P.safe.z=P.pos.z;P.safeT=.5;}
 
 /* ============================== storm ============================== */
 const ST={phase:'calm',t:150,k:0,flash:0,boltT:3,spawnT:2,strikeT:4};
@@ -315,7 +339,7 @@ function initMenus(){
 /* ============================== save ============================== */
 const SAVE_K='stormblade.save.v2';
 function save(){lsSet(SAVE_K,{v:CFG.ver,stats:P.stats,braci:P.braci,sword:P.sword,flaskMax:P.flaskMax,cleared:P.cleared,chests:P.chests,shrine:P.shrine,kills:P.kills,time:G.playTime,tips:{p:P.parryTip,s:P.stormTip}});}
-function resetPlayer(){Object.assign(P,{stats:{vig:1,end:1,str:1},braci:0,sword:0,flaskMax:CFG.flask.start,cleared:[false,false,false,false],chests:[false,false,false,false],shrine:0,kills:0});G.playTime=0;G.won=false;}
+function resetPlayer(){Object.assign(P,{stats:{vig:1,end:1,str:1},braci:0,drop:null,sword:0,flaskMax:CFG.flask.start,cleared:[false,false,false,false],chests:[false,false,false,false],shrine:0,kills:0});G.playTime=0;G.won=false;syncDrop();}
 function loadSave(){const s=lsGet(SAVE_K);if(!s)return false;resetPlayer();Object.assign(P,{stats:s.stats||P.stats,braci:s.braci||0,sword:s.sword||0,flaskMax:s.flaskMax||3,cleared:s.cleared||P.cleared,chests:s.chests||P.chests,shrine:s.shrine||0,kills:s.kills||0});
   G.playTime=s.time||0;if(s.tips){P.parryTip=s.tips.p;P.stormTip=s.tips.s;}return true;}
 /* ============================== flow ============================== */
@@ -354,7 +378,7 @@ function tick(rdt,doRender){
   const dt=(playing||title)?rdt*ts:0;G.t+=dt;U.time.value+=dt;if(G.cine>0)G.cine-=rdt;
   if(playing){G.playTime+=dt;
     if(G.state==='play'){if(IN.pauseP){pause();}if(IN.viewP){setView(!G.fp);SET.fp=G.fp;saveSettings();}if(IN.lockP)toggleLock();if(IN.lockSwitch)switchLock(IN.lockSwitch);updTutorial(rdt);}
-    updPlayer(dt);updEnemies(dt);updProjectiles(dt);updStorm(dt);updStrikes(dt);if(G.state==='play')updInteract();
+    updPlayer(dt);updEnemies(dt);updProjectiles(dt);updStorm(dt);updStrikes(dt);updDrop(dt);if(G.state==='play')updInteract();
     updCamera(rdt,dt);}
   else if(title){titleCam(rdt);animPlayer(dt);updStorm(0);}
   camera.updateMatrixWorld();
@@ -390,5 +414,5 @@ async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('l
     L(1,'Pronto');await nextFrame();showTitle();}
   catch(e){console.error('BOOT',e&&e.stack||e);$('loadTxt').textContent='Errore di avvio: '+(e&&e.message);}
   requestAnimationFrame(frame);}
-window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu};
+window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci};
 boot();
