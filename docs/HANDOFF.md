@@ -11,7 +11,7 @@
   - telefono solo in orizzontale (se lo tieni in verticale il gioco ruota); menu da tastiera e controller;
   - scelta tra eroe ed eroina; dialoghi con il testo al maschile o al femminile; missioni e diario; Selin al primo santuario.
 - **Ramo `animazioni`** (non ancora su `main`): tappe 1 e 2 del piano `docs/superpowers/plans/2026-11-04-stormblade-animazioni-tappe1-2.md` finite; registro con tutte le decisioni in `.superpowers/sdd/2026-11-04-stormblade-animazioni-tappe1-2/progress.md` (cartella di lavoro, non nel repository). Misure della tappa 2: 1 goblin 2,55 s, 3 goblin 5,04 s (20 prove), logica per frame 1,38 ms contro 1,31 della tappa 1 (rumore entro +0,1 ms), 76 test verdi.
-- **Pagina pubblicata**: versione 10, con le animazioni della tappa 2.
+- **Pagina pubblicata**: versione 11, con le animazioni della tappa 2 e le correzioni della revisione finale (fusione delle mosse senza scatti delle spalle, bacino più fluido nella corsa).
 - **Meshy**: l'eroe usa un modello Meshy (`assets/meshy/hero/`), caricato da `src/l_meshy.js` solo via http; in locale e nei test resta il personaggio procedurale. L'eroina non ha ancora un modello Meshy.
 - **Registro dell'esecuzione**: `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.ledger.md`. Contiene ogni decisione presa con il suo costo e i punti minori della revisione rimandati.
 

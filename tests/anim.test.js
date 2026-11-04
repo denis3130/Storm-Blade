@@ -135,3 +135,14 @@ T.test('idle breathes with the chest', () => { meshyOn(); S.tp(0, 30); move('sto
   const corr = sxy / Math.sqrt(sxx * syy || 1);
   T.ok(amp >= .8 && amp <= 2, 'chest amplitude ' + amp.toFixed(2) + '°'); T.ok(period >= 2.9 && period <= 5, 'breathing period ' + period.toFixed(2) + ' s');
   T.ok(corr > .8, 'clavicles in phase with the chest: correlation ' + corr.toFixed(2)); });
+// final review: the blend snapshot held the computed layers (clavicles, flinch) and the blended pose got them a second time
+T.test('a chained move keeps the clavicle within its maximum', () => { meshyOn(); T.sim(30); const A = S.CFG.anim;
+  S.startAct('light4'); while (S.P.act && S.P.act.t < .19) T.sim(1); S.startAct('light1'); let worst = 0;
+  for (let f = 0; f < 10; f++) { T.sim(1); worst = Math.max(worst, S.lastPose()[37], S.lastPose()[39]); }
+  T.ok(worst <= (A.clavMax + A.breathClav + .5) * D2R, 'clavicle raise ' + (worst / D2R).toFixed(1) + '° with clavMax ' + A.clavMax + '°'); });
+// final review: the pelvis dropped 4 cm in one frame at every jogging step when the landing foot started to count
+T.test('jogging moves the pelvis without jolts', () => { meshyOn(); S.tp(-48, 24); S.CAM.yaw = 0; S.P.yaw = 0; move('jog'); T.sim(90);
+  let worst = 0, prev = null; const v = new TH.Vector3();
+  try { for (let f = 0; f < 240; f++) { T.sim(1); const R = S.PL.rig, y = R.P.pel.getWorldPosition(v).y - R.root.position.y; if (prev !== null) worst = Math.max(worst, Math.abs(y - prev)); prev = y; } }
+  finally { move('stop'); }
+  T.ok(worst < .035, 'the pelvis moves ' + (worst * 100).toFixed(1) + ' cm in one frame'); });

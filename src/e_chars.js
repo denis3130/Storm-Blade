@@ -75,12 +75,13 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
     // target relative to the hip joint as the pelvis twist actually moves it, then into the pelvis frame;
     // the ground is asked at the untwisted stride point (sf forward, ss to the right of the hip, body frame): the twist moves it < 2 cm
     const side=i?1:-1,sf=x*f,ss=x*sdir+side*.012*(1-run),rf=sf-side*d.hipW*sy,rs=ss-side*d.hipW*(cy-1),k=i*7;
-    _GT[k]=rf*cy-rs*sy;_GT[k+1]=rs*cy+rf*sy;_GT[k+2]=lift;_GT[k+3]=toe;_GT[k+5]=stn&&ph>=duty*CFG.anim.reachFrom?1:0;_GT[k+6]=stn||ph>=duty+(1-duty)*.35?1:0;
+    _GT[k]=rf*cy-rs*sy;_GT[k+1]=rs*cy+rf*sy;_GT[k+2]=lift;_GT[k+3]=toe;_GT[k+5]=stn?sstep(0,CFG.anim.reachFrom*1.6,ph/duty)*(1-sstep(.8,1,ph/duty)):0;_GT[k+6]=stn||ph>=duty+(1-duty)*.35?1:0;
     _GT[k+4]=opt&&opt.gnd?clamp(opt.gnd(i,sf,ss),-AN.footMaxDrop,AN.footMaxRise):0;}
   // a planted foot that the leg cannot reach (downhill, long running strides) pulls the pelvis down, never more than footMaxDrop;
-  // the first reachFrom of the stance (the landing, foot far ahead) is left out, so running does not dip at every step
+  // a landing foot counts in fully only after the first reachFrom*1.6 of the stance, and a pushing-off one fades out over its last
+  // fifth (the heel lifts): the pelvis then dips smoothly instead of dropping in one frame at every running step
   let need=0;const RR=LEG*AN.reach;
-  for(let i=0;i<2;i++){const k=i*7;if(!_GT[k+5])continue;const V=hipH0-_GT[k+4],Vm=Math.sqrt(Math.max(0,RR*RR-_GT[k]*_GT[k]-_GT[k+1]*_GT[k+1]));if(V>Vm)need=Math.max(need,V-Vm);}
+  for(let i=0;i<2;i++){const k=i*7;if(!_GT[k+5])continue;const V=hipH0-_GT[k+4],Vm=Math.sqrt(Math.max(0,RR*RR-_GT[k]*_GT[k]-_GT[k+1]*_GT[k+1]));if(V>Vm)need=Math.max(need,(V-Vm)*_GT[k+5]);}
   // goes down fast (a landing foot must reach the ground at once) and comes back up gently
   const nd=Math.min(need,AN.footMaxDrop);st.drop=damp(st.drop||0,nd,nd>(st.drop||0)?AN.dropDown:AN.dropRate,dt);o[0]-=st.drop*w;const hipH=hipH0-st.drop*w;
   // pass 2: two-bone IK for each leg

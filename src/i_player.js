@@ -62,7 +62,8 @@ const P={pos:V3(0,0,4),vel:V3(),av:V3(),yaw:0,hp:100,maxHp:100,st:100,maxSt:100,
   cleared:[false,false,false,false],chests:[false,false,false,false],
   amx:0,amz:0,gait:{ph:0,w:0,seed:1.3},roll:0,pitchL:0,fo:0,yawRate:0,wade:0,accF:0,lastVF:0,stepSide:0};
 let PL=null;
-const _L=new Float32Array(NP),_A=new Float32Array(NP),_F=new Float32Array(NP),_B=new Float32Array(NP);   // _B: pose a new move blends in from
+// _B: pose a new move blends in from; _F0: this frame's pose before the flinch and the computed layers (what _B copies)
+const _L=new Float32Array(NP),_A=new Float32Array(NP),_F=new Float32Array(NP),_B=new Float32Array(NP),_F0=new Float32Array(NP);
 // rotate a toward b: exponential response capped at maxW rad/s
 const turnYaw=(a,b,k,maxW,dt)=>{const d=angD(a,b);let s=d*(1-Math.exp(-k*dt));const m=maxW*dt;if(s>m)s=m;else if(s<-m)s=-m;return a+s;};
 function recalcStats(){const hpr=P.hp/P.maxHp;P.maxHp=CFG.hp.base+(P.stats.vig-1)*CFG.hp.perVig;P.maxSt=CFG.stam.base+(P.stats.end-1)*CFG.stam.perEnd;P.dmgMul=1+(P.stats.str-1)*CFG.str.per;
@@ -232,7 +233,7 @@ function extrasLayer(p){const A=CFG.anim;for(let s=0;s<2;s++){const x=s?13:9,z=s
 const _GAIT_LEGS=[0,1,2,3,20,21,22,23,24,25,26,27,28,29,41,42];
 function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   // a move started or ended: remember the pose it interrupts, and blend the new one in from it
-  if(a!==PL.lastAct){_B.set(_F);P.blendT=CFG.anim.blend;PL.lastAct=a;}
+  if(a!==PL.lastAct){_B.set(_F0);P.blendT=CFG.anim.blend;PL.lastAct=a;}
   // root height and facing of this frame first: the feet ask the ground relative to them
   const fo=P.pos.y-gH(P.pos.x,P.pos.z);P.fo=Math.abs(fo-P.fo)>1.2?fo:damp(P.fo,fo,16,dt);
   let ry=P.yaw+P.spinYaw;if(a&&a.rollYaw!==undefined&&(k==='dodge'))ry=a.rollYaw;
@@ -260,9 +261,10 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
     if(MOVE_ACTS.has(k)){for(let n=0;n<_GAIT_LEGS.length;n++)_A[_GAIT_LEGS[n]]=_L[_GAIT_LEGS[n]];}}
   P.aw=damp(P.aw||0,w,w?30:12,dt);
   mixPose(_F,_L,_A,P.aw);
-  _F[4]+=P.flinch*.5;_F[7]+=P.flinch*.6;_F[0]-=Math.abs(P.flinch)*.04;
   // linear: the gap to the new move is spread evenly over the frames, so no frame jumps more than the motion around it
   if(P.blendT>0){P.blendT=Math.max(0,P.blendT-dt);mixPose(_F,_B,_F,1-P.blendT/CFG.anim.blend);}
+  // the flinch and the computed layers go on top, after the blend, and stay out of the pose the next blend starts from
+  _F0.set(_F);_F[4]+=P.flinch*.5;_F[7]+=P.flinch*.6;_F[0]-=Math.abs(P.flinch)*.04;
   extrasLayer(_F);R.apply(_F);
   // whole-body lean: into turns, forward when accelerating, back when braking
   const free=!k||MOVE_ACTS.has(k);
