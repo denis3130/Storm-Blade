@@ -5,21 +5,18 @@
 - **Stormblade Unreal**: è un gioco a parte, che Denis sviluppa con Claude Code sul suo PC, sul ramo `unreal`. Usa solo contenuti gratuiti di Fab. Non va tenuto allineato con la versione web.
 
 ## Dove siamo
-- **`main`**: Stormblade v5, il design del capitolo 1, il piano della Tappa 1, queste istruzioni e il brief di Meshy.
-- **`tappa1-basi`**: la Tappa 1 "Basi" è **finita** (Task 1-9 del piano `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.md`), poi revisionata da un revisore nuovo e corretta:
+- **`main`** contiene la Tappa 1 "Basi", **finita** (Task 1-9 del piano `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.md`), revisionata da un revisore nuovo e corretta. Il ramo `tappa1-basi` è stato unito su `main` il 4 novembre 2026, con l'ok di Denis. Novità rispetto alla v5:
   - le braci sostituiscono l'esperienza: si sale di livello al santuario e, alla morte, restano a terra finché non le riprendi;
   - salvataggio v4 (chiave nuova: le partite delle versioni vecchie non vengono lette né cancellate);
   - telefono solo in orizzontale (se lo tieni in verticale il gioco ruota); menu da tastiera e controller;
   - scelta tra eroe ed eroina; dialoghi con il testo al maschile o al femminile; missioni e diario; Selin al primo santuario.
-  - **Da fare**: unire il ramo su `main`, quando Denis dà l'ok.
 - **Pagina pubblicata**: la Tappa 1 con le correzioni della revisione.
 - **Meshy**: l'eroe usa un modello Meshy (`assets/meshy/hero/`), caricato da `src/l_meshy.js` solo via http; in locale e nei test resta il personaggio procedurale. L'eroina non ha ancora un modello Meshy.
 - **Registro dell'esecuzione**: `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.ledger.md`. Contiene ogni decisione presa con il suo costo e i punti minori della revisione rimandati.
 
 ## Ordine consigliato (lo decide Denis)
-1. Unire `tappa1-basi` su `main`.
-2. Meshy: modello dell'eroina. Prima mostra a Denis il saldo e il costo stimato, poi fai un solo modello di prova.
-3. Piano della Tappa 2 "Mondo": il design dice di scrivere un piano alla volta, dopo aver consegnato la tappa precedente.
+1. Meshy: modello dell'eroina. Prima mostra a Denis il saldo e il costo stimato, poi fai un solo modello di prova.
+2. Piano della Tappa 2 "Mondo": il design dice di scrivere un piano alla volta, dopo aver consegnato la tappa precedente.
 
 ## Decisioni già prese (da rispettare)
 - **Test**:
