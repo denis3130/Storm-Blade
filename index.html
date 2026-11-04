@@ -6,6 +6,7 @@
 <style>
 /* Layout: full-bleed WebGL scene; HUD hugs the safe-area corners; full-screen overlays for loading, title, pause, settings, level-up, death, victory */
 :root{
+  --vw:1vw; --vh:1vh;
   --ink:#ece5d3; --dim:#a69f8f; --faint:rgba(236,229,211,.13); --line:rgba(236,229,211,.24);
   --gold:#c9a862; --gold-hi:#efd79c; --hp:#962519; --hp-hi:#d04434; --chip:#e8c9a0; --st:#5f7f3c; --st-hi:#a3c066; --ember:#ff8a32; --ember-hi:#ffd9a0;
   --storm:#a88ff2; --ward:#8ad0ff; --panel:rgba(8,9,10,.76); --bg:#050607;
@@ -16,6 +17,8 @@
 }
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);overflow:hidden;font-family:var(--ui);touch-action:none;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#app{position:fixed;inset:0;overflow:hidden}
+#app.rot90{left:0;top:0;right:auto;bottom:auto;width:100vh;height:100vw;transform:translateX(100vw) rotate(90deg);transform-origin:top left}
 #game{position:fixed;inset:0;background:var(--bg)}
 #game canvas{display:block;width:100%;height:100%;outline:none}
 button{font-family:inherit;color:inherit}
@@ -48,7 +51,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .slot b{font-family:var(--display);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
 .slot span{font-size:14px;font-weight:600;letter-spacing:.03em;color:var(--gold-hi);text-shadow:0 1px 2px #000}
 .slot.off b{color:#7b6f64}
-#compass{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);width:min(520px,38vw);height:30px;transform:translateX(-50%);
+#compass{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);width:min(520px,calc(38*var(--vw)));height:30px;transform:translateX(-50%);
   overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
 #compass::before{content:"";position:absolute;left:0;right:0;top:15px;height:1px;background:rgba(236,229,211,.3)}
 #compass .c{position:absolute;top:0;transform:translateX(-50%);font-family:var(--display);font-size:14px;font-weight:600;color:var(--ink);text-shadow:0 1px 3px #000}
@@ -62,7 +65,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #compass .m.obj{width:0;height:0;background:none;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--gold-hi);top:20px;filter:drop-shadow(0 0 4px var(--gold))}
 #compass .d{position:absolute;top:31px}
 #compassDist{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 46px);transform:translateX(-50%);font-size:12px;font-weight:600;color:var(--gold-hi);text-shadow:0 1px 3px #000;letter-spacing:.06em}
-#objective{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(env(safe-area-inset-right,0px) + 18px);text-align:right;max-width:min(300px,34vw);display:flex;flex-direction:column;gap:3px}
+#objective{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(env(safe-area-inset-right,0px) + 18px);text-align:right;max-width:min(300px,calc(34*var(--vw)));display:flex;flex-direction:column;gap:3px}
 #objective .lab{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
 #objText{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.15;text-shadow:0 1px 4px #000}
 #stormLine{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--dim);text-shadow:0 1px 3px #000;font-variant-numeric:tabular-nums}
@@ -70,7 +73,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #stormLine.on{color:#fff}
 #stormLine.safe{color:var(--ward)}
 @keyframes pulse{50%{opacity:.5}}
-#boss{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 46px);transform:translateX(-50%);width:min(660px,78vw);display:flex;flex-direction:column;gap:6px}
+#boss{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 46px);transform:translateX(-50%);width:min(660px,calc(78*var(--vw)));display:flex;flex-direction:column;gap:6px}
 #bossName{font-family:var(--display);font-size:17px;font-weight:600;letter-spacing:.08em;text-shadow:0 1px 4px #000}
 #bossName small{font-family:var(--ui);font-size:12px;letter-spacing:.18em;color:var(--dim);margin-left:10px;text-transform:uppercase}
 .bar.boss{height:9px}
@@ -84,13 +87,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:22px;padding:0 5px;display:inline-grid;place-items:center;border:1px solid var(--gold);color:var(--gold-hi);background:rgba(0,0,0,.55);border-radius:3px;box-sizing:border-box}
 #banner{position:absolute;left:0;right:0;top:30%;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;transition:opacity .5s ease;padding-inline:16px;text-align:center}
 #banner.show{opacity:1}
-#bannerTitle{font-family:var(--display);font-weight:600;font-size:clamp(28px,5.4vw,56px);letter-spacing:.12em;text-transform:uppercase;
+#bannerTitle{font-family:var(--display);font-weight:600;font-size:clamp(28px,calc(5.4*var(--vw)),56px);letter-spacing:.12em;text-transform:uppercase;
   background:linear-gradient(180deg,#fff3d6,var(--gold) 70%,#8d6c33);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 14px rgba(0,0,0,.85))}
 #banner.red #bannerTitle{background:linear-gradient(180deg,#ffb7a8,#c0281a 70%,#6d0f08);-webkit-background-clip:text;background-clip:text}
 #banner.storm #bannerTitle{background:linear-gradient(180deg,#f2ecff,var(--storm) 70%,#5b3fb0);-webkit-background-clip:text;background-clip:text}
-#banner::before,#banner::after{content:"";width:min(520px,70vw);height:1px;background:linear-gradient(90deg,transparent,rgba(239,215,156,.75),transparent)}
+#banner::before,#banner::after{content:"";width:min(520px,calc(70*var(--vw)));height:1px;background:linear-gradient(90deg,transparent,rgba(239,215,156,.75),transparent)}
 #banner::after{order:3}
-#bannerSub{order:2;font-family:var(--serif);font-style:italic;font-size:clamp(17px,2.4vw,23px);color:#e4dccb;text-shadow:0 1px 6px #000}
+#bannerSub{order:2;font-family:var(--serif);font-style:italic;font-size:clamp(17px,calc(2.4*var(--vw)),23px);color:#e4dccb;text-shadow:0 1px 6px #000}
 #toasts{position:absolute;left:calc(env(safe-area-inset-left,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .toast{background:linear-gradient(90deg,rgba(0,0,0,.75),rgba(0,0,0,0));border-left:2px solid var(--gold);padding:6px 30px 6px 10px;font-size:15px;font-weight:600;letter-spacing:.02em;
   animation:tin .35s ease both, tout .6s ease 3.6s both}
@@ -98,7 +101,7 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 @keyframes tin{from{opacity:0;transform:translateX(-12px)}}
 @keyframes tout{to{opacity:0}}
 #hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 170px);transform:translateX(-50%);display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;
-  max-width:min(760px,92vw);padding:10px 18px;background:rgba(6,7,8,.72);border:1px solid var(--faint);font-size:15px;font-weight:500;opacity:0;transition:opacity .5s}
+  max-width:min(760px,calc(92*var(--vw)));padding:10px 18px;background:rgba(6,7,8,.72);border:1px solid var(--faint);font-size:15px;font-weight:500;opacity:0;transition:opacity .5s}
 #hint.show{opacity:1}
 #hint span{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
 #nums{position:absolute;inset:0;overflow:hidden}
@@ -156,16 +159,16 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 .rule::after{background:linear-gradient(90deg,var(--gold),transparent)}
 #loading{background:var(--bg);align-items:center;justify-content:center}
 #loading .in{display:flex;flex-direction:column;align-items:center;gap:22px;width:min(460px,100%)}
-#loading .logo{font-size:clamp(34px,8vw,76px)}
+#loading .logo{font-size:clamp(34px,calc(8*var(--vw)),76px)}
 #loadBar{width:100%;height:2px;background:rgba(236,229,211,.14);position:relative;overflow:hidden}
 #loadBar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-hi));box-shadow:0 0 10px var(--gold);transition:width .25s}
 #loadTxt{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--dim)}
 #title{align-items:flex-end;background:linear-gradient(90deg,rgba(5,6,7,.82) 0%,rgba(5,6,7,.45) 42%,rgba(5,6,7,0) 70%),linear-gradient(0deg,rgba(5,6,7,.7),rgba(5,6,7,0) 45%)}
-#title .in{display:flex;flex-direction:column;align-items:flex-start;gap:18px;margin-left:clamp(0px,5vw,72px);margin-bottom:clamp(0px,3vh,40px);max-width:min(820px,100%)}
-#title .logo{font-size:clamp(40px,9vw,118px)}
-.tag{font-family:var(--serif);font-style:italic;font-size:clamp(18px,2.3vw,24px);color:#dcd3bf;margin:0;max-width:34ch;line-height:1.3;text-shadow:0 2px 10px #000}
+#title .in{display:flex;flex-direction:column;align-items:flex-start;gap:18px;margin-left:clamp(0px,calc(5*var(--vw)),72px);margin-bottom:clamp(0px,calc(3*var(--vh)),40px);max-width:min(820px,100%)}
+#title .logo{font-size:clamp(40px,calc(9*var(--vw)),118px)}
+.tag{font-family:var(--serif);font-style:italic;font-size:clamp(18px,calc(2.3*var(--vw)),24px);color:#dcd3bf;margin:0;max-width:34ch;line-height:1.3;text-shadow:0 2px 10px #000}
 .menu{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:8px}
-.menu button{position:relative;background:none;border:0;padding:7px 0 7px 26px;font-family:var(--display);font-size:clamp(18px,2.2vw,22px);font-weight:600;letter-spacing:.12em;
+.menu button{position:relative;background:none;border:0;padding:7px 0 7px 26px;font-family:var(--display);font-size:clamp(18px,calc(2.2*var(--vw)),22px);font-weight:600;letter-spacing:.12em;
   text-transform:uppercase;color:#cfc6b2;cursor:pointer;text-align:left;text-shadow:0 2px 6px #000;transition:color .15s}
 .menu button::before{content:"";position:absolute;left:4px;top:50%;width:8px;height:8px;margin-top:-4px;transform:rotate(45deg) scale(0);background:var(--gold-hi);box-shadow:0 0 8px var(--gold);transition:transform .15s}
 .menu button:hover,.menu button:focus-visible{color:#fff7e2;outline:0}
@@ -174,6 +177,32 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 .menu button:disabled{opacity:.42;cursor:default}.menu button:disabled::before{display:none}
 .card.padf{border-color:var(--gold);box-shadow:0 0 24px rgba(201,168,98,.25)}
 .btn.padf{background:rgba(201,168,98,.28);outline:2px solid var(--gold);outline-offset:3px}
+#charsel .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(520px,100%)}
+#charsel .card svg{width:56px;height:56px}
+/* ---------- dialogue box: bottom of the screen, readable from 360 px of game height ---------- */
+#dialog{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;justify-content:center;pointer-events:auto}
+#dialog[hidden],#dlgChoices[hidden],#dlgMore[hidden]{display:none}
+#dialog .box{position:relative;width:min(780px,calc(100% - 32px));box-sizing:border-box;padding:12px 20px 14px;background:linear-gradient(180deg,rgba(16,15,12,.9),rgba(7,7,7,.95));
+  border:1px solid var(--line);border-top-color:var(--gold);box-shadow:0 10px 40px rgba(0,0,0,.6);cursor:pointer}
+#dlgWho{font-family:var(--display);font-size:14px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:4px}
+#dlgText{font-family:var(--serif);font-size:20px;line-height:1.35;color:#efe7d4;min-height:2.7em;text-shadow:0 1px 2px #000}
+#dlgChoices{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.dlgC{display:flex;align-items:center;gap:10px;text-align:left;background:rgba(201,168,98,.08);border:1px solid var(--faint);padding:7px 12px;font-family:var(--ui);font-size:16px;font-weight:600;color:#ddd5c3;cursor:pointer}
+.dlgC:hover,.dlgC:focus-visible,.dlgC.padf{border-color:var(--gold);color:#fff7e2;background:rgba(201,168,98,.18);outline:0}
+.dlgC kbd{min-width:18px;text-align:center}
+#dlgMore{position:absolute;right:14px;bottom:9px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--gold);animation:dlgMore 1s ease-in-out infinite}
+@keyframes dlgMore{50%{transform:translateY(3px);opacity:.55}}
+@media (prefers-reduced-motion:reduce){#dlgMore{animation:none}}
+#hud.under #toasts,#hud.under #hint{visibility:hidden}
+/* ---------- journal ---------- */
+#jList{display:flex;flex-direction:column;gap:10px;max-height:calc(52*var(--vh));overflow-y:auto}
+.jq{border-left:2px solid var(--gold);padding:8px 14px;background:linear-gradient(90deg,rgba(201,168,98,.1),rgba(201,168,98,0))}
+.jq small{display:block;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.jq b{display:block;font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:.06em;color:#f1e6cb;margin:2px 0}
+.jq p{margin:0;font-family:var(--serif);font-style:italic;font-size:17px;color:#dcd3bf;line-height:1.3}
+.jq.done{border-left-color:var(--line);opacity:.6}
+.jq.done b{text-decoration:line-through;text-decoration-color:rgba(236,229,211,.35)}
+.jempty{text-align:center;color:var(--dim);font-style:italic}
 .luCost,.smStats{margin:0;text-align:center;font-size:15px;color:var(--dim)}
 .luCost b,.smStats b{font-family:var(--display);font-weight:600;color:var(--ember-hi)}
 .smStats{display:flex;gap:22px;justify-content:center;letter-spacing:.06em}
@@ -182,14 +211,14 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 .foot{font-size:12px;color:#857e70;letter-spacing:.06em}
 .center{align-items:center;justify-content:center}
 .panel{width:min(620px,100%);display:flex;flex-direction:column;gap:18px;margin:auto}
-.panel h2{font-family:var(--display);font-weight:600;font-size:clamp(28px,5vw,44px);letter-spacing:.1em;text-transform:uppercase;margin:0;text-align:center;color:#f1e6cb;text-shadow:0 3px 14px #000}
+.panel h2{font-family:var(--display);font-weight:600;font-size:clamp(28px,calc(5*var(--vw)),44px);letter-spacing:.1em;text-transform:uppercase;margin:0;text-align:center;color:#f1e6cb;text-shadow:0 3px 14px #000}
 .rows{display:flex;flex-direction:column;border-top:1px solid var(--faint)}
 .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--faint);font-size:16px;font-weight:500}
 .row label{color:#ddd5c3}
 .seg{display:flex;border:1px solid var(--line)}
 .seg button{background:transparent;border:0;padding:6px 12px;font-size:14px;font-weight:600;letter-spacing:.04em;color:var(--dim);cursor:pointer}
 .seg button.on{background:rgba(201,168,98,.22);color:var(--gold-hi)}
-input[type=range]{width:min(200px,40vw);accent-color:var(--gold)}
+input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
 .keys{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
 .keys .row{font-size:15px}
 .keys .row span:last-child{display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap}
@@ -206,7 +235,7 @@ input[type=range]{width:min(200px,40vw);accent-color:var(--gold)}
 .card em{font-style:normal;font-family:var(--display);font-size:14px;color:var(--ink)}
 #death{align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(0,0,0,.35),rgba(0,0,0,.8))}
 #death .in{display:flex;flex-direction:column;align-items:center;gap:28px;width:100%}
-#death h2{font-family:var(--serif);font-weight:500;font-size:clamp(52px,11vw,120px);letter-spacing:.08em;margin:0;color:#a3170c;text-transform:uppercase;
+#death h2{font-family:var(--serif);font-weight:500;font-size:clamp(52px,calc(11*var(--vw)),120px);letter-spacing:.08em;margin:0;color:#a3170c;text-transform:uppercase;
   text-shadow:0 0 30px rgba(0,0,0,.9);animation:dieIn 2.4s ease both;width:100%;text-align:center;background:linear-gradient(90deg,transparent,rgba(0,0,0,.65) 25%,rgba(0,0,0,.65) 75%,transparent);padding-block:6px}
 @keyframes dieIn{from{opacity:0;letter-spacing:.02em}to{opacity:1}}
 #death .btn{animation:tin 1s ease 1.6s both}
@@ -214,29 +243,45 @@ input[type=range]{width:min(200px,40vw);accent-color:var(--gold)}
 .stats div{display:flex;flex-direction:column;align-items:center}
 .stats b{font-family:var(--display);font-weight:600;font-size:30px;color:#f1e6cb}
 .stats span{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
-.rot{position:fixed;inset:auto 0 calc(env(safe-area-inset-bottom,0px) + 10px) 0;text-align:center;font-size:13px;color:var(--dim);display:none}
-@media (orientation:portrait) and (pointer:coarse){.rot{display:block}}
-@media (max-width:1000px){#hpBar{width:170px!important}#stBar{width:150px!important}#objText{font-size:16px}#objective{max-width:30vw}}
-@media (max-width:640px){
-  #levelup .cards{grid-template-columns:minmax(0,1fr)}
-  .keys{grid-template-columns:minmax(0,1fr)}
-  #objective{max-width:42vw}#objText{font-size:15px}
-  #hpBar{width:150px}#stBar{width:134px}
-  #compass{top:calc(env(safe-area-inset-top,0px) + 112px);width:70vw}
-  #compassDist{top:calc(env(safe-area-inset-top,0px) + 144px)}
-  #items{top:calc(env(safe-area-inset-top,0px) + 74px)}
-}
-@media (max-height:460px){
-  #title .logo{font-size:clamp(40px,8vw,72px)}#title .in{gap:10px}.menu button{padding-block:4px}
-  #boss{bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
-  .screen.dim{padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px)}
-  .panel{gap:10px}.panel h2{font-size:26px}
-  #levelup .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-  .card{padding:10px 8px;gap:4px}.card span{display:none}.card svg{width:28px;height:28px}
-}
+/* game width/height classes set by applyOrient (r_orient.js) */
+#app.w1000 #hpBar{width:170px!important}
+#app.w1000 #stBar{width:150px!important}
+#app.w1000 #objText{font-size:16px}
+#app.w1000 #objective{max-width:calc(30*var(--vw))}
+/* game width/height classes set by applyOrient (r_orient.js) */
+#app.w640 #levelup .cards{grid-template-columns:minmax(0,1fr)}
+#app.w640 .keys{grid-template-columns:minmax(0,1fr)}
+#app.w640 #objective{max-width:calc(42*var(--vw))}
+#app.w640 #objText{font-size:15px}
+#app.w640 #hpBar{width:150px}
+#app.w640 #stBar{width:134px}
+#app.w640 #compass{top:calc(env(safe-area-inset-top,0px) + 112px);width:calc(70*var(--vw))}
+#app.w640 #compassDist{top:calc(env(safe-area-inset-top,0px) + 144px)}
+#app.w640 #items{top:calc(env(safe-area-inset-top,0px) + 74px)}
+/* game width/height classes set by applyOrient (r_orient.js) */
+#app.h460 #title .logo{font-size:clamp(40px,calc(8*var(--vw)),72px)}
+#app.h460 #title .in{gap:10px}
+#app.h460 .menu button{padding-block:4px}
+#app.h460 #boss{bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
+#app.h460 .screen.dim{padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px)}
+#app.h460 .panel{gap:10px}
+#app.h460 .panel h2{font-size:26px}
+#app.h460 #levelup .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#app.h460 .card{padding:10px 8px;gap:4px}
+#app.h460 .card span{display:none}
+#app.h460 .card svg{width:28px;height:28px}
+#app.h460 #charsel .card svg{width:44px;height:44px}
+#app.h460 #dialog{bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+#app.h460 #dialog .box{padding:8px 14px 10px}
+#app.h460 #dlgText{font-size:17px;min-height:2.5em}
+#app.h460 .dlgC{padding:5px 10px;font-size:15px}
+#app.h460 #jList{max-height:calc(46*var(--vh))}
+#app.h460 .jq b{font-size:17px}
+#app.h460 .jq p{font-size:15px}
 @media (prefers-reduced-motion:reduce){#stormLine.warn{animation:none}.toast{animation:none}#death h2{animation:none}}
 </style>
 
+<div id="app">
 <div id="game"></div>
 
 <div id="hud" hidden>
@@ -261,6 +306,7 @@ input[type=range]{width:min(200px,40vw);accent-color:var(--gold)}
   <div id="banner"><div id="bannerTitle"></div><div id="bannerSub"></div></div>
   <div id="hint"></div>
   <div id="toasts"></div>
+  <div id="dialog" hidden><div class="box" role="dialog" aria-live="polite"><div id="dlgWho"></div><div id="dlgText"></div><div id="dlgChoices" hidden></div><div id="dlgMore" hidden></div></div></div>
   <div id="nums"></div>
   <div id="touch" hidden>
     <div id="touchZone"></div>
@@ -273,6 +319,7 @@ input[type=range]{width:min(200px,40vw);accent-color:var(--gold)}
     <button class="tb" id="tLck" type="button" aria-label="Aggancia bersaglio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></svg></button>
     <button class="tb" id="tAct" type="button" hidden aria-label="Interagisci"><svg viewBox="0 0 24 24"><path d="M12 3v12M6 9l6 6 6-6M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div id="tTop">
+      <button class="tb" id="tJournal" type="button" aria-label="Diario"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.8 4.5 4 4.6v13.6c3.8-.1 6.2.4 8 1.9 1.8-1.5 4.2-2 8-1.9V4.6c-3.8-.1-6.2.4-8 1.9zM12 6.5v13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
       <button class="tb" id="tView" type="button" aria-label="Cambia visuale"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>
       <button class="tb" id="tPause" type="button" aria-label="Pausa"><svg viewBox="0 0 24 24"><path d="M7 5v14M17 5v14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
     </div>
@@ -304,11 +351,33 @@ input[type=range]{width:min(200px,40vw);accent-color:var(--gold)}
   </div>
 </section>
 
+<section id="charsel" class="screen dim center" data-back="csBack" hidden>
+  <div class="panel" style="align-items:center">
+    <div class="rule" style="justify-content:center">Nuova partita</div>
+    <h2>Scegli l'erede</h2>
+    <div class="cards">
+      <button class="card" type="button" id="csM"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5c-6 0-10 5-10 11 0 4 2 7 4 9-5 2-9 7-10 15h32c-1-8-5-13-10-15 2-2 4-5 4-9 0-6-4-11-10-11z" fill="#2c3829" stroke="#c9a862" stroke-width="1.3"/><path d="M19 16c1-3 3-5 5-5s4 2 5 5c-1 3-3 5-5 5s-4-2-5-5z" fill="#0c0a08"/></svg><b>Eroe</b><span>La storia si rivolge a te al maschile.</span></button>
+      <button class="card" type="button" id="csF"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M30 16c0 4-2 7-6 7s-6-3-6-7 2-8 6-8 6 4 6 8z" fill="#7a5a48"/><path d="M18 16c0-6 3-9 6-9s6 3 6 9c-1-4-3-6-6-6s-5 2-6 6z" fill="#2b1d14"/><path d="M29.5 14c3 2 4 6 3 10l-1 6" fill="none" stroke="#2b1d14" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 1.5"/><path d="M10 42c1-8 6-13 14-14 8 1 13 6 14 14z" fill="#2c3829" stroke="#c9a862" stroke-width="1.3"/></svg><b>Eroina</b><span>La storia si rivolge a te al femminile.</span></button>
+    </div>
+    <div class="btns"><button class="btn ghost" type="button" id="csBack">Indietro</button></div>
+  </div>
+</section>
+
+<section id="journal" class="screen dim center" data-back="jClose" hidden>
+  <div class="panel" style="width:min(680px,100%)">
+    <div class="rule" style="justify-content:center">Diario</div>
+    <h2>Missioni</h2>
+    <div id="jList"></div>
+    <div class="btns"><button class="btn ghost" type="button" id="jClose">Chiudi</button></div>
+  </div>
+</section>
+
 <section id="pause" class="screen dim center" data-back="pResume" hidden>
   <div class="panel" style="align-items:center">
     <h2>Pausa</h2>
     <div class="menu" style="align-items:center">
       <button type="button" id="pResume">Riprendi</button>
+      <button type="button" id="pJournal">Diario</button>
       <button type="button" id="pSettings">Impostazioni</button>
       <button type="button" id="pControls">Comandi</button>
       <button type="button" id="pTitle">Torna al titolo</button>
@@ -383,7 +452,7 @@ input[type=range]{width:min(200px,40vw);accent-color:var(--gold)}
     <div class="btns"><button class="btn" type="button" id="vCont">Continua a esplorare</button><button class="btn ghost" type="button" id="vTitle">Torna al titolo</button></div>
   </div>
 </section>
-<div class="rot">Ruota il telefono in orizzontale per giocare meglio</div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -413,6 +482,7 @@ const CFG={
   prog:{chestBraci:90},                // braci from a camp chest = chestBraci × (camp index + 1)
   // braci (the souls of this world): level cost = lvlBase + lvlLin·(lvl−1) + lvlQuad·(lvl−1)²; pickR = pick-up radius of the pile left at death
   braci:{lvlBase:60, lvlLin:30, lvlQuad:4, pickR:1.3},
+  ui:{typeSpeed:48},                   // dialogue typewriter, characters per second
   swordDmg:[16,24,34,46,62],
   parry:{window:.28, guardTap:.25},
   block:{stMul:1.3, chip:.12, breakDmg:.6},
@@ -515,14 +585,14 @@ renderer.toneMapping=THREE.NoToneMapping;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,Q.pr));
-renderer.setSize(innerWidth,innerHeight);
+renderer.setSize(viewW(),viewH());   // game size (r_orient.js): swapped when a phone held upright gets the rotated layout
 const canvas=renderer.domElement;canvas.tabIndex=0;$('game').appendChild(canvas);
 const gl=renderer.getContext();
 const isGL2=renderer.capabilities.isWebGL2;
 let HDR=false;try{HDR=isGL2&&!!(gl.getExtension('EXT_color_buffer_float')||gl.getExtension('EXT_color_buffer_half_float'));}catch(e){}
 const MAXANI=Math.min(8,renderer.capabilities.getMaxAnisotropy()||1);
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.06,560);
+const camera=new THREE.PerspectiveCamera(60,viewW()/viewH(),.06,560);
 camera.rotation.order='YXZ';
 const U={time:{value:0},wind:{value:1},player:{value:V3(0,0,0)},grassFade:{value:40},wet:{value:0},storm:{value:0}};
 
@@ -702,7 +772,7 @@ const Post=(()=>{
 function applyQuality(){
   Q=QP[SET.quality]||QP.medium;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,Q.pr));
-  renderer.setSize(innerWidth,innerHeight);
+  renderer.setSize(viewW(),viewH());
   const want=Q.shadow>0;
   if(sun.castShadow!==want||sun.shadow.mapSize.x!==(Q.shadow||1024)){
     sun.castShadow=want;sun.shadow.mapSize.set(Q.shadow||1024,Q.shadow||1024);
@@ -712,8 +782,8 @@ function applyQuality(){
   U.grassFade.value=Q.grassR*GCH*.92;gPcx=1e9;
   Post.resize();
 }
-function onResize(){camera.aspect=innerWidth/Math.max(1,innerHeight);camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);Post.resize();}
-addEventListener('resize',onResize);
+// called by applyOrient (r_orient.js), which listens to resize and orientationchange
+function onResize(){camera.aspect=viewW()/Math.max(1,viewH());camera.updateProjectionMatrix();renderer.setSize(viewW(),viewH());Post.resize();}
 Post.resize();
 
 /* ============================== procedural textures ============================== */
@@ -1433,36 +1503,50 @@ const gTor=(r,t,s=8,ts=16)=>new THREE.TorusGeometry(r,t,s,ts);
 
 /* ---------- hero ---------- */
 const HERO_D={hip:.96,spine:.1,torso:.5,neck:.07,shW:.215,shDrop:.075,upper:.29,fore:.26,hipW:.105,thigh:.44,shin:.43};
-function heroBuild(add,d){
-  const tun=0x34452f,tun2=0x283424,lea=0x3e2c20,lea2=0x251c15,skin=0x7a5a48,trou=0x2c2823,boot=0x2c2119,metal=0x9a9ea4,hood=0x2c3829;
+// provisional heroine (until her Meshy model): same outfit and palette, narrower shoulders and waist, hood down, hair braided to mid-back
+const HEROINE_D={hip:.93,spine:.1,torso:.47,neck:.07,shW:.19,shDrop:.07,upper:.28,fore:.25,hipW:.11,thigh:.43,shin:.42};
+function heroBuild(add,d,o){
+  const F=!!(o&&o.f),ty=F?d.torso/HERO_D.torso:1,sx=F?d.shW/HERO_D.shW:1,aR=F?.9:1,lR=F?.94:1;
+  const tr=(r,y)=>F?r*(y<=.2?.88:y<.54?.93:1):r;           // torso radius: thinner waist, slightly narrower chest
+  const prof=pts=>pts.map(([r,y])=>[tr(r,y),y*ty]);
+  const tun=0x34452f,tun2=0x283424,lea=0x3e2c20,lea2=0x251c15,skin=0x7a5a48,trou=0x2c2823,boot=0x2c2119,metal=0x9a9ea4,hood=0x2c3829,hair=0x2b1d14,hair2=0x1f150e;
   add('pel','b',gLathe([[0,-.13],[.14,-.12],[.18,-.05],[.178,.05],[.16,.12],[0,.13]],14),M4(0,0,0,0,0,0,1,1,.78),trou);
   add('pel','b',gTor(.176,.034,6,22),M4(0,.035,0,PI/2,0,0,1,.78,1),lea);
   add('pel','m',gBox(.06,.05,.02),M4(0,.035,-.125),metal);
   add('pel','b',gBox(.07,.08,.05),M4(.13,-.01,-.05,0,-.4,0),lea2);add('pel','b',gBox(.08,.09,.05),M4(-.06,-.01,.12,0,.2,0),lea2);
   add('pel','b',gBox(.25,.26,.025,1,3,1),M4(0,-.13,-.115,.08,0,0),tun2,{cf:(x,y,z,c)=>{if(y<-.1)c.multiplyScalar(.8);}});
   add('pel','b',gBox(.27,.28,.025,1,3,1),M4(0,-.13,.11,-.1,0,0),tun2);
-  add('spi','b',gLathe([[0,-.02],[.165,0],[.17,.1],[.168,.2],[.19,.32],[.208,.42],[.198,.49],[.13,.545],[.055,.575],[0,.58]],18),M4(0,0,0,0,0,0,1,1,.7),tun);
-  add('spi','b',gLathe([[.176,.12],[.19,.24],[.21,.36],[.214,.44],[.2,.5]],18),M4(0,0,0,0,0,0,1,1,.74),lea);
-  for(const s of[-1,1])add('spi','b',new THREE.SphereGeometry(.15,14,10,0,TAU,0,PI*.5),M4(s*.13,.47,.02,0,0,s*.35,1.15,.6,1.25),hood);
-  add('spi','b',gLathe([[.22,.3],[.2,.4],[.15,.5],[.08,.56]],18),M4(0,0,.03,0,0,0,1,1,.8),hood);
-  add('spi','b',gBox(.05,.6,.03),M4(0,.27,-.13,0,0,.72),lea2);
-  add('spi','m',gSph(.022,8,6),M4(.06,.33,-.142),metal);
-  add('spi','b',gTor(.085,.035,6,16),M4(0,.53,0,PI/2,0,0,1,.85,1),hood);
-  add('spi','b',gCaps(.045,.05,.07,8,2),M4(0,.6,0),skin);
+  add('spi','b',gLathe(prof([[0,-.02],[.165,0],[.17,.1],[.168,.2],[.19,.32],[.208,.42],[.198,.49],[.13,.545],[.055,.575],[0,.58]]),18),M4(0,0,0,0,0,0,1,1,.7),tun);
+  add('spi','b',gLathe(prof([[.176,.12],[.19,.24],[.21,.36],[.214,.44],[.2,.5]]),18),M4(0,0,0,0,0,0,1,1,.74),lea);
+  for(const s of[-1,1])add('spi','b',new THREE.SphereGeometry(.15,14,10,0,TAU,0,PI*.5),M4(s*.13*sx,.47*ty,.02,0,0,s*.35,1.15*sx,.6,1.25),hood);
+  add('spi','b',gLathe(prof([[.22,.3],[.2,.4],[.15,.5],[.08,.56]]),18),M4(0,0,.03,0,0,0,1,1,.8),hood);
+  add('spi','b',gBox(.05,.6*ty,.03),M4(0,.27*ty,F?-.121:-.13,0,0,.72),lea2);
+  add('spi','m',gSph(.022,8,6),M4(.06,.33*ty,F?-.132:-.142),metal);
+  add('spi','b',gTor(.085,.035,6,16),M4(0,.53*ty,0,PI/2,0,0,1,.85,1),hood);
+  add('spi','b',gCaps(.045,.05,.07,8,2),M4(0,.6*ty,0),skin);
+  if(F){// the hood lies folded on the nape; the braid hangs over the cape, bead by bead, down to mid-back
+    add('spi','b',gSph(.11,12,8),M4(0,.53*ty,.1,-.3,0,0,1.25,.55,.75),hood);
+    // the cape stands ~.21-.25 off the spine axis below the shoulders (measured), so the braid rides on top of it
+    [[.5,.2,.03,.008,-.75],[.42,.262,.029,-.008,-.1],[.34,.274,.027,.008,.04],[.27,.277,.025,-.006,.04]].forEach(([y,z,r,x,rx],i)=>
+      add('spi','b',gSph(r,8,6),M4(x,y*ty,z,rx,0,i%2?.25:-.25,1,1.6,.85),i%2?hair2:hair));
+    add('spi','b',gTor(.016,.007,5,10),M4(0,.235*ty,.278,PI/2,0,0),lea2);add('spi','b',gCone(.02,.06,6),M4(0,.2*ty,.279,PI,0,0),hair);}
   // head + hood + scarf
   add('head','b',gSph(.104,16,12),M4(0,.1,0,0,0,0,.92,1.06,1),skin);
-  add('head','b',new THREE.SphereGeometry(.133,18,12,PI*1.5+.62,TAU-1.24,0,PI*.78),M4(0,.112,.012,0,0,0,1,1.06,1.05),hood);
-  add('head','b',gCone(.1,.2,10),M4(0,.13,.12,-1.15,0,0,1,1,.6),hood);
+  if(!F){add('head','b',new THREE.SphereGeometry(.133,18,12,PI*1.5+.62,TAU-1.24,0,PI*.78),M4(0,.112,.012,0,0,0,1,1.06,1.05),hood);
+    add('head','b',gCone(.1,.2,10),M4(0,.13,.12,-1.15,0,0,1,1,.6),hood);}
+  else{// hair pulled back (open at the face), gathered into the braid's first bead at the back of the head
+    add('head','b',new THREE.SphereGeometry(.112,18,12,PI*1.5+.95,TAU-1.9,0,PI*.64),M4(0,.118,.006,0,0,0,.96,1.04,1.05),hair);
+    add('head','b',gSph(.034,8,6),M4(0,.03,.098,.3,0,0,1,1.5,.9),hair2);}
   add('head','b',gSph(.109,14,8),M4(0,.05,-.008,0,0,0,1,.55,1),0x1f2420);
   add('head','b',gSph(.012,6,4),M4(.034,.116,-.094),0x0c0a08);add('head','b',gSph(.012,6,4),M4(-.034,.116,-.094),0x0c0a08);
   for(const s of[-1,1]){const sh=s<0?'shL':'shR',el=s<0?'elL':'elR',wr=s<0?'wrL':'wrR';
-    add(sh,'b',gSph(.078,10,8),M4(0,0,0),tun);add(sh,'b',gCaps(.058,.066,.29,10,3),M4(0,0,0),tun);
+    add(sh,'b',gSph(.078*aR,10,8),M4(0,0,0),tun);add(sh,'b',gCaps(.058*aR,.066*aR,d.upper,10,3),M4(0,0,0),tun);
     add(sh,'b',new THREE.SphereGeometry(.105,12,8,0,TAU,0,PI*.55),M4(0,.016,0,0,0,s*.25,1,.82,1),s>0?lea:tun2);if(s>0)add(sh,'m',new THREE.SphereGeometry(.112,12,8,0,TAU,0,PI*.32),M4(0,.03,0,0,0,.25,1,.8,1),metal);
-    add(el,'b',gCaps(.046,.055,.26,10,3),M4(0,0,0),tun);add(el,'b',gCylO(.059,.052,.17,10),M4(0,-.15,0),lea);
+    add(el,'b',gCaps(.046*aR,.055*aR,d.fore,10,3),M4(0,0,0),tun);add(el,'b',gCylO(.059*aR,.052*aR,.17,10),M4(0,-.15,0),lea);
     add(wr,'b',gSph(.046,10,8),M4(0,-.045,-.005,0,0,0,.9,1.2,.7),lea2);add(wr,'b',gCaps(.016,.018,.05,6,2),M4(s*-.03,-.02,-.025,.6,0,s*.3),lea2);}
   for(const s of[-1,1]){const hp=s<0?'hipL':'hipR',kn=s<0?'knL':'knR',ft=s<0?'ftL':'ftR';
-    add(hp,'b',gCaps(.078,.1,.44,10,3),M4(0,0,0),trou);
-    add(kn,'b',gCaps(.056,.074,.43,10,3),M4(0,0,0),trou);add(kn,'b',gCaps(.064,.079,.28,10,3),M4(0,-.15,0),boot);add(kn,'b',gTor(.079,.018,6,14),M4(0,-.15,0,PI/2,0,0),lea2);
+    add(hp,'b',gCaps(.078*lR,.1*lR,d.thigh,10,3),M4(0,0,0),trou);
+    add(kn,'b',gCaps(.056*lR,.074*lR,d.shin,10,3),M4(0,0,0),trou);add(kn,'b',gCaps(.064,.079,.28,10,3),M4(0,-.15,0),boot);add(kn,'b',gTor(.079,.018,6,14),M4(0,-.15,0,PI/2,0,0),lea2);
     add(kn,'b',gSph(.062,8,6),M4(0,.0,-.03,0,0,0,1,1,.8),lea);
     add(ft,'b',gSph(.075,10,8),M4(0,-.035,-.06,0,0,0,1,.7,2.05),boot);add(ft,'b',gBox(.12,.022,.28),M4(0,-.075,-.06),lea2);}
 }
@@ -2061,7 +2145,7 @@ function initHeroPoses(){
 const PA=CFG.moves;
 const ATTACKS=new Set(['light1','light2','light3','light4','heavy','runatk','spin','riposte']);
 const MOVE_ACTS=new Set(['block','charge','drink','parry']);
-const P={pos:V3(0,0,4),vel:V3(),av:V3(),yaw:0,hp:100,maxHp:100,st:100,maxSt:100,chip:100,stats:{vig:1,end:1,str:1},lvl:1,braci:0,sword:0,flasks:3,flaskMax:3,dmgMul:1,
+const P={pos:V3(0,0,4),vel:V3(),av:V3(),yaw:0,hp:100,maxHp:100,st:100,maxSt:100,chip:100,stats:{vig:1,end:1,str:1},lvl:1,braci:0,drop:null,safe:{x:0,z:4},safeT:0,hero:'m',quests:{},flags:{},sword:0,flasks:3,flaskMax:3,dmgMul:1,
   act:null,buf:null,blockPress:-9,iframe:0,stDelay:0,dead:false,lock:null,sprinting:false,spinYaw:0,combatK:0,lastAtk:null,heal:0,shrine:0,inWard:false,lastHit:-9,flinch:0,flinchV:0,kills:0,hyperT:0,
   cleared:[false,false,false,false],chests:[false,false,false,false],
   amx:0,amz:0,gait:{ph:0,w:0,seed:1.3},roll:0,pitchL:0,fo:0,yawRate:0,wade:0,accF:0,lastVF:0,stepSide:0};
@@ -2071,12 +2155,17 @@ const _L=new Float32Array(NP),_A=new Float32Array(NP),_F=new Float32Array(NP);
 const turnYaw=(a,b,k,maxW,dt)=>{const d=angD(a,b);let s=d*(1-Math.exp(-k*dt));const m=maxW*dt;if(s>m)s=m;else if(s<-m)s=-m;return a+s;};
 function recalcStats(){const hpr=P.hp/P.maxHp;P.maxHp=CFG.hp.base+(P.stats.vig-1)*CFG.hp.perVig;P.maxSt=CFG.stam.base+(P.stats.end-1)*CFG.stam.perEnd;P.dmgMul=1+(P.stats.str-1)*CFG.str.per;
   P.lvl=P.stats.vig+P.stats.end+P.stats.str-2;P.hp=Math.min(P.maxHp,Math.max(1,hpr*P.maxHp));}
-function createPlayer(){
-  const mats=heroMats();const rig=buildHuman({d:HERO_D,mats,build:heroBuild});scene.add(rig.root);
+function createPlayer(hero){const F=hero==='f';
+  const mats=heroMats();const rig=buildHuman({d:F?HEROINE_D:HERO_D,mats,build:F?(a,d)=>heroBuild(a,d,{f:1}):heroBuild});scene.add(rig.root);
   const flask=new THREE.Group();const fb=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8),new THREE.MeshStandardMaterial({color:col(0x6a1410),emissive:new THREE.Color(.9,.12,.05),roughness:.2,metalness:.1,transparent:true,opacity:.92}));
   const fn=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,.06,6),new THREE.MeshStandardMaterial({color:col(0x8a7a5a),roughness:.6}));fn.position.y=.06;flask.add(fb,fn);flask.position.set(0,-.08,-.02);flask.visible=false;rig.P.wrL.add(flask);
-  PL={rig,mats,cape:new Cape(rig),trail:new Trail(30),flask,sw:null};
+  PL={rig,mats,cape:new Cape(rig),trail:new Trail(30),flask,sw:null,hero:F?'f':'m'};
   setSword(0);}
+// change body (character select, "Continua"): rebuild rig, cape, trail, flask and sword; the Meshy model only dresses the hero
+function setHero(h){h=h==='f'?'f':'m';P.hero=h;if(PL&&PL.hero===h)return;
+  if(PL){meshyDetach();scene.remove(PL.rig.root);for(const m of PL.rig.meshes)m.geometry.dispose();for(const k in PL.mats)PL.mats[k].dispose();
+    scene.remove(PL.cape.mesh);PL.cape.mesh.geometry.dispose();PL.cape.mat.dispose();scene.remove(PL.trail.mesh);PL.trail.mesh.geometry.dispose();PL.trail.mesh.material.dispose();}
+  createPlayer(h);if(h==='m')meshyAttach();setSword(P.sword||0);setView(G.fp);}
 function setSword(t){if(PL.sw&&PL.sw.g.parent)PL.sw.g.parent.remove(PL.sw.g);PL.sw=buildSword(t);PL.sw.g.position.set(0,-.072,-.004);(MESHY.on?MESHY.proxR:PL.rig.P.wrR).add(PL.sw.g);
   const gl=SWORDS[t].glow;PL.trail.u.uC.value.copy(gl?new THREE.Color(gl[0],gl[1],gl[2]).multiplyScalar(.8):new THREE.Color(1.9,1.75,1.45));$('swordName').textContent=SWORDS[t].name;}
 function setView(fp){G.fp=fp;PL.rig.P.head.scale.setScalar(fp?.001:1);PL.cape.mesh.visible=!fp;$('fpCross').hidden=!fp||G.state!=='play';camera.near=fp?.05:.08;camera.updateProjectionMatrix();}
@@ -2162,6 +2251,8 @@ function slopeAt(x,z,o){o.x=(gH(x+.35,z)-gH(x-.35,z))/.7;o.z=(gH(x,z+.35)-gH(x,z
 const _sl={x:0,z:0};
 function updPlayer(dt){
   const M=CFG.move;
+  // last safe ground (dry land) every 0.5 s: where the braci land if the player dies in deep water
+  P.safeT-=dt;if(P.safeT<=0){P.safeT=.5;if(!P.dead&&wadeDepth(P.pos.x,P.pos.z)<.3){P.safe.x=P.pos.x;P.safe.z=P.pos.z;}}
   const cy=CAM.yaw,fx=-Math.sin(cy),fz=-Math.cos(cy),rx=Math.cos(cy),rz=-Math.sin(cy);
   let ix=IN.mx,iz=IN.mz,il=Math.hypot(ix,iz);if(il>1){ix/=il;iz/=il;il=1;}
   P.moveX=rx*ix+fx*iz;P.moveZ=rz*ix+fz*iz;P.moveLen=il;
@@ -2221,7 +2312,7 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   mixPose(_A,HP.idle,HP.guard,P.combatK);
   // turning on the spot: small shuffle steps instead of feet skating round
   let gs=vs;if(hs<.7&&Math.abs(P.yawRate)>1.1&&(!k||MOVE_ACTS.has(k)))gs+=clamp(P.yawRate*.24,-1.1,1.1);
-  const ev=gaitIK(_L,_A,P.gait,HERO_D,1,vf,gs,dt,{arm:1-P.combatK*.35,armR:1-P.combatK*.72,elbow:1-P.combatK*.55});
+  const ev=gaitIK(_L,_A,P.gait,PL.rig.d,1,vf,gs,dt,{arm:1-P.combatK*.35,armR:1-P.combatK*.72,elbow:1-P.combatK*.55});
   if(ev&&(!k||MOVE_ACTS.has(k))&&hs>.35){
     if(P.wade>.05){splash(P.pos,5+(P.sprinting?4:0),.8+P.wade);sfx('splash',P.pos,hs>3?1:.6);}
     else{sfx('step',P.pos,P.sprinting?1.5:hs<2.5?.55:1);if(P.sprinting&&Math.random()<.6)dust(P.pos,2,.4);}}
@@ -2274,7 +2365,7 @@ function applyDmg(dmg,dx,dz,d,o,chip){dmg=Math.max(1,Math.round(dmg));P.hp-=dmg;
     const k=P.act?P.act.k:null;
     if(P.hp>0&&G.t>P.hyperT){if(o.knock||dmg>=P.maxHp*.28){startAct('knock',{dx:-dx/d,dz:-dz/d});PL.flask.visible=false;P.hyperT=G.t+1.9;}else if(!ATTACKS.has(k)||k==='light1'||k==='light2'){startAct('hurt',{dx:-dx/d,dz:-dz/d});PL.flask.visible=false;P.hyperT=G.t+.75;}}}
   if(P.hp<=0)playerDie();}
-function playerDie(){if(P.dead)return;P.dead=true;P.hp=0;P.act={k:'death',t:0,hit:new Set()};P.lock=null;G.state='dying';G.slow=1.2;G.slowS=.35;sfx('death');setTimeout(()=>{if(G.state!=='dying')return;showScreen('death');if(document.pointerLockElement)document.exitPointerLock();},2300);}
+function playerDie(){if(P.dead)return;P.dead=true;P.hp=0;dropBraci();P.act={k:'death',t:0,hit:new Set()};P.lock=null;G.state='dying';G.slow=1.2;G.slowS=.35;sfx('death');setTimeout(()=>{if(G.state!=='dying')return;showScreen('death');if(document.pointerLockElement)document.exitPointerLock();},2300);}
 
 /* ============================== camera ============================== */
 const CAM={yaw:0,pitch:-.2,dist:4.5,cur:4.5,piv:V3(),trauma:0,fov:60,init:false,idle:0};
@@ -2658,7 +2749,16 @@ const worldQ=(o,q)=>q.setFromRotationMatrix(_mm.extractRotation(o.matrixWorld));
 function loadMeshyHero(){
   if(!THREE.GLTFLoader||location.protocol==='file:')return Promise.resolve(false);
   return new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v);}};setTimeout(()=>fin(false),20000);
-    new THREE.GLTFLoader().load(MESHY.url,g=>{try{fin(setupMeshyHero(g));}catch(e){console.warn('meshy hero',e);fin(false);}},null,()=>fin(false));});}
+    new THREE.GLTFLoader().load(MESHY.url,g=>{try{
+        // keep the bind pose: the model can be re-attached to a rebuilt rig (character select) after meshySync has posed its bones
+        MESHY.gltf=g;MESHY.bind=[];g.scene.traverse(o=>{if(o.isBone)MESHY.bind.push([o,o.quaternion.clone(),o.position.clone()]);});
+        fin(setupMeshyHero(g));}catch(e){console.warn('meshy hero',e);fin(false);}},null,()=>fin(false));});}
+// re-dress the current (rebuilt) hero rig with the loaded model; false when none is loaded (tests, offline)
+function meshyAttach(){if(!MESHY.gltf)return false;for(const[b,q,p]of MESHY.bind){b.quaternion.copy(q);b.position.copy(p);}
+  for(const k of['proxR','proxL'])if(MESHY[k]&&MESHY[k].parent)MESHY[k].parent.remove(MESHY[k]);
+  try{return setupMeshyHero(MESHY.gltf);}catch(e){console.warn('meshy hero',e);MESHY.on=false;return false;}}
+// the heroine has no Meshy model yet: take it off and let the procedural body (and its cape) show
+function meshyDetach(){if(MESHY.holder&&MESHY.holder.parent)MESHY.holder.parent.remove(MESHY.holder);MESHY.on=false;}
 function setupMeshyHero(gltf){
   const R=PL.rig,P_=R.P,B={};let skin=null;
   gltf.scene.traverse(o=>{if(o.isBone)B[o.name]=o;if(o.isSkinnedMesh){skin=o;o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;
@@ -2702,6 +2802,122 @@ function meshySync(){if(!MESHY.on)return;const R=PL.rig;
   MESHY.B.Head.scale.setScalar(G.fp?.001:1);
   PL.cape.mesh.visible=false;}
 
+/* ============================== story: gendered text, dialogue ==============================
+   Text data carries masculine/feminine variants as {m|f}; gtxt resolves them for the chosen body BEFORE the text starts typing.
+   A dialogue is a graph of nodes {who, text, next?, choices?:[{t, next?, act?}], act?} that starts at 'start'.
+   While a dialogue is open G.state is 'dialogue': the world is frozen like in pause, only the text and the HUD move. */
+function gtxt(s,hero){const f=(hero===undefined?P.hero:hero)==='f';return String(s).replace(/\{([^{}|]*)\|([^{}|]*)\}/g,(m,a,b)=>f?b:a);}
+const DLG={defs:{},cur:null};
+function defineDialogue(id,nodes){DLG.defs[id]=nodes;}
+function dlgActive(){return !!DLG.cur;}
+// opt.onEnd runs when the dialogue closes (e.g. open the shrine menu after Selin has spoken)
+function dlgStart(id,opt){const d=DLG.defs[id];if(!d||!d.start||G.state!=='play'||DLG.cur)return false;
+  if(E.some(e=>!e.dead&&e.aggro&&Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z)<14))return false;
+  DLG.cur={id,d,onEnd:opt&&opt.onEnd};G.state='dialogue';IN.atk=IN.blk=IN.hvy=false;
+  $('dialog').hidden=false;$('touch').hidden=true;$('prompt').hidden=true;if(document.pointerLockElement)document.exitPointerLock();
+  dlgShow('start');storyEvent('talk',{who:gtxt(d.start.who||''),id});return true;}
+function dlgShow(key){const c=DLG.cur,n=c.d[key];if(!n){dlgEnd();return;}
+  Object.assign(c,{key,n,full:gtxt(n.text||''),shown:0,typing:true});
+  $('dlgWho').textContent=gtxt(n.who||'');$('dlgText').textContent='';$('dlgChoices').innerHTML='';$('dlgChoices').hidden=true;$('dlgMore').hidden=true;
+  if(n.act)storyAct(n.act);}
+// typewriter: CFG.ui.typeSpeed characters per second, on real time (the world clock is stopped)
+function dlgTick(rdt){const c=DLG.cur;if(!c||!c.typing)return;c.shown=Math.min(c.full.length,c.shown+rdt*CFG.ui.typeSpeed);
+  $('dlgText').textContent=c.full.slice(0,Math.floor(c.shown));if(c.shown>=c.full.length)dlgDone();}
+function dlgDone(){const c=DLG.cur;c.typing=false;$('dlgText').textContent=c.full;const ch=c.n.choices;
+  if(ch&&ch.length){const box=$('dlgChoices');
+    ch.forEach((o,i)=>{const b=document.createElement('button');b.type='button';b.className='dlgC';const k=document.createElement('kbd');k.textContent=i+1;b.appendChild(k);
+      b.appendChild(document.createTextNode(gtxt(o.t)));b.onclick=e=>{e.stopPropagation();dlgChoose(i);};box.appendChild(b);});
+    box.hidden=false;menuFocus(box.firstChild);}
+  else $('dlgMore').hidden=false;}
+function dlgButtons(){return[...$('dlgChoices').querySelectorAll('button')];}
+// advance: finish the typing first, then go to the next node or close; a node with choices waits for one
+function dlgNext(){const c=DLG.cur;if(!c)return;if(c.typing){dlgDone();return;}if(c.n.choices&&c.n.choices.length)return;
+  sfx('ui');if(c.n.next)dlgShow(c.n.next);else dlgEnd();}
+function dlgChoose(i){const c=DLG.cur;if(!c)return;if(c.typing)dlgDone();const o=c.n.choices&&c.n.choices[i];if(!o)return;
+  sfx('ui');if(o.act)storyAct(o.act);if(o.next)dlgShow(o.next);else dlgEnd();}
+function dlgEnd(){const c=DLG.cur;DLG.cur=null;$('dialog').hidden=true;$('touch').hidden=!isTouch;if(G.state==='dialogue')G.state='play';if(c&&c.onEnd)c.onEnd();}
+// keyboard during a dialogue: E / Space / Enter advance, 1-3 choose, arrows move between choices; Esc is ignored
+function dlgKey(e){const k=e.code;
+  if(k==='Digit1'||k==='Digit2'||k==='Digit3'||k==='Numpad1'||k==='Numpad2'||k==='Numpad3'){dlgChoose(+k.slice(-1)-1);return;}
+  const B=dlgButtons();
+  if(B.length&&(k==='ArrowDown'||k==='ArrowUp'||k==='ArrowLeft'||k==='ArrowRight')){e.preventDefault();let i=B.indexOf(document.activeElement);
+    i=i<0?0:(i+(k==='ArrowDown'||k==='ArrowRight'?1:-1)+B.length)%B.length;menuFocus(B[i]);return;}
+  if(k==='KeyE'||k==='Space'||k==='Enter'||k==='NumpadEnter'){e.preventDefault();
+    if(B.length){const a=document.activeElement;(B.includes(a)?a:B[0]).click();}else dlgNext();}}
+// controller during a dialogue: A advances (or takes the highlighted choice), d-pad/stick moves between choices; Start is ignored
+function padDialogue(pr,lx,ly){const B=dlgButtons(),yv=ly<-.5?-1:ly>.5?1:0;
+  if(B.length){let d=0;if(pr(12)||(yv<0&&PAD.my!==-1))d=-1;else if(pr(13)||(yv>0&&PAD.my!==1))d=1;PAD.my=yv;
+    if(d){let i=B.indexOf(document.activeElement);i=i<0?0:(i+d+B.length)%B.length;menuFocus(B[i]);}
+    if(pr(0)){const a=document.activeElement;(B.includes(a)?a:B[0]).click();}}
+  else if(pr(0))dlgNext();}
+/* ---------- story actions: 'flag:<name>' sets a flag, 'braci:<n>' gives braci, 'quest:<id>' starts a quest ---------- */
+function storyAct(a){const s=String(a),i=s.indexOf(':'),k=i<0?s:s.slice(0,i),v=i<0?'':s.slice(i+1);
+  if(k==='flag'&&v)P.flags[v]=true;
+  else if(k==='braci'&&+v>0)addBraci(Math.round(+v));
+  else if(k==='quest'&&QUESTS[v])questStart(v);
+  else console.warn('storyAct: unknown action "'+s+'"');}
+/* ---------- quests: steps advance on story events; P.quests[id] = {step, n, done} is saved with the game ---------- */
+const QUESTS={},QORDER=[];
+function defineQuest(q){if(!QUESTS[q.id])QORDER.push(q.id);QUESTS[q.id]=q;}
+function questStart(id){const d=QUESTS[id];if(!d||P.quests[id])return;P.quests[id]={step:0,n:0,done:false};toast('Nuova missione: <em>'+gtxt(d.title)+'</em>');}
+function questStep(id){const q=P.quests[id];return q?(q.done?QUESTS[id].steps.length:q.step):-1;}
+function questIsDone(id){const q=P.quests[id];return!!(q&&q.done);}
+function questAdvance(id){const d=QUESTS[id],q=P.quests[id];if(!d||!q||q.done)return;q.step++;q.n=0;
+  if(q.step>=d.steps.length){q.done=true;toast('Missione completata: <em>'+gtxt(d.title)+'</em>');sfx('level');if(d.done)storyAct(d.done);}
+  save();}
+// an event advances every active quest whose current step listens to it: same type and every other key of `on` equal in data
+function storyEvent(type,data={}){for(const id of QORDER){const d=QUESTS[id],q=P.quests[id];if(!q||q.done)continue;const st=d.steps[q.step],on=st&&st.on;
+    if(!on||on.type!==type)continue;let ok=true;for(const k in on)if(k!=='type'&&on[k]!==data[k]){ok=false;break;}if(!ok)continue;
+    if(st.count){q.n++;if(q.n>=st.count)questAdvance(id);}else questAdvance(id);}}
+function questHint(id){const d=QUESTS[id],q=P.quests[id];if(!d||!q||q.done)return'';const st=d.steps[q.step];return st?gtxt(st.hint).replace('{n}',q.n):'';}
+function mainHint(){for(const id of QORDER)if(QUESTS[id].kind==='main'&&P.quests[id]&&!P.quests[id].done)return questHint(id);return'';}
+/* ---------- journal: active quests first, then the completed ones ---------- */
+let journalBack='play';
+function openJournal(from){journalBack=from==='pause'||G.state==='pause'?'pause':'play';G.state='journal';showScreen('journal');
+  const list=$('jList'),act=[],fin=[];list.innerHTML='';for(const id of QORDER){const q=P.quests[id];if(q)(q.done?fin:act).push(id);}
+  for(const id of act.concat(fin)){const d=QUESTS[id],q=P.quests[id],el=document.createElement('div');el.className='jq'+(q.done?' done':'')+(d.kind==='main'?' main':'');
+    const k=document.createElement('small');k.textContent=(d.kind==='main'?'Principale':'Secondaria')+(q.done?' · completata':'');
+    const t=document.createElement('b');t.textContent=gtxt(d.title);el.append(k,t);
+    if(!q.done){const h=document.createElement('p');h.textContent=questHint(id);el.append(h);}list.appendChild(el);}
+  if(!list.children.length){const e=document.createElement('p');e.className='jempty';e.textContent='Nessuna missione per ora.';list.appendChild(e);}
+  if(document.pointerLockElement)document.exitPointerLock();menuFocus($('jClose'));}
+function closeJournal(){if(G.state!=='journal')return;if(journalBack==='pause'){G.state='pause';showScreen('pause');menuFocus($('pJournal'));}else resume();}
+/* ============================== stage 1 content ============================== */
+defineQuest({id:'valle',title:'La Valle di Cenere',kind:'main',
+  steps:[{hint:"Libera la valle: distruggi un accampamento goblin e apri il forziere del suo capo ({n}/4).",on:{type:'chest'},count:4}]});
+defineQuest({id:'selin',title:'La voce del santuario',kind:'side',
+  steps:[{hint:'Riposa a un santuario: avvicinati al cristallo blu.',on:{type:'rest'}}]});
+defineDialogue('selin1',{
+  start:{who:'Selin',text:"Un'altra fiamma nella tempesta… Sei stanc{o|a}, erede, ma ancora viv{o|a}.",next:'b'},
+  b:{who:'Selin',text:'Le braci dei caduti restano su di te. Qui puoi spenderle per diventare più forte.',next:'c'},
+  c:{who:'Selin',text:'Ma se cadi, resteranno dove sei cadut{o|a}. Torna a prenderle prima di cadere ancora.',
+    choices:[{t:'Chi sei?',next:'who'},{t:'Andrò avanti.',next:'end'}]},
+  who:{who:'Selin',text:'Sono Selin. Ero la voce dei Custodi, quando i Custodi avevano ancora una voce.',next:'end'},
+  end:{who:'Selin',text:"Va', stranier{o|a}. Il diario ricorderà quello che dimentichi.",act:'flag:selinMet'}});
+
+/* ============================== orientation: phones play in landscape only ==============================
+   A touch device held upright gets the whole game container (#app) rotated 90° with CSS; touches are mapped back into game space.
+   Layout reads the GAME size, not the window: --vw/--vh and the size classes w1000 / w640 / h460 on #app stand in for
+   vw/vh units and size media queries, so the HUD and menus lay out the same whether the page is rotated or not. */
+var ROT=false;   // var on purpose: a_core.js sizes the renderer through viewW()/viewH() before this file has run
+function wantRot(){return isTouch&&innerHeight>innerWidth;}
+function viewW(){return ROT?innerHeight:innerWidth;}
+function viewH(){return ROT?innerWidth:innerHeight;}
+// pointer position in game space: in the rotated layout the game's x runs down the screen and its y runs right-to-left
+function touchXY(e){return ROT?{x:e.clientY,y:innerWidth-e.clientX}:{x:e.clientX,y:e.clientY};}
+function applyOrient(){ROT=wantRot();const app=$('app');
+  if(app){app.classList.toggle('rot90',ROT);const W=viewW(),H=viewH();
+    app.classList.toggle('w1000',W<=1000);app.classList.toggle('w640',W<=640);app.classList.toggle('h460',H<=460);
+    const s=document.documentElement.style;s.setProperty('--vw',W/100+'px');s.setProperty('--vh',H/100+'px');}
+  onResize();}
+// on the first tap of "Nuova partita" / "Continua": full screen and the browser's landscape lock where allowed (Android); the CSS rotation covers the rest
+async function lockLandscape(){if(!isTouch)return;
+  try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)await d.requestFullscreen({navigationUI:'hide'});}catch(_){}
+  try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape');}catch(_){}
+  applyOrient();}
+addEventListener('resize',applyOrient);
+addEventListener('orientationchange',()=>setTimeout(applyOrient,60));
+
 /* ============================== combat glue ============================== */
 function damageEnemy(e,a,D,nx,nz,hp){const C=CFG.combat;const l=Math.hypot(nx,nz)||1;nx/=l;nz/=l;
   let mul=D.mul*(a.charged?1.45:1),crit=false;
@@ -2732,7 +2948,8 @@ function damageEnemy(e,a,D,nx,nz,hp){const C=CFG.combat;const l=Math.hypot(nx,nz
   if(e.type==='goblin'||e.type==='archer'){if(Math.random()<.6)sfx('gobHurt',e.pos);}else if(e.type==='wolf'&&Math.random()<.5)sfx('bite',e.pos);
   if(e.hp<=0)killEnemy(e,D);}
 function killEnemy(e,D){if(e.dead)return;e.dead=true;e.deadT=0;e.atk=null;e.stun=0;e.stag=0;e.down=0;TOK.delete(e);e.fall=Math.random()<.5?1:-1;P.kills++;
-  emberOrbs(e,e.braci);
+  emberOrbs(e,e.braci);storyEvent('kill',{type:e.type,camp:e.camp,boss:!!e.boss});
+  if(!P.flags.braciTip){P.flags.braciTip=true;hint('Le <b>braci</b> dei nemici sono tue: spendile ai santuari per salire di livello.',5);}
   sfx(e.type==='goblin'||e.type==='archer'?'gobDie':e.type==='wolf'?'growl':e.type==='troll'?'roar':'wail',e.pos);
   if(P.lock===e)P.lock=autoRelock(e);
   if(e.boss){G.slow=1.6;G.slowS=.22;CAM.trauma=1;Post.u.flash.value=.45;sfx('bossDie');
@@ -2756,10 +2973,10 @@ function updOrbs(rdt){if(!ORBS.length)return;hudXY($('braciN'),_ot);const tx=_ot
     const x=lerp(lerp(o.x0,o.x0+o.bx,eOut2(u)),tx,k),y=lerp(lerp(o.y0,o.y0+o.by,eOut2(u)),ty,k);o.d.style.opacity=1;o.d.style.transform=`translate(${x}px,${y}px) scale(${1-u*.45})`;
     if(u>=1){o.d.remove();ORBS.splice(i,1);addBraci(o.v);}}}
 function bump(el,cls='bump'){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
-function checkCamp(i){if(P.cleared[i])return;if(E.some(o=>o.camp===i&&!o.dead))return;P.cleared[i]=true;const c=CAMPS[i];c.chest.light.i=2.4;
+function checkCamp(i){if(P.cleared[i])return;if(E.some(o=>o.camp===i&&!o.dead))return;P.cleared[i]=true;storyEvent('camp',{i});const c=CAMPS[i];c.chest.light.i=2.4;
   const n=P.cleared.filter(Boolean).length;banner('Accampamento distrutto',c.name+' · '+n+' di 4');sfx('banner');save();
   setTimeout(()=>toast('Il forziere del capo è <em>aperto</em>'),2600);}
-function openChest(i){const c=CAMPS[i];if(c.chest.open)return;c.chest.open=true;P.chests[i]=true;sfx('chest',c.chest.g.position);
+function openChest(i){const c=CAMPS[i];if(c.chest.open)return;c.chest.open=true;P.chests[i]=true;storyEvent('chest',{i});sfx('chest',c.chest.g.position);
   magic(V3(c.chest.x,c.chest.g.position.y+1,c.chest.z),50,[3,2.2,.8],4,1.2);
   const tier=Math.max(P.sword,i+1);const newSword=tier>P.sword;if(newSword){P.sword=tier;setSword(tier);}
   P.flaskMax=Math.min(CFG.flask.max,P.flaskMax+1);P.flasks=P.flaskMax;addBraci(CFG.prog.chestBraci*(i+1));
@@ -2783,7 +3000,34 @@ function openLevelUp(){const c=levelCost(P.lvl);if(P.braci<c){openShrineMenu();r
 function pickStat(s){if(levelUp(s))toast('Livello <em>'+P.lvl+'</em>');openShrineMenu();}
 function restAtShrine(s){P.hp=P.maxHp;P.flasks=P.flaskMax;P.st=P.maxSt;P.shrine=s.id;sfx('rest');healFx(P.pos);magic(V3(s.x,s.y+2.3,s.z),40,[.5,1.4,2.6],2.5,1.2);
   if(ST.phase!=='storm'&&ST.phase!=='warn')spawnWorld(true);save();toast('Hai riposato a <em>'+s.name+'</em>. I nemici sono tornati.');
+  // the first rest wakes Selin (read before the event: her dialogue sets the flag); the shrine menu opens when she has spoken
+  const meet=!P.flags.selinMet;storyEvent('rest',{shrine:s.id});
+  if(meet&&dlgStart('selin1',{onEnd:()=>openShrineMenu(s)}))return;
   openShrineMenu(s);}
+/* ---------- braci left where the player fell (last safe ground); touching the pile takes them back, dying first loses them ---------- */
+let PILE=null;
+// emissive map of the pile: thin glowing cracks plus scattered hot spots on black (only these glow, the ash stays dark)
+function pileTex(){const c=mkC(64,64);pxFill(c,(u,v,o)=>{const n=tn2(u*5,v*5,5,5,11),s=tn2(u*13,v*13,13,13,29);
+    const k=Math.min(1,sstep(.06,0,Math.abs(n-.5))*.85+sstep(.68,.86,s));o[0]=255*k;o[1]=(70+90*k)*k;o[2]=18*k*k;});return toTex(c);}
+function pileMesh(){if(PILE)return PILE;const g=new THREE.Group();
+  // lumpy ash mound: jitter keyed on the vertex position keeps the faces closed; the bottom half is flattened onto the ground
+  const m=new THREE.Mesh(geo('pile',()=>{const q=new THREE.IcosahedronGeometry(.34,1),p=q.attributes.position;
+      for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),h=Math.sin(x*91.7+y*47.3+z*63.1)*43758.5453,j=1+(h-Math.floor(h)-.5)*.3;
+        p.setXYZ(i,x*j,Math.max(y,-.02)*j*.42,z*j);}q.computeVertexNormals();return q;}),
+    new THREE.MeshStandardMaterial({color:col(0x2b221d),roughness:1,flatShading:true,emissive:new THREE.Color(1,1,1),emissiveIntensity:1.2,emissiveMap:pileTex()}));
+  m.position.y=.07;g.add(m);g.visible=false;scene.add(g);PILE={g,m,t:0,fx:0};return PILE;}
+function syncDrop(){const d=P.drop;if(!d){if(PILE)PILE.g.visible=false;return;}const p=pileMesh();p.g.visible=true;p.g.position.set(d.x,gY(d.x,d.z),d.z);}
+function dropBraci(){if(P.braci>0){P.drop={x:P.safe.x,z:P.safe.z,amount:P.braci};P.braci=0;}else P.drop=null;syncDrop();
+  if(P.drop){_v1.set(P.drop.x,gY(P.drop.x,P.drop.z)+.3,P.drop.z);magic(_v1,18,[2.6,1.1,.3],1.2,.8,.1);}save();}
+function recoverBraci(){const d=P.drop;if(!d)return;P.drop=null;syncDrop();addBraci(d.amount);sfx('level');
+  _v1.set(d.x,gY(d.x,d.z)+.4,d.z);magic(_v1,30,[2.6,1.1,.3],2.2,.9,.12);orbBurst(_v1,6);toast('Braci recuperate: <em>'+d.amount+'</em>');save();}
+function updDrop(dt){const d=P.drop;if(!d||!PILE)return;const p=PILE;p.t+=dt;p.m.material.emissiveIntensity=1+Math.sin(p.t*3)*.35;p.m.rotation.y+=dt*.3;
+  p.fx-=dt;if(p.fx<=0){p.fx=.07;FXA.emit(d.x+rr(-.25,.25),p.g.position.y+.15,d.z+rr(-.25,.25),rr(-.1,.1),rr(.5,1.1),rr(-.1,.1),rr(.8,1.6),.06,.01,2.6,1,.25,1,-.1,.6,1);}
+  if(!P.dead&&G.state==='play'&&Math.hypot(P.pos.x-d.x,P.pos.z-d.z)<CFG.braci.pickR)recoverBraci();}
+// decorative embers flying to the counter (no value: the braci were already added)
+function orbBurst(p,n){if(G.state!=='play'||!toScreen(p,_sp))return;
+  for(let i=0;i<n;i++){const d=document.createElement('i');d.className='orb';$('nums').appendChild(d);
+    ORBS.push({d,x0:_sp.x+rr(-18,18),y0:_sp.y+rr(-14,14),t:-i*.045,dur:rr(.55,.75),bx:rr(-90,90),by:rr(-120,-50),v:0});}}
 function victory(){if(G.won)return;G.won=true;G.state='victory';showScreen('victory');if(document.pointerLockElement)document.exitPointerLock();
   const m=Math.floor(G.playTime/60),s=Math.floor(G.playTime%60);
   $('winStats').innerHTML=`<div><b>${P.lvl}</b><span>Livello</span></div><div><b>${P.kills}</b><span>Nemici</span></div><div><b>${m}:${String(s).padStart(2,'0')}</b><span>Tempo</span></div>`;}
@@ -2802,7 +3046,7 @@ function spawnWorld(keepNear){
   [[-62,22,0],[36,78,1],[104,-8,1]].forEach(([x,z,t])=>{for(let k=0;k<2;k++)spawnEnemy('goblin',x+rr(-2,2),z+rr(-2,2),{tier:t});});}
 function placeAtShrine(id){const s=SHRINES[id]||SHRINES[0];const a=Math.atan2(-s.z,-s.x)+PI+.6;P.pos.set(s.x+Math.cos(a)*3,0,s.z+Math.sin(a)*3);P.pos.y=gH(P.pos.x,P.pos.z);
   P.yaw=yawTo(P.pos.x-s.x,P.pos.z-s.z);if(id===0){P.pos.set(1.5,0,5.5);P.pos.y=gH(1.5,5.5);P.yaw=yawTo(CAMPS[0].x-1.5,CAMPS[0].z-5.5);}
-  CAM.yaw=P.yaw;CAM.pitch=-.18;CAM.init=false;P.vel.set(0,0,0);if(PL)PL.cape.reset();}
+  CAM.yaw=P.yaw;CAM.pitch=-.18;CAM.init=false;P.vel.set(0,0,0);if(PL)PL.cape.reset();P.safe.x=P.pos.x;P.safe.z=P.pos.z;P.safeT=.5;}
 
 /* ============================== storm ============================== */
 const ST={phase:'calm',t:150,k:0,flash:0,boltT:3,spawnT:2,strikeT:4};
@@ -2847,7 +3091,7 @@ function banner(t,s,cls){$('bannerTitle').textContent=t;$('bannerSub').textConte
 function toast(h){const d=document.createElement('div');d.className='toast';d.innerHTML=h;$('toasts').appendChild(d);setTimeout(()=>d.remove(),4300);while($('toasts').children.length>3)$('toasts').firstChild.remove();}
 let hintT=0;function hint(h,dur=5){const e=$('hint');e.innerHTML=h;e.classList.add('show');hintT=dur;}
 const _pv=V3();
-function toScreen(p,out){_pv.copy(p).project(camera);if(_pv.z>1||_pv.z<-1)return false;out.x=(_pv.x*.5+.5)*innerWidth;out.y=(-_pv.y*.5+.5)*innerHeight;return true;}
+function toScreen(p,out){_pv.copy(p).project(camera);if(_pv.z>1||_pv.z<-1)return false;out.x=(_pv.x*.5+.5)*viewW();out.y=(-_pv.y*.5+.5)*viewH();return true;}
 const _sp={x:0,y:0};
 const CMP={el:null,items:[]};
 function buildCompass(){const el=$('compass');CMP.el=el;el.innerHTML='';const W=[['N',0],['O',PI/2],['S',PI],['E',-PI/2]];
@@ -2864,8 +3108,11 @@ function updCompass(objP){const W=CMP.el.clientWidth||400,half=W/2;const yaw=CAM
     CMP.obj.n.style.display='block';CMP.obj.n.style.left=x+'px';$('compassDist').textContent=Math.round(d)+' m';$('compassDist').style.display=d>8?'block':'none';}
   else{CMP.obj.n.style.display='none';$('compassDist').style.display='none';}}
 function nearestShrine(){let b=null,bd=1e9;for(const s of SHRINES){const d=Math.hypot(P.pos.x-s.x,P.pos.z-s.z);if(d<bd){bd=d;b=s;}}return[b,bd];}
+// objective box: the storm warning first, otherwise the main quest's hint; the compass keeps its old target until stage 2
 function objective(){
   if((ST.phase==='warn'||ST.phase==='storm')&&!P.inWard){const[s,d]=nearestShrine();return{t:'Raggiungi un santuario: '+s.name,p:s};}
+  const o=campObjective(),mh=mainHint();if(mh)o.t=mh;return o;}
+function campObjective(){
   for(let i=0;i<4;i++)if(P.cleared[i]&&!P.chests[i])return{t:'Apri il forziere: '+CAMPS[i].name,p:{x:CAMPS[i].chest.x,z:CAMPS[i].chest.z}};
   let best=-1;for(let i=0;i<4;i++)if(!P.cleared[i]){best=i;break;}
   if(best<0)return{t:'La valle è libera',p:null};const n=P.cleared.filter(Boolean).length;
@@ -2873,7 +3120,7 @@ function objective(){
 const EBARS=[],HUDC={};
 function updHUD(rdt){
   const hw=Math.min(380,220+(P.maxHp-100)*1.1),sw=Math.min(360,200+(P.maxSt-100)*1.2);
-  if(innerWidth>640){$('hpBar').style.width=hw+'px';$('stBar').style.width=sw+'px';}
+  if(viewW()>640){$('hpBar').style.width=hw+'px';$('stBar').style.width=sw+'px';}
   const hr=clamp(P.hp/P.maxHp,0,1);P.chipT=(P.chipT||0)-rdt;if(P.chipT<=0)P.chip=damp(P.chip,P.hp,4,rdt);if(P.chip<P.hp)P.chip=P.hp;
   $('hpFill').style.transform=`scaleX(${hr})`;$('hpChip').style.transform=`scaleX(${clamp(P.chip/P.maxHp,0,1)})`;
   $('stFill').style.transform=`scaleX(${clamp(P.st/P.maxSt,0,1)})`;
@@ -2919,8 +3166,10 @@ addEventListener('keydown',e=>{if(e.repeat&&!['KeyW','KeyA','KeyS','KeyD'].inclu
     if(e.code==='KeyE')IN.actP=true;if(e.code==='KeyR')IN.flaskP=true;if(e.code==='KeyF')IN.lockP=true;if(e.code==='KeyV')IN.viewP=true;
     if(e.code==='KeyJ'){IN.atk=true;IN.atkP=true;}if(e.code==='KeyK'){IN.blk=true;IN.blkP=true;}if(e.code==='KeyL')IN.dodgeP=true;
     if(e.code==='KeyQ'){IN.hvy=true;IN.hvyP=true;}if(e.code==='KeyC')IN.lockSwitch=1;if(e.code==='KeyX')IN.lockSwitch=-1;
-    if(e.code==='Escape'||e.code==='KeyP')IN.pauseP=true;}
+    if(e.code==='Escape'||e.code==='KeyP')IN.pauseP=true;if(e.code==='KeyN')openJournal('play');}
   else if(e.code==='KeyP'&&G.state==='pause')resume();
+  else if(G.state==='dialogue')dlgKey(e);
+  else if(G.state==='journal'&&e.code==='KeyN')closeJournal();
   else menuKey(e);});
 addEventListener('keyup',e=>{KEYS[e.code]=false;if(e.code==='KeyJ')IN.atk=false;if(e.code==='KeyK')IN.blk=false;if(e.code==='KeyQ')IN.hvy=false;});
 addEventListener('blur',()=>{for(const k in KEYS)KEYS[k]=false;IN.atk=IN.blk=IN.hvy=false;if(G.state==='play'&&!isTouch)pause();});
@@ -2954,28 +3203,32 @@ function pollPad(dt){let gp=null;try{const l=navigator.getGamepads?navigator.get
     if(pr(5))IN.atkP=true;IN.atk=IN.atk||b(5);if(pr(7))IN.hvyP=true;IN.hvy=IN.hvy||b(7);if(pr(4)||pr(6))IN.blkP=true;IN.blk=IN.blk||b(4)||b(6);if(pr(1))IN.dodgeP=true;if(pr(0))IN.actP=true;if(pr(2))IN.flaskP=true;if(pr(3))IN.viewP=true;
     if(pr(11))IN.lockP=true;if(pr(9))IN.pauseP=true;if(b(10)||(b(1)&&PAD.bHeld>.35))IN.sprint=true;PAD.bHeld=b(1)?(PAD.bHeld||0)+dt:0;}
   else if(pr(9)&&G.state==='pause')resume();
+  else if(G.state==='dialogue')padDialogue(pr,lx,ly);
   else padMenu(pr,lx,ly);
   PAD.prev=gp.buttons.map(x=>x.pressed);if(!PAD.seen){PAD.seen=1;toast('Controller collegato');}}
 /* ---------- touch ---------- */
 const TOUCH={joy:{id:null,ox:0,oy:0,x:0,y:0,t:0},look:{id:null,lx:0,ly:0},sprint:false};
 function initTouch(){const z=$('touchZone'),J=$('joy'),K=$('joyK');
-  z.addEventListener('pointerdown',e=>{if(G.state!=='play')return;audioInit();e.preventDefault();
-    if(e.clientX<innerWidth*.42&&TOUCH.joy.id===null){TOUCH.joy.id=e.pointerId;TOUCH.joy.ox=e.clientX;TOUCH.joy.oy=e.clientY;TOUCH.joy.x=TOUCH.joy.y=0;TOUCH.joy.t=0;J.style.display='block';J.style.left=e.clientX+'px';J.style.top=e.clientY+'px';K.style.transform='';}
-    else if(TOUCH.look.id===null){TOUCH.look.id=e.pointerId;TOUCH.look.lx=e.clientX;TOUCH.look.ly=e.clientY;}
+  // all positions in game space (touchXY), so the stick and the look drag follow what the player sees when the layout is rotated
+  z.addEventListener('pointerdown',e=>{if(G.state!=='play')return;audioInit();e.preventDefault();const p=touchXY(e);
+    if(p.x<viewW()*.42&&TOUCH.joy.id===null){TOUCH.joy.id=e.pointerId;TOUCH.joy.ox=p.x;TOUCH.joy.oy=p.y;TOUCH.joy.x=TOUCH.joy.y=0;TOUCH.joy.t=0;J.style.display='block';J.style.left=p.x+'px';J.style.top=p.y+'px';K.style.transform='';}
+    else if(TOUCH.look.id===null){TOUCH.look.id=e.pointerId;TOUCH.look.lx=p.x;TOUCH.look.ly=p.y;}
     try{z.setPointerCapture(e.pointerId);}catch(_){}});
-  z.addEventListener('pointermove',e=>{const j=TOUCH.joy;if(e.pointerId===j.id){let dx=e.clientX-j.ox,dy=e.clientY-j.oy;const l=Math.hypot(dx,dy),m=52;if(l>m){dx*=m/l;dy*=m/l;}j.x=dx/m;j.y=dy/m;K.style.transform=`translate(${dx}px,${dy}px)`;}
-    else if(e.pointerId===TOUCH.look.id){const L=TOUCH.look;const mx=e.clientX-L.lx,my=e.clientY-L.ly;if(P.lock&&!G.fp){if(Math.abs(mx)>40){IN.lockSwitch=mx>0?-1:1;L.lx=e.clientX;}}else IN.lookX+=mx*.0065;IN.lookY+=my*.005;if(!P.lock||G.fp)L.lx=e.clientX;L.ly=e.clientY;}});
+  z.addEventListener('pointermove',e=>{const j=TOUCH.joy,p=touchXY(e);if(e.pointerId===j.id){let dx=p.x-j.ox,dy=p.y-j.oy;const l=Math.hypot(dx,dy),m=52;if(l>m){dx*=m/l;dy*=m/l;}j.x=dx/m;j.y=dy/m;K.style.transform=`translate(${dx}px,${dy}px)`;}
+    else if(e.pointerId===TOUCH.look.id){const L=TOUCH.look;const mx=p.x-L.lx,my=p.y-L.ly;if(P.lock&&!G.fp){if(Math.abs(mx)>40){IN.lockSwitch=mx>0?-1:1;L.lx=p.x;}}else IN.lookX+=mx*.0065;IN.lookY+=my*.005;if(!P.lock||G.fp)L.lx=p.x;L.ly=p.y;}});
   const end=e=>{if(e.pointerId===TOUCH.joy.id){TOUCH.joy.id=null;TOUCH.joy.x=TOUCH.joy.y=0;J.style.display='none';TOUCH.sprint=false;}if(e.pointerId===TOUCH.look.id)TOUCH.look.id=null;};
   z.addEventListener('pointerup',end);z.addEventListener('pointercancel',end);
   const btn=(id,down,up)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();audioInit();b.classList.add('on');try{b.setPointerCapture(e.pointerId);}catch(_){}down();});
     const u=()=>{b.classList.remove('on');if(up)up();};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);b.addEventListener('contextmenu',e=>e.preventDefault());};
   btn('tAtk',()=>{IN.atk=true;IN.atkP=true;},()=>{IN.atk=false;});btn('tHvy',()=>{IN.hvy=true;IN.hvyP=true;},()=>{IN.hvy=false;});btn('tBlk',()=>{IN.blk=true;IN.blkP=true;},()=>{IN.blk=false;});btn('tDdg',()=>{IN.dodgeP=true;});
-  btn('tFlk',()=>{IN.flaskP=true;});btn('tLck',()=>{IN.lockP=true;});btn('tAct',()=>{IN.actP=true;});btn('tView',()=>{IN.viewP=true;});btn('tPause',()=>{IN.pauseP=true;});}
+  btn('tFlk',()=>{IN.flaskP=true;});btn('tLck',()=>{IN.lockP=true;});btn('tAct',()=>{IN.actP=true;});btn('tView',()=>{IN.viewP=true;});btn('tPause',()=>{IN.pauseP=true;});
+  btn('tJournal',()=>{if(G.state==='play')openJournal('play');});}
 function updTouchSprint(dt){const j=TOUCH.joy;if(j.id!==null&&Math.hypot(j.x,j.y)>.96){j.t+=dt;if(j.t>.9)TOUCH.sprint=true;}else{j.t=0;TOUCH.sprint=false;}}
 
 /* ============================== menus ============================== */
-const SCREENS=['title','pause','settings','controls','levelup','shrineMenu','death','victory'];let settingsBack='title';
-function showScreen(id){for(const s of SCREENS)$(s).hidden=s!==id;$('fpCross').hidden=!(G.fp&&G.state==='play');for(const o of document.querySelectorAll('.padf'))o.classList.remove('padf');}
+const SCREENS=['title','charsel','pause','settings','controls','levelup','shrineMenu','journal','death','victory'];let settingsBack='title';
+function showScreen(id){for(const s of SCREENS)$(s).hidden=s!==id;$('hud').classList.toggle('under',!!id);   // toasts and hints wait behind menus
+  $('fpCross').hidden=!(G.fp&&G.state==='play');for(const o of document.querySelectorAll('.padf'))o.classList.remove('padf');}
 /* ---------- menu navigation shared by keyboard (arrows, Esc) and controller (d-pad/stick, A, B); a screen's data-back names its "back" button ---------- */
 function menuScreen(){for(const id of SCREENS){const s=$(id);if(s&&!s.hidden)return s;}return null;}
 function menuButtons(s){return[...s.querySelectorAll('button')].filter(b=>!b.disabled&&!b.hidden&&b.offsetParent!==null);}
@@ -2993,17 +3246,20 @@ function padMenu(pr,lx,ly){const yv=ly<-.5?-1:ly>.5?1:0,xv=lx<-.5?-1:lx>.5?1:0;l
 function pause(){if(G.state!=='play')return;G.state='pause';showScreen('pause');IN.atk=IN.blk=IN.hvy=false;if(document.pointerLockElement)document.exitPointerLock();}
 function resume(){G.state='play';showScreen(null);$('hud').hidden=false;if(!isTouch){try{const p=canvas.requestPointerLock&&canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(_){}}setView(G.fp);}
 function fillControls(){const pc=[['Muoversi',['W','A','S','D']],['Visuale','Mouse · frecce'],['Correre',['Shift']],['Attacco (combo di 4)',['Clic sinistro']],['Colpo pesante · tieni premuto: rotante caricato',['Q']],
-    ['Parata (deviazione al momento giusto)',['Clic destro']],['Schivata con invulnerabilità',['Spazio']],['Fiaschetta di cura',['R']],['Interagisci · riposa',['E']],['Aggancia bersaglio',['Tab','F']],['Cambia bersaglio','Rotella · muovi il mouse · C / X'],['Prima / terza persona',['V']],['Pausa',['Esc']]];
-  const tc=[['Muoversi','Pollice sinistro'],['Visuale','Trascina a destra'],['Correre','Spingi il pollice al bordo'],['Attacco (combo di 4)','Tocca la spada'],['Colpo pesante','Ascia · tienila premuta per caricare'],['Parata','Scudo'],['Schivata','Freccia curva'],['Fiaschetta','Ampolla rossa'],['Aggancia','Mirino'],['Interagisci','Compare quando serve']];
-  const gp=[['Attacco','RB'],['Colpo pesante · caricato','RT · tieni RT'],['Parata','LB'],['Schivata','B (tieni: corsa)'],['Fiaschetta','X'],['Interagisci','A'],['Aggancia','R3'],['Visuale','Y'],['Pausa','Start']];
+    ['Parata (deviazione al momento giusto)',['Clic destro']],['Schivata con invulnerabilità',['Spazio']],['Fiaschetta di cura',['R']],['Interagisci · riposa',['E']],['Aggancia bersaglio',['Tab','F']],['Cambia bersaglio','Rotella · muovi il mouse · C / X'],['Prima / terza persona',['V']],['Diario',['N']],['Dialoghi: avanti',['E','Spazio']],['Dialoghi: scelte',['1','2','3']],['Pausa',['Esc']]];
+  const tc=[['Muoversi','Pollice sinistro'],['Visuale','Trascina a destra'],['Correre','Spingi il pollice al bordo'],['Attacco (combo di 4)','Tocca la spada'],['Colpo pesante','Ascia · tienila premuta per caricare'],['Parata','Scudo'],['Schivata','Freccia curva'],['Fiaschetta','Ampolla rossa'],['Aggancia','Mirino'],['Interagisci','Compare quando serve'],['Diario','Libro in alto'],['Dialoghi','Tocca il riquadro o una scelta']];
+  const gp=[['Attacco','RB'],['Colpo pesante · caricato','RT · tieni RT'],['Parata','LB'],['Schivata','B (tieni: corsa)'],['Fiaschetta','X'],['Interagisci','A'],['Aggancia','R3'],['Visuale','Y'],['Pausa','Start'],['Dialoghi','A · croce per le scelte'],['Diario','Start → Diario']];
   const rows=(isTouch?tc:pc).concat(isTouch?[]:gp.map(r=>['Controller · '+r[0],r[1]]));
   $('keysList').innerHTML=rows.map(([a,b])=>`<div class="row"><span>${a}</span><span>${Array.isArray(b)?b.map(k=>`<kbd>${k}</kbd>`).join(''):b}</span></div>`).join('');}
 function syncSettingsUI(){const seg=(id,v)=>{for(const b of $(id).querySelectorAll('button'))b.classList.toggle('on',b.dataset.v===String(v));};
   seg('sQuality',SET.quality);seg('sView',G.fp?'fp':'tp');seg('sInv',SET.invertY?'1':'0');seg('sNums',SET.nums?'1':'0');seg('sFps',SET.fps?'1':'0');$('sSens').value=SET.sens;$('sMusic').value=SET.music;$('sSfx').value=SET.sfx;}
 function initMenus(){
-  $('mNew').onclick=()=>{sfx('ui');startGame(false);};$('mContinue').onclick=()=>{sfx('ui');startGame(true);};
+  // "Nuova partita" opens the character select (still over the title camera); the choice starts the game with that body
+  $('mNew').onclick=()=>{sfx('ui');lockLandscape();showScreen('charsel');menuFocus($('csM'));};$('mContinue').onclick=()=>{sfx('ui');lockLandscape();startGame(true);};
+  $('csM').onclick=()=>{sfx('ui');startGame(false,'m');};$('csF').onclick=()=>{sfx('ui');startGame(false,'f');};
+  $('csBack').onclick=()=>{sfx('ui');showScreen('title');menuFocus($('mNew'));};
   $('mSettings').onclick=()=>{settingsBack='title';syncSettingsUI();showScreen('settings');};$('mControls').onclick=()=>{settingsBack='title';fillControls();showScreen('controls');};
-  $('pResume').onclick=()=>resume();$('pSettings').onclick=()=>{settingsBack='pause';syncSettingsUI();showScreen('settings');};$('pControls').onclick=()=>{settingsBack='pause';fillControls();showScreen('controls');};
+  $('pResume').onclick=()=>resume();$('pJournal').onclick=()=>{sfx('ui');openJournal('pause');};$('jClose').onclick=()=>{sfx('ui');closeJournal();};$('pSettings').onclick=()=>{settingsBack='pause';syncSettingsUI();showScreen('settings');};$('pControls').onclick=()=>{settingsBack='pause';fillControls();showScreen('controls');};
   $('pTitle').onclick=()=>{save();showTitle();};
   $('sBack').onclick=()=>showScreen(settingsBack);$('cBack').onclick=()=>showScreen(settingsBack);
   $('sQuality').onclick=e=>{const v=e.target.dataset&&e.target.dataset.v;if(!v)return;SET.quality=v;saveSettings();applyQuality();syncSettingsUI();};
@@ -3015,21 +3271,32 @@ function initMenus(){
   for(const c of document.querySelectorAll('#levelup .card'))c.onclick=()=>pickStat(c.dataset.stat);
   $('luBack').onclick=()=>{sfx('ui');openShrineMenu();};$('smLevel').onclick=()=>{sfx('ui');openLevelUp();};$('smLeave').onclick=()=>{sfx('ui');resume();};
   $('dRetry').onclick=()=>respawn();$('vCont').onclick=()=>{G.state='play';resume();};$('vTitle').onclick=()=>showTitle();
+  $('dialog').addEventListener('click',()=>dlgNext());   // click / tap on the box advances (choice buttons stop the event)
   if(isTouch)initTouch();}
 /* ============================== save ============================== */
-const SAVE_K='stormblade.save.v2';
-function save(){lsSet(SAVE_K,{v:CFG.ver,stats:P.stats,braci:P.braci,sword:P.sword,flaskMax:P.flaskMax,cleared:P.cleared,chests:P.chests,shrine:P.shrine,kills:P.kills,time:G.playTime,tips:{p:P.parryTip,s:P.stormTip}});}
-function resetPlayer(){Object.assign(P,{stats:{vig:1,end:1,str:1},braci:0,sword:0,flaskMax:CFG.flask.start,cleared:[false,false,false,false],chests:[false,false,false,false],shrine:0,kills:0});G.playTime=0;G.won=false;}
-function loadSave(){const s=lsGet(SAVE_K);if(!s)return false;resetPlayer();Object.assign(P,{stats:s.stats||P.stats,braci:s.braci||0,sword:s.sword||0,flaskMax:s.flaskMax||3,cleared:s.cleared||P.cleared,chests:s.chests||P.chests,shrine:s.shrine||0,kills:s.kills||0});
-  G.playTime=s.time||0;if(s.tips){P.parryTip=s.tips.p;P.stormTip=s.tips.s;}return true;}
+// save data v4: a new key, so v2/v3 games (made for the old world) are never read nor deleted; settings live in their own key
+const SAVE_K='stormblade.save.v4';
+function save(){lsSet(SAVE_K,{v:CFG.ver,hero:P.hero,stats:P.stats,braci:P.braci,drop:P.drop,sword:P.sword,flasks:P.flasks,flaskMax:P.flaskMax,shrine:P.shrine,kills:P.kills,
+  time:G.playTime,quests:P.quests,flags:P.flags,cleared:P.cleared,chests:P.chests,tips:{p:P.parryTip,s:P.stormTip}});}
+function readSave(){const s=lsGet(SAVE_K);return s&&typeof s==='object'&&s.v===CFG.ver?s:null;}
+function resetPlayer(){Object.assign(P,{hero:'m',stats:{vig:1,end:1,str:1},braci:0,drop:null,sword:0,flaskMax:CFG.flask.start,cleared:[false,false,false,false],chests:[false,false,false,false],
+  shrine:0,kills:0,quests:{},flags:{}});G.playTime=0;G.won=false;syncDrop();}
+function loadSave(){const s=readSave();if(!s)return false;resetPlayer();
+  const st=s.stats,d=s.drop,okSt=st&&['vig','end','str'].every(k=>st[k]>=1),okD=d&&isFinite(d.x)&&isFinite(d.z)&&d.amount>0;
+  Object.assign(P,{hero:s.hero==='f'?'f':'m',stats:okSt?{vig:st.vig|0,end:st.end|0,str:st.str|0}:P.stats,braci:Math.max(0,Math.round(+s.braci||0)),
+    drop:okD?{x:+d.x,z:+d.z,amount:Math.round(d.amount)}:null,sword:s.sword||0,flasks:s.flasks||0,flaskMax:s.flaskMax||CFG.flask.start,
+    cleared:s.cleared||P.cleared,chests:s.chests||P.chests,shrine:s.shrine||0,kills:s.kills||0,quests:s.quests&&typeof s.quests==='object'?s.quests:{},flags:s.flags&&typeof s.flags==='object'?s.flags:{}});
+  G.playTime=s.time||0;if(s.tips){P.parryTip=s.tips.p;P.stormTip=s.tips.s;}syncDrop();return true;}
 /* ============================== flow ============================== */
 function syncWorldToSave(){CAMPS.forEach((c,i)=>{const ch=c.chest;ch.open=!!P.chests[i];ch.t=ch.open?1:0;ch.lid.rotation.x=ch.open?-1.9:0;ch.light.i=P.cleared[i]&&!ch.open?2.4:0;});}
-function startGame(cont){audioInit();if(!(cont&&loadSave()))resetPlayer();if(!cont)lsDel(SAVE_K);
+function startGame(cont,hero){audioInit();const fresh=!(cont&&loadSave());if(fresh){resetPlayer();P.hero=hero==='f'?'f':'m';}if(!cont)lsDel(SAVE_K);
+  setHero(P.hero);
   recalcStats();P.hp=P.maxHp;P.st=P.maxSt;P.flasks=P.flaskMax;P.dead=false;P.act=null;P.lock=null;P.chip=P.hp;P.heal=0;setSword(P.sword);syncWorldToSave();
   placeAtShrine(P.shrine);spawnWorld();Object.assign(ST,{phase:'calm',t:cont?95:150,k:0});STRIKES.length=0;
   G.state='play';showScreen(null);$('hud').hidden=false;$('touch').hidden=!isTouch;setView(SET.fp);resume();
   banner('Valle di Cenere',cont?'Bentornato, viandante':'Distruggi i quattro accampamenti dei goblin');sfx('banner');
-  if(!cont){tutorial=0;tutT=4.4;}else tutorial=99;}
+  if(!cont){tutorial=0;tutT=4.4;}else tutorial=99;
+  if(fresh){questStart('valle');questStart('selin');}}
 let tutorial=99,tutT=0;
 const TUT_PC=['<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> muovi</span><span><kbd>Shift</kbd> corri</span><span>Mouse visuale</span>',
   '<span><kbd>Clic</kbd> combo</span><span><kbd>Q</kbd> colpo pesante, tieni per caricare</span><span><kbd>Tab</kbd> aggancia</span>',
@@ -3040,7 +3307,7 @@ function updTutorial(rdt){if(tutorial>=4)return;tutT-=rdt;if(tutT<=0&&bannerT<=0
 function respawn(){P.dead=false;recalcStats();P.hp=P.maxHp;P.st=P.maxSt;P.flasks=P.flaskMax;P.act=null;P.lock=null;P.chip=P.hp;P.heal=0;
   placeAtShrine(P.shrine);spawnWorld();Object.assign(ST,{phase:'calm',t:110});ST.k=0;STRIKES.length=0;Post.u.desat.value=0;
   G.state='play';showScreen(null);resume();banner(SHRINES[P.shrine].name,'Ti sei rialzato');}
-function showTitle(){G.state='title';$('hud').hidden=true;showScreen('title');$('loading').hidden=true;const s=lsGet(SAVE_K);const mc=$('mContinue');
+function showTitle(){G.state='title';$('hud').hidden=true;showScreen('title');$('loading').hidden=true;const s=readSave();const mc=$('mContinue');
   if(s){mc.hidden=false;const lv=(s.stats?s.stats.vig+s.stats.end+s.stats.str-2:1);$('mContinueInfo').textContent='Livello '+lv+' · '+(s.cleared?s.cleared.filter(Boolean).length:0)+' accampamenti su 4';}else mc.hidden=true;
   if(document.pointerLockElement)document.exitPointerLock();placeAtShrine(0);setTimeout(()=>{const b=mc.hidden?$('mNew'):mc;b.focus();},60);}
 let titleA=0;
@@ -3058,7 +3325,7 @@ function tick(rdt,doRender){
   const dt=(playing||title)?rdt*ts:0;G.t+=dt;U.time.value+=dt;if(G.cine>0)G.cine-=rdt;
   if(playing){G.playTime+=dt;
     if(G.state==='play'){if(IN.pauseP){pause();}if(IN.viewP){setView(!G.fp);SET.fp=G.fp;saveSettings();}if(IN.lockP)toggleLock();if(IN.lockSwitch)switchLock(IN.lockSwitch);updTutorial(rdt);}
-    updPlayer(dt);updEnemies(dt);updProjectiles(dt);updStorm(dt);updStrikes(dt);if(G.state==='play')updInteract();
+    updPlayer(dt);updEnemies(dt);updProjectiles(dt);updStorm(dt);updStrikes(dt);updDrop(dt);if(G.state==='play')updInteract();
     updCamera(rdt,dt);}
   else if(title){titleCam(rdt);animPlayer(dt);updStorm(0);}
   camera.updateMatrixWorld();
@@ -3073,6 +3340,7 @@ function tick(rdt,doRender){
   pu.exposure.value=lerp(1.0,.92,ST.k);
   if(pu.lowhp.value>.5&&playing&&!P.dead){P.hbT=(P.hbT||0)-rdt;if(P.hbT<=0){P.hbT=.95;sfx('heart');}}
   renderer.getDrawingBufferSize(_db);PSCALE.value=_db.y/(2*Math.tan(camera.fov*DEG/2));
+  dlgTick(rdt);
   if(G.state!=='loading'&&G.state!=='title')updHUD(rdt);
   updAudio(rdt,ST.k,U.wind.value);
   MUS.combat=damp(MUS.combat,playing&&E.some(e=>!e.dead&&e.aggro&&!e.boss&&e.dist<26)?1:0,.6,rdt);MUS.boss=damp(MUS.boss,playing&&E.some(e=>!e.dead&&e.aggro&&e.boss&&e.dist<40)?1:0,.5,rdt);
@@ -3080,6 +3348,7 @@ function tick(rdt,doRender){
   clearPresses();
   if(doRender)Post.render(Q.rays?(1-ST.k)*.9:0);}
 async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('loadTxt').textContent=t;};
+  applyOrient();
   try{L(.04,'Forgiando le texture');await nextFrame();makeTextures();makeMaterials();makeWardMat();
     L(.16,'Modellando la valle');await nextFrame();buildPaths();setupFlats();buildTerrain();buildMountains();
     L(.34,'Riempiendo il lago');await nextFrame();buildWater();initShore();
