@@ -10,7 +10,8 @@
   - salvataggio v4 (chiave nuova: le partite delle versioni vecchie non vengono lette né cancellate);
   - telefono solo in orizzontale (se lo tieni in verticale il gioco ruota); menu da tastiera e controller;
   - scelta tra eroe ed eroina; dialoghi con il testo al maschile o al femminile; missioni e diario; Selin al primo santuario.
-- **Pagina pubblicata**: la Tappa 1 con le correzioni della revisione.
+- **Ramo `animazioni`** (non ancora su `main`): tappe 1 e 2 del piano `docs/superpowers/plans/2026-11-04-stormblade-animazioni-tappe1-2.md` finite; registro con tutte le decisioni in `.superpowers/sdd/2026-11-04-stormblade-animazioni-tappe1-2/progress.md` (cartella di lavoro, non nel repository). Misure della tappa 2: 1 goblin 2,55 s, 3 goblin 5,04 s (20 prove), logica per frame 1,38 ms contro 1,31 della tappa 1 (rumore entro +0,1 ms), 76 test verdi.
+- **Pagina pubblicata**: versione 10, con le animazioni della tappa 2.
 - **Meshy**: l'eroe usa un modello Meshy (`assets/meshy/hero/`), caricato da `src/l_meshy.js` solo via http; in locale e nei test resta il personaggio procedurale. L'eroina non ha ancora un modello Meshy.
 - **Registro dell'esecuzione**: `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.ledger.md`. Contiene ogni decisione presa con il suo costo e i punti minori della revisione rimandati.
 
@@ -45,6 +46,13 @@
   - il passo usa le misure delle gambe del modello Meshy (`MESHY.legD`), posa i piedi sul terreno e abbassa il bacino quando un piede a terra non ci arriva (`CFG.anim`);
   - ogni mossa nuova si fonde con quella che interrompe in `CFG.anim.blend` secondi; `resetBlend()` la azzera a ogni rinascita, teletrasporto o cambio di corpo;
   - `tests/anim_ref.json` è il riferimento della lama (arco e portata di ogni attacco): un cambio di animazione deve restare entro il 10%.
+  - **Tappa 2** (clip di camminata e corsa):
+    - `bash tools/anim/bake.sh` converte le clip elencate in `tools/anim/moves.json` nel vettore di pose del gioco e riscrive `src/n_anims.js` (generato: non si modifica a mano). Il convertitore (`tools/anim/bake.js`) gira nella pagina di test con lo scheletro vero dell'eroe; si ferma se l'andata e ritorno supera 2° sulle ossa che il trasferimento può seguire, e stampa a parte quelle che non può seguire (Spine02 e neck sono miscele, il piede ha un solo asse);
+    - braccia e gambe si convertono come catene di due ossa (la torsione dell'osso alto mette quello basso nel piano della cerniera); le punte si misurano contro il piede della clip;
+    - nel gioco (`gaitIK`, solo per il giocatore: `opt.clip`) dalla clip vengono, in proporzione al movimento in avanti, il giro del bacino, schiena, petto, testa, clavicole e braccia (spalle e polsi come rotazioni, perché i loro angoli nella clip sono lontani dalla posa di base). Inclinazione e rollio del bacino restano fuori: le anche Meshy stanno 10 cm sotto il perno e i piedi scivolerebbero;
+    - restano calcolati: gambe e piedi (anche l'altezza del piede in volo e la piega delle punte: la curva della caviglia della clip va con il suo piede inclinato e farebbe saltare il piede di 6-9 cm), inclinazione, rimbalzo, terreno; `CFG.anim.clipGain` (0 = il passo di prima);
+    - da fermi il giocatore respira (petto e clavicole; sull'eroina, senza petto Meshy, la schiena) e sposta piano il peso di lato (`CFG.anim.breath*`, `sway*`); i nemici tengono l'oscillazione di prima;
+    - problema noto della tappa 1: correndo a 5,4 m/s il piede che atterra non arriva a terra per il primo 15% dell'appoggio e scende di 6-9 cm in un frame poco dopo (`reachFrom`). Non è ancora corretto.
 
 ## Tutti i test
 ```
@@ -58,7 +66,8 @@ python3 tests/run.py tests/meshy_http.test.js --http
 ```
 - `tests/fixtures.js` (scheletro vero dell'eroe Meshy, `meshyOn()`) viene caricato da `run.py` prima di ogni test.
 - `--http` apre la pagina da un piccolo server locale, così il modello Meshy si carica; il GLTFLoader del CDN è sostituito da `tests/vendor/mini_gltf.js`.
-- Video prima/dopo: `python3 tools/anim/video.py --before <copia con game_w.html> --after . --scene stage1 --out video.mp4` (circa 10 minuti).
+- Video prima/dopo: `python3 tools/anim/video.py --before <copia con game_w.html> --after . --scene stage1|stage2 --out video.mp4` (circa 10 minuti).
+- Convertitore delle clip: `python3 -m unittest tools/anim/test_clip2json.py` (lettore GLB), poi `bash tools/anim/bake.sh`.
 
 ## Idee tenute per dopo (non costruirle finché Denis non lo chiede)
 - Parte 2 della storia (capitoli 2 e 3, poteri dei frammenti, boss finale, due finali).
