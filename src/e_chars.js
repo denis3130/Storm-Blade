@@ -1,9 +1,11 @@
 /* ============================== character rigs ============================== */
-const NP=34;
-const PK={y:[0],pel:[1,2,3],spi:[4,5,6],head:[7,8,33],shL:[9,10,11],elL:[12],shR:[13,14,15],elR:[16],wrR:[17,18,19],hipL:[20,21,22],knL:[23],hipR:[24,25,26],knR:[27],ftL:[28],ftR:[29],wrL:[30,31,32]};
-// authored poses use 'positive pitch = bend forward' for spine/head (and small pelvis tilts); the rig's +X pitch tilts backward, so flip here
+const NP=43;
+// 34..42 drive joints without meshes that only the Meshy model uses: chest (upper back), clavicles [raise, forward], toes (positive = bend up)
+const PK={y:[0],pel:[1,2,3],spi:[4,5,6],head:[7,8,33],shL:[9,10,11],elL:[12],shR:[13,14,15],elR:[16],wrR:[17,18,19],hipL:[20,21,22],knL:[23],hipR:[24,25,26],knR:[27],ftL:[28],ftR:[29],wrL:[30,31,32],
+  chest:[34,35,36],clL:[37,38],clR:[39,40],toeL:[41],toeR:[42]};
+// authored poses use 'positive pitch = bend forward' for spine/chest/head (and small pelvis tilts); the rig's +X pitch tilts backward, so flip here
 function pose(o,base){const p=new Float32Array(NP);if(base)p.set(base);
-  for(const k in o){const idx=PK[k],v=o[k];if(k==='y'){p[0]=v;continue;}if(Array.isArray(v)){for(let i=0;i<v.length;i++){let a=v[i];if(i===0&&(k==='spi'||k==='head'||(k==='pel'&&Math.abs(a)<30)))a=-a;p[idx[i]]=a*DEG;}}else p[idx[0]]=v*DEG;}return p;}
+  for(const k in o){const idx=PK[k],v=o[k];if(k==='y'){p[0]=v;continue;}if(Array.isArray(v)){for(let i=0;i<v.length;i++){let a=v[i];if(i===0&&(k==='spi'||k==='chest'||k==='head'||(k==='pel'&&Math.abs(a)<30)))a=-a;p[idx[i]]=a*DEG;}}else p[idx[0]]=v*DEG;}return p;}
 function track(base,keys){return keys.map(k=>({t:k[0],p:k[1] instanceof Float32Array?k[1]:pose(k[1],base),e:k[2]||eIO}));}
 function evalTrack(tr,t,out){if(t<=tr[0].t){out.set(tr[0].p);return;}
   for(let i=1;i<tr.length;i++){if(t<=tr[i].t){const a=tr[i-1],b=tr[i];const k=b.e((t-a.t)/Math.max(1e-4,b.t-a.t));for(let j=0;j<NP;j++)out[j]=a.p[j]+(b.p[j]-a.p[j])*k;return;}}
@@ -70,14 +72,19 @@ function buildHuman(cfg){
   J('shL',P.spi,-d.shW,d.torso-d.shDrop,d.shZ||0);J('shR',P.spi,d.shW,d.torso-d.shDrop,d.shZ||0);
   J('elL',P.shL,0,-d.upper,0);J('elR',P.shR,0,-d.upper,0);J('wrL',P.elL,0,-d.fore,0);J('wrR',P.elR,0,-d.fore,0);
   J('hipL',P.pel,-d.hipW,0,0);J('hipR',P.pel,d.hipW,0,0);J('knL',P.hipL,0,-d.thigh,0);J('knR',P.hipR,0,-d.thigh,0);J('ftL',P.knL,0,-d.shin,0);J('ftR',P.knR,0,-d.shin,0);
+  // virtual joints: no meshes and not skeleton bones; the Meshy transfer reads their world rotation (positions only for readability)
+  const V={},VJ=(n,par,x,y,z)=>{const g=new THREE.Object3D();g.position.set(x,y,z);g.rotation.order='YXZ';par.add(g);V[n]=g;};
+  VJ('chest',P.spi,0,d.torso-d.shDrop,0);VJ('clL',P.spi,-d.shW*.35,d.torso-d.shDrop,0);VJ('clR',P.spi,d.shW*.35,d.torso-d.shDrop,0);VJ('toeL',P.ftL,0,0,0);VJ('toeR',P.ftR,0,0,0);
   const L={};const add=(bone,mat,g,m,c,o)=>{const k=bone+'|'+mat;(L[k]=L[k]||{bone,mat,parts:[]}).parts.push(Object.assign({g,m,c:c&&c.isColor?c:col(c||0xffffff)},o||{}));};
   cfg.build(add,d);
   const meshes=skinBuild(inner,P,L,cfg.mats);
-  const rig={root,inner,P,meshes,d,cur:new Float32Array(NP),mats:cfg.mats,
+  const rig={root,inner,P,V,meshes,d,cur:new Float32Array(NP),mats:cfg.mats,
     apply(p){const Pp=this.P;Pp.pel.position.y=d.hip+p[0];Pp.pel.rotation.set(p[1],p[2],p[3]);Pp.spi.rotation.set(p[4],p[5],p[6]);Pp.head.rotation.set(p[7],p[8],p[33]);
       Pp.shL.rotation.set(p[9],p[10],p[11]);Pp.elL.rotation.x=p[12];Pp.shR.rotation.set(p[13],p[14],p[15]);Pp.elR.rotation.x=p[16];Pp.wrR.rotation.set(p[17],p[18],p[19]);
       Pp.hipL.rotation.set(p[20],p[21],p[22]);Pp.knL.rotation.x=p[23];Pp.hipR.rotation.set(p[24],p[25],p[26]);Pp.knR.rotation.x=p[27];Pp.ftL.rotation.x=p[28];Pp.ftR.rotation.x=p[29];
-      Pp.wrL.rotation.set(p[30],p[31],p[32]);}};
+      Pp.wrL.rotation.set(p[30],p[31],p[32]);
+      // clavicle raise turns the outer end up about the body's forward axis, forward turns it toward -z; toes bend about X
+      const V=this.V;V.chest.rotation.set(p[34],p[35],p[36]);V.clL.rotation.set(0,-p[38],-p[37]);V.clR.rotation.set(0,p[40],p[39]);V.toeL.rotation.x=p[41];V.toeR.rotation.x=p[42];}};
   return rig;}
 const G_=(k,f)=>geo(k,f);
 const gSph=(r,ws=14,hs=10)=>new THREE.SphereGeometry(r,ws,hs);

@@ -5,15 +5,16 @@
    where C turns the meshy bind bone direction (A-pose) onto the procedural rest direction.
    If the file cannot be loaded (tests on file://, offline) the procedural hero stays. */
 const MESHY={on:false,url:'assets/meshy/hero/hero.json'};
-// meshy bone, procedural joint for the rotation delta (b = optional second joint, w = blend), procedural direction pair, meshy child for direction
+// meshy bone, procedural joint for the rotation delta (b = optional second joint, w = blend), procedural direction pair, meshy child for direction;
+// joints are looked up in rig.P, then in rig.V (chest, clavicles, toes: virtual joints without meshes)
 const MESHY_MAP=[
   {m:'Hips',p:'pel',pd:['pel','spi'],mc:'Spine02'},
   {m:'Spine02',p:'pel',b:'spi',w:.34,pd:['spi','head'],mc:'Spine01'},
   {m:'Spine01',p:'pel',b:'spi',w:.67,pd:['spi','head'],mc:'Spine'},
-  {m:'Spine',p:'spi',pd:['spi','head'],mc:'neck'},
-  {m:'neck',p:'spi',b:'head',w:.5,pd:['spi','head'],mc:'Head'},
+  {m:'Spine',p:'chest',pd:['spi','head'],mc:'neck'},
+  {m:'neck',p:'chest',b:'head',w:.5,pd:['spi','head'],mc:'Head'},
   {m:'Head',p:'head',pd:['spi','head'],mc:'head_end'},
-  {m:'LeftShoulder',p:'spi',fixed:1},{m:'RightShoulder',p:'spi',fixed:1},
+  {m:'LeftShoulder',p:'clL',fixed:1},{m:'RightShoulder',p:'clR',fixed:1},
   {m:'LeftArm',p:'shL',pd:['shL','elL'],mc:'LeftForeArm'},
   {m:'LeftForeArm',p:'elL',pd:['elL','wrL'],mc:'LeftHand'},
   {m:'LeftHand',p:'wrL',pd:['elL','wrL'],mc:'LeftHand',mp:'LeftForeArm'},
@@ -25,7 +26,9 @@ const MESHY_MAP=[
   {m:'LeftFoot',p:'ftL',pd:['knL','ftL'],mc:'LeftFoot',mp:'LeftLeg'},
   {m:'RightUpLeg',p:'hipR',pd:['hipR','knR'],mc:'RightLeg'},
   {m:'RightLeg',p:'knR',pd:['knR','ftR'],mc:'RightFoot'},
-  {m:'RightFoot',p:'ftR',pd:['knR','ftR'],mc:'RightFoot',mp:'RightLeg'}];
+  {m:'RightFoot',p:'ftR',pd:['knR','ftR'],mc:'RightFoot',mp:'RightLeg'},
+  // toes: same correction C as their foot, so with the toe value at zero they stay where the foot puts them
+  {m:'LeftToeBase',p:'toeL',cOf:'LeftFoot'},{m:'RightToeBase',p:'toeR',cOf:'RightFoot'}];
 const _mq1=new THREE.Quaternion(),_mq2=new THREE.Quaternion(),_mq3=new THREE.Quaternion(),_mm=new THREE.Matrix4(),_mv=new THREE.Vector3(),_mv2=new THREE.Vector3();
 const worldQ=(o,q)=>q.setFromRotationMatrix(_mm.extractRotation(o.matrixWorld));
 function loadMeshyHero(){
@@ -42,7 +45,7 @@ function meshyAttach(){if(!MESHY.gltf)return false;for(const[b,q,p]of MESHY.bind
 // the heroine has no Meshy model yet: take it off and let the procedural body (and its cape) show
 function meshyDetach(){if(MESHY.holder&&MESHY.holder.parent)MESHY.holder.parent.remove(MESHY.holder);MESHY.on=false;}
 function setupMeshyHero(gltf){
-  const R=PL.rig,P_=R.P,B={};let skin=null;
+  const R=PL.rig,P_=R.P,J=n=>P_[n]||R.V[n],B={};let skin=null;
   gltf.scene.traverse(o=>{if(o.isBone)B[o.name]=o;if(o.isSkinnedMesh){skin=o;o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;
     const m=o.material;for(const k of['map','emissiveMap'])if(m[k])m[k].encoding=THREE.LinearEncoding;m.envMapIntensity=.6;}});
   if(!skin||!B.Hips)return false;
@@ -53,12 +56,13 @@ function setupMeshyHero(gltf){
   R.root.position.set(0,0,0);R.root.rotation.set(0,0,0);R.inner.rotation.set(0,0,0);R.apply(new Float32Array(NP));R.root.updateMatrixWorld(true);
   const wp=(o,v)=>o.getWorldPosition(v);
   const rows=MESHY_MAP.map(r=>{const bone=B[r.m];if(!bone)return null;
-    const row={bone,p:P_[r.p],b:r.b?P_[r.b]:null,w:r.w||0,Qp0i:worldQ(P_[r.p],new THREE.Quaternion()).invert(),Qb0i:r.b?worldQ(P_[r.b],new THREE.Quaternion()).invert():null,
+    const row={bone,p:J(r.p),b:r.b?J(r.b):null,w:r.w||0,cOf:r.cOf,Qp0i:worldQ(J(r.p),new THREE.Quaternion()).invert(),Qb0i:r.b?worldQ(J(r.b),new THREE.Quaternion()).invert():null,
       Qm0:worldQ(bone,new THREE.Quaternion()),C:new THREE.Quaternion(),parentQ:new THREE.Quaternion()};
-    if(!r.fixed){const md=wp(B[r.mc],_mv).sub(wp(B[r.mp||r.m],_mv2)).normalize().clone();const pd=wp(P_[r.pd[1]],_mv).sub(wp(P_[r.pd[0]],_mv2)).normalize();row.C.setFromUnitVectors(md,pd);}
+    if(!r.fixed&&!r.cOf){const md=wp(B[r.mc],_mv).sub(wp(B[r.mp||r.m],_mv2)).normalize().clone();const pd=wp(J(r.pd[1]),_mv).sub(wp(J(r.pd[0]),_mv2)).normalize();row.C.setFromUnitVectors(md,pd);}
     row.CQm0=row.C.clone().multiply(row.Qm0);return row;}).filter(Boolean);
   // per-frame scratch, made once: wq = this frame's target world rotation; pr = the row of the parent bone when it is synced
   // earlier in the same frame (its wq is then fresh), pq = the parent's current world rotation otherwise
+  for(const r of rows)if(r.cOf){const src=rows.find(o=>o.bone.name===r.cOf);if(src){r.C.copy(src.C);r.CQm0.copy(r.C).multiply(r.Qm0);}}
   rows.forEach((r,i)=>{r.wq=new THREE.Quaternion();r.pq=new THREE.Quaternion();r.pr=rows.slice(0,i).find(o=>o.bone===r.bone.parent)||null;});
   const hipOff=P_.pel.worldToLocal(wp(B.Hips,new THREE.Vector3()));
   // attachment proxies: children of the meshy hands whose world rotation equals the procedural wrist's
