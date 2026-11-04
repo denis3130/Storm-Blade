@@ -1,45 +1,56 @@
-# Passaggio di consegne — 3 novembre 2026
+# Passaggio di consegne — aggiornato il 4 novembre 2026
 
-Fino a oggi Stormblade è stato sviluppato in una conversazione dell'app Claude. **Da qui in poi si lavora solo in Claude Code**, su questo repository. Denis non torna nella conversazione di prima, quindi tutto quello che serve è qui.
+## Due giochi separati (scelta di Denis, 4/11/2026)
+- **Stormblade web** (questo codice, Three.js): si sviluppa **nella conversazione dell'app Claude**, come dall'inizio, con Meshy e Blender quando servono. La versione giocabile è la pagina Claude "Stormblade" (vedi `CLAUDE.md`, "Pubblicare una versione giocabile").
+- **Stormblade Unreal**: è un gioco a parte, che Denis sviluppa con Claude Code sul suo PC, sul ramo `unreal`. Usa solo contenuti gratuiti di Fab. Non va tenuto allineato con la versione web.
 
 ## Dove siamo
-- **`main`** contiene:
-  - Stormblade v5 (movimento, collisioni, combattimento e IA dei nemici già rifatti);
-  - il design approvato del capitolo 1 e il piano della Tappa 1;
-  - queste istruzioni e il brief di Meshy;
-  - la versione giocabile `index.html` (v5).
-- **`tappa1-basi`** contiene la Tappa 1 in corso, secondo il piano `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.md`:
-  - **Task 1 fatto**: runner di test nella pagina e regressione della v5 (commit `b43f6e3`).
-  - **Task 2 fatto**: le braci sostituiscono l'esperienza, si sale di livello al santuario, i menu si usano anche da tastiera e controller (commit `37bf36e`). Test: braci 7/7, fumo 2/2, regressione 3/3.
-  - **Prossimo**: il Task 3 (braci a terra alla morte), poi i Task 4-9. Infine una revisione del ramo intero con un contesto nuovo, l'unione su `main` e la pubblicazione.
-- **Registro dell'esecuzione** (sul ramo `tappa1-basi`): `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.ledger.md`. Se usi la skill `superpowers:executing-plans`, copia questo file in `.superpowers/sdd/2026-11-03-stormblade-tappa1-basi/progress.md` prima di partire: la skill riprende dal Task 3 senza rifare i primi due.
-- **Meshy (Tappa 3)** non è ancora collegato. L'ambiente **Default** di Claude Code ha già `meshy.ai` e `*.meshy.ai` tra i domini consentiti, insieme ai gestori di pacchetti. Segui `docs/meshy/BRIEF.md`.
-- **Versione giocabile**: d'ora in poi si pubblica con GitHub Pages da `main` (vedi `CLAUDE.md`). La vecchia pagina dell'app Claude resta ferma alla v5.
+- **`main`**: Stormblade v5, il design del capitolo 1, il piano della Tappa 1, queste istruzioni e il brief di Meshy.
+- **`tappa1-basi`**: la Tappa 1 "Basi" è **finita** (Task 1-9 del piano `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.md`), poi revisionata da un revisore nuovo e corretta:
+  - le braci sostituiscono l'esperienza: si sale di livello al santuario e, alla morte, restano a terra finché non le riprendi;
+  - salvataggio v4 (chiave nuova: le partite delle versioni vecchie non vengono lette né cancellate);
+  - telefono solo in orizzontale (se lo tieni in verticale il gioco ruota); menu da tastiera e controller;
+  - scelta tra eroe ed eroina; dialoghi con il testo al maschile o al femminile; missioni e diario; Selin al primo santuario.
+  - **Da fare**: unire il ramo su `main`, quando Denis dà l'ok.
+- **Pagina pubblicata**: la Tappa 1 con le correzioni della revisione.
+- **Meshy**: l'eroe usa un modello Meshy (`assets/meshy/hero/`), caricato da `src/l_meshy.js` solo via http; in locale e nei test resta il personaggio procedurale. L'eroina non ha ancora un modello Meshy.
+- **Registro dell'esecuzione**: `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.ledger.md`. Contiene ogni decisione presa con il suo costo e i punti minori della revisione rimandati.
 
 ## Ordine consigliato (lo decide Denis)
-1. Meshy: login, saldo e costo stimato, poi solo l'eroe come modello di prova (brief).
-2. Tappa 1: Task 3-9 sul ramo `tappa1-basi`, revisione finale, unione su `main`, pubblicazione.
+1. Unire `tappa1-basi` su `main`.
+2. Meshy: modello dell'eroina. Prima mostra a Denis il saldo e il costo stimato, poi fai un solo modello di prova.
 3. Piano della Tappa 2 "Mondo": il design dice di scrivere un piano alla volta, dopo aver consegnato la tappa precedente.
 
-## Decisioni già prese durante la Tappa 1 (da rispettare)
+## Decisioni già prese (da rispettare)
 - **Test**:
   - `T.clearEnemies` usa `removeEnemy` (esportato nel `window.__SB` di test) e toglie anche i proiettili dei nemici.
   - `run.py` fallisce anche sugli errori della console, tranne "Failed to load resource" (i font bloccati).
+  - `Math.random` ha un seme: i test sono deterministici e il seme predefinito è 1. Un fallimento si ripete con `python3 tests/run.py <file> --seed N`.
 - **Santuario**:
   - Il menu si apre subito, quando l'animazione di riposo arriva a 0,9 s, invece che con un timer.
   - Dopo aver scelto una statistica si torna al menu del santuario. La schermata del livello ha "Indietro" (`#luBack`) e mostra costo e braci.
 - **Contatore delle braci**: sta nella riga dell'HUD dove c'era la barra dell'esperienza. Quando le braci bastano per salire di livello, la medaglia pulsa una volta, con un avviso e un suono.
+- **Mucchio di braci**: `syncDrop()` ricrea o nasconde la mesh partendo da `P.drop`; la chiamano `loadSave` e `resetPlayer`.
 - **Menu**:
   - La navigazione è unica per tutte le schermate in `SCREENS`, con le funzioni `menuMove`, `menuPress`, `menuBack` e `padMenu`. Frecce ed Esc da tastiera; croce o levetta, A e B dal controller.
-  - Ogni schermata dichiara il suo pulsante "indietro" con `data-back`. I Task 6 (scelta del personaggio), 7 (scelte dei dialoghi) e 8 (diario) devono solo registrare le loro schermate; per le scelte dei dialoghi va aggiunto il caso in `padMenu`.
+  - Ogni schermata dichiara il suo pulsante "indietro" con `data-back`. Una schermata nuova va solo aggiunta a `SCREENS`.
+- **Orientamento** (`src/r_orient.js`):
+  - Su un telefono in verticale `#app` ruota di 90°. Larghezza, altezza e trasformazione le imposta `applyOrient` in px da `innerWidth`/`innerHeight`: mai `100vh`/`100vw`, perché su iOS `100vh` è più alto della parte visibile quando c'è la barra di Safari.
+  - Il layout legge la misura del gioco, non quella della finestra: `--vw`/`--vh` e le classi `w1000`/`w640`/`h460` su `#app` al posto delle unità vw/vh e delle media query.
+  - Zone sicure (notch, barra home): usa `--it`/`--ir`/`--ib`/`--il`, cioè i bordi alto, destro, basso e sinistro del gioco. In verticale prendono il lato fisico giusto (`#app.rot90` in `head.html`). Non usare `env(safe-area-inset-*)` direttamente.
 - **Schermi bassi**: regole compatte per altezze fino a 460 px, così le carte del livello restano tre in fila e stanno in 360 px.
-- **Task 3 → 4**: il Task 3 deve esporre `syncDrop()`, che ricrea o nasconde la mesh del mucchio di braci partendo da `P.drop`. `loadSave` e `resetPlayer` la chiamano.
-- **Task 9**: le sonde di misura della v5 sono in `tests/probes/` (ramo `tappa1-basi`), con i risultati di riferimento. Limiti: 1 goblin ≤ 2,64 s, 3 goblin ≤ 5,16 s (20 prove); logica per frame entro +0,1 ms dalla v5.
+- **Salvataggio**: si salva al riposo, alla morte e quando riprendi le braci, a ogni passo di missione e alla fine di ogni dialogo.
+- **Storia** (`src/m_story.js`): i testi hanno varianti `{maschile|femminile}`, risolte da `gtxt` prima di essere scritti. Durante un dialogo il mondo è fermo. La tempesta ha la precedenza sull'obiettivo della missione nel riquadro in alto a destra.
+- **Modello Meshy**: `meshySync` gira a ogni frame e non crea oggetti (i quaternioni li prepara `setupMeshyHero`). `tests/meshy.test.js` lo verifica con uno scheletro finto.
+- **Misure**: le sonde della v5 sono in `tests/probes/`, con i risultati di riferimento. Limiti: 1 goblin ≤ 2,64 s, 3 goblin ≤ 5,16 s (20 prove); logica per frame entro +0,1 ms dalla v5.
 
-## Test intermittente — risolto il 4 novembre (ramo `tappa1-basi`)
-- Il test che falliva a volte era `every enemy attack fires`. Con il giocatore fermo, il lupo (che colpisce e scappa) attacca quasi solo con il balzo da 3-6 m e non arriva a distanza di morso: col seme 17 non morde mai in 60 s. Il test ora fa nascere il lupo a 1,6 m, dentro la distanza del morso.
-- I test usano un `Math.random` con seme: è deterministico, e il seme predefinito è 1. Un fallimento si ripete con `python3 tests/run.py <file> --seed N`.
-- Verifica: regressione verde con i semi da 1 a 10; i due scenari casuali verdi su 25 semi.
+## Tutti i test
+```
+bash mk.sh
+for f in smoke regression braci drop save charsel dialogue quest meshy; do python3 tests/run.py tests/$f.test.js || break; done
+python3 tests/run.py tests/orient.test.js --viewport 360x640 --touch --mobile
+python3 tests/run.py tests/orient_desktop.test.js --viewport 1280x720
+```
 
 ## Idee tenute per dopo (non costruirle finché Denis non lo chiede)
 - Parte 2 della storia (capitoli 2 e 3, poteri dei frammenti, boss finale, due finali).
