@@ -197,7 +197,7 @@ function campObjective(){
   for(let i=0;i<CAMPS.length;i++)if(P.cleared[i]&&!P.chests[i])return{t:'Apri il forziere: '+CAMPS[i].name,p:{x:CAMPS[i].chest.x,z:CAMPS[i].chest.z}};
   let best=-1;for(let i=0;i<CAMPS.length;i++)if(!P.cleared[i]){best=i;break;}
   if(best<0)return{t:'La valle è libera',p:null};const n=P.cleared.filter(Boolean).length;
-  return{t:'Distruggi '+CAMPS[best].name+' ('+n+'/'+CAMPS.length+')',p:CAMPS[best]};}
+  return{t:(DEMO?'Libera ':'Distruggi ')+CAMPS[best].name+' ('+n+'/'+CAMPS.length+')',p:CAMPS[best]};}
 const EBARS=[],HUDC={};
 function updHUD(rdt){
   const hw=Math.min(380,220+(P.maxHp-100)*1.1),sw=Math.min(360,200+(P.maxSt-100)*1.2);
@@ -211,7 +211,7 @@ function updHUD(rdt){
   updOrbs(rdt);
   const ob=objective();$('objText').textContent=ob.t;updCompass(ob.p);
   const sl=$('stormLine'),t=Math.ceil(ST.t),ts=Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
-  if(ST.phase==='calm'){sl.className='';sl.textContent='Prossima tempesta tra '+ts;}else if(ST.phase==='warn'){sl.className='warn';sl.textContent='Tempesta tra '+ts;}
+  if(DEMO){sl.className='';sl.textContent='';}else if(ST.phase==='calm'){sl.className='';sl.textContent='Prossima tempesta tra '+ts;}else if(ST.phase==='warn'){sl.className='warn';sl.textContent='Tempesta tra '+ts;}
   else if(ST.phase==='storm'){sl.className=P.inWard?'safe':'on';sl.textContent=(P.inWard?'Al sicuro · ':'Allo scoperto · ')+ts;}else{sl.className='';sl.textContent='Il cielo si schiarisce';}
   let boss=null;for(const e of E)if(e.boss&&!e.dead&&e.aggro&&e.dist<45){boss=e;break;}
   const bb=$('boss');if(boss){bb.hidden=false;$('bossName').innerHTML=boss.name+(boss.phase>1?'<small>infuriato</small>':'');$('bossFill').style.transform=`scaleX(${clamp(boss.hp/boss.maxHp,0,1)})`;
@@ -375,7 +375,7 @@ function startGame(cont,hero){audioInit();const fresh=!(cont&&loadSave());if(fre
   recalcStats();P.hp=P.maxHp;P.st=P.maxSt;P.flasks=P.flaskMax;P.dead=false;P.act=null;P.lock=null;P.chip=P.hp;P.heal=0;setSword(P.sword);syncWorldToSave();
   placeAtShrine(P.shrine);spawnWorld();Object.assign(ST,{phase:'calm',t:cont?95:150,k:0});STRIKES.length=0;
   G.state='play';showScreen(null);$('hud').hidden=false;$('touch').hidden=!isTouch;setView(SET.fp);resume();
-  banner('Valle di Cenere',cont?'Bentornato, viandante':'Distruggi i quattro accampamenti dei goblin');sfx('banner');
+  banner(DEMO?'La Valle delle Lanterne':'Valle di Cenere',cont?'Bentornato, viandante':DEMO?'Sconfiggi i due guardiani della valle':'Distruggi i quattro accampamenti dei goblin');sfx('banner');
   if(!cont){tutorial=0;tutT=4.4;}else tutorial=99;
   if(fresh&&!DEMO){questStart('valle');questStart('selin');}}
 let tutorial=99,tutT=0;

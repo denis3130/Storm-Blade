@@ -27,7 +27,7 @@ function genCobble(){const S=TS,c=mkC(S),N=11,J=[];for(let k=0;k<N*N;k++)J.push(
 // vertical weathered boards for house walls
 function genBoards(){const S=TS/2,c=mkC(S);pxFill(c,(u,v,o)=>{const k=Math.floor(u*9),f=(u*9)%1,n=tfbm(u*.3+k*.11,v,3,6,93+k),g=tfbm(u,v*.25,40,2,7),e=sstep(0,.06,f)*sstep(1,.94,f);
     const b=lerp(70,120,n)*(.55+.45*e)*(.9+.2*g)*(.85+.15*hash2(k,5));o[0]=b;o[1]=b*.93;o[2]=b*.86;});return c;}
-function makeDemoTextures(){TEXD.boards=toTex(genBoards());TEXD.tiles=toTex(genTiles());TEXD.plaster=toTex(genPlaster());TEXD.cloth=toTex(genCloth());TEXD.cobble=toTex(genCobble());
+function makeDemoTextures(){demoTexts();TEXD.boards=toTex(genBoards());TEXD.tiles=toTex(genTiles());TEXD.plaster=toTex(genPlaster());TEXD.cloth=toTex(genCloth());TEXD.cobble=toTex(genCobble());
   MATD.stone=stoneMat(0xa3abb3,.14,.86,.95);MATD.stoneDark=stoneMat(0x8e959b,.22,.9,.8);MATD.rock=stoneMat(0x8b9198,.3,.92,.5);
   MATD.tile=new THREE.MeshStandardMaterial({map:TEXD.tiles,vertexColors:true,roughness:.62,metalness:.05,side:THREE.DoubleSide});
   MATD.plaster=new THREE.MeshStandardMaterial({map:TEXD.plaster,vertexColors:true,roughness:.95});
@@ -119,15 +119,15 @@ function bonfire(x,y,z){const b=DB.stone;
 
 /* ---------- the stairs down to the village ---------- */
 function demoStairs(){const b=DB.stone,R=DEMO.RAMP[0],ax=R[0],az=R[1],ya=R[2],bx=R[3],bz=R[4],yb=R[5],hw=R[6];
-  const L=Math.hypot(bx-ax,bz-az),n=Math.round((ya-yb)/.19),yaw=-Math.atan2(bz-az,bx-ax)+PI/2;
+  const L=Math.hypot(bx-ax,bz-az),n=Math.round((ya-yb)/.28),yaw=-Math.atan2(bz-az,bx-ax)+PI/2;
   for(let i=0;i<n;i++){const t=(i+.5)/n,px=lerp(ax,bx,t),pz=lerp(az,bz,t),yy=lerp(ya,yb,(i+1)/n);
     // each step: a few long blocks, slightly uneven, worn
-    let u=-hw;while(u<hw){const w=Math.min(sr(1,2.2),hw-u);boxAt(b,MATD.stone,px+(u+w/2),yy-.16+sr(-.015,.015),pz,w-.04,.36,L/n+.06,yaw,grey(sr(.6,.8)),sr(-.01,.01),0);u+=w;}}
+    let u=-hw;while(u<hw){const w=Math.min(sr(1.1,2.6),hw-u),g=sr(.58,.82),mo=srnd()<.25;boxAt(b,MATD.stone,px+(u+w/2),yy-.2+sr(-.02,.02),pz+sr(-.04,.04),w-.06,.44,L/n+.04,yaw+sr(-.02,.02),mo?new THREE.Color(g*.86,g*.92,g*.78):grey(g,.04),sr(-.015,.015),sr(-.015,.015));u+=w;}}
   // side walls with the balustrades on top, lantern posts every few metres
   for(const side of[-1,1]){const sx=side*(hw+.35);
     for(let i=0;i<n;i+=3){const t=(i+1.5)/n,pz=lerp(az,bz,t),yy=lerp(ya,yb,t),gy=dY(sx+side*1.5,pz);const h=Math.max(1,yy-gy+1.2);
       boxAt(b,MATD.stoneDark,sx,yy-h/2+.15,pz,.7,h,L/n*3+.04,0,grey(sr(.64,.76)));}
-    balustradeSlope(b,sx,az,ya,sx,bz,yb);addSeg(sx,az,sx,bz,.3,1.3);}
+    parapetSlope(b,sx,az,ya,sx,bz,yb);addSeg(sx,az,sx,bz,.3,1.3);}
   for(let k=0;k<4;k++){const t=k/3,pz=lerp(az,bz,t)-.3,yy=lerp(ya,yb,t);for(const side of[-1,1])lanternPost(side*(hw+.35),yy+1.05,pz);}}
 function balustradeSlope(b,ax,az,ya,bx,bz,yb,h=1){const L=Math.hypot(bx-ax,bz-az),n=Math.round(L/2.2),yaw=-Math.atan2(bz-az,bx-ax),sl=Math.atan2(yb-ya,L);
   for(let i=0;i<=n;i++){const t=i/n,px=lerp(ax,bx,t),pz=lerp(az,bz,t),yy=lerp(ya,yb,t);boxAt(b,MATD.stone,px,yy+h/2,pz,.36,h,.36,yaw,grey(sr(.72,.84)));
@@ -135,6 +135,13 @@ function balustradeSlope(b,ax,az,ya,bx,bz,yb,h=1){const L=Math.hypot(bx-ax,bz-az
   for(let i=0;i<n;i++){const t=(i+.5)/n,px=lerp(ax,bx,t),pz=lerp(az,bz,t),yy=lerp(ya,yb,t);
     boxAt(b,MATD.stone,px,yy+h-.04,pz,L/n/Math.cos(sl),.12,.28,yaw,grey(.8),0,sl);
     const nb=6;for(let k=1;k<nb;k++){const tt=(i+k/nb)/n,qx=lerp(ax,bx,tt),qz=lerp(az,bz,tt),qy=lerp(ya,yb,tt);cylAt(b,MATD.stone,qx,qy+h/2,qz,.065,h-.1,7,grey(sr(.7,.82)),.05);}}}
+// a solid sloping parapet: wall courses following the slope, a coping, big square posts with caps every few metres
+function parapetSlope(b,ax,az,ya,bx,bz,yb,h=.95){const L=Math.hypot(bx-ax,bz-az),yaw=-Math.atan2(bz-az,bx-ax),sl=Math.atan2(yb-ya,L),n=Math.ceil(L/1.3);
+  for(let i=0;i<n;i++){const t=(i+.5)/n,px=lerp(ax,bx,t),pz=lerp(az,bz,t),yy=lerp(ya,yb,t);boxAt(b,MATD.stone,px,yy+h/2-.05,pz,L/n/Math.cos(sl)+.03,h,.46,yaw,grey(sr(.6,.76)),0,sl);
+    boxAt(b,MATD.stone,px,yy+h+.02,pz,L/n/Math.cos(sl)+.03,.14,.56,yaw,grey(sr(.72,.82)),0,sl);}
+  const np=Math.max(1,Math.round(L/3.2));for(let i=0;i<=np;i++){const t=i/np,px=lerp(ax,bx,t),pz=lerp(az,bz,t),yy=lerp(ya,yb,t);
+    boxAt(b,MATD.stone,px,yy+(h+.35)/2,pz,.64,h+.35,.64,yaw,grey(sr(.64,.76)));boxAt(b,MATD.stone,px,yy+h+.42,pz,.76,.14,.76,yaw,grey(.8));
+    if(srnd()<.5)boxAt(b,MATD.stone,px,yy+h+.6,pz,.4,.22,.4,yaw+.78,grey(.76));}}
 // a stone post with a hanging paper lantern (warm glow), a pool light only for some of them
 const LANTERNS=[];
 function lanternPost(x,y,z,light=false){const b=DB.stone;boxAt(b,MATD.stone,x,y+.25,z,.24,.5,.24,0,grey(.78));
@@ -293,7 +300,7 @@ function gothicHall(x,y,z,yaw,W,D,H,tiers){const c=Math.cos(yaw),s=Math.sin(yaw)
   {const[px,pz]=L(0,D/2+.06);DB.glow.add(MATD.windowDim,geo('dbox',()=>new THREE.BoxGeometry(1,1,1)),M4(px,y+1+3.4,pz,0,yaw,0,3.8,6.8,.1,'YXZ'),WHITE);
     const[qx,qz]=L(0,D/2+.1);DB.glow.add(MATD.window,geo('dbox',()=>new THREE.BoxGeometry(1,1,1)),M4(qx,y+1+1.8,qz,0,yaw,0,2.2,3.6,.1,'YXZ'),WHITE);}
   for(const sd of[-1,1]){const[px,pz]=L(sd*2.75,D/2+.4);boxAt(DB.stone,st,px,y+1+2.8,pz,.6,5.6,1.4,yaw,grey(.74));}
-  const top=chineseRoof(x,y+1+H+.5,z,yaw,W+1,D+1,tiers,5.2,3.2,.52,2.4);
+  const top=chineseRoof(x,y+1+H+.5,z,yaw,W+3,D+2,tiers,3.6,4.6,.5,3.4);
   dBox(x,z,W+2,D+2,yaw,8);return top;}
 // a square Gothic tower: storeys marked by string courses, lit lancets, a rose window, corner pinnacles
 function gothicTower(x,y,z,yaw,S,H,rose){const c=Math.cos(yaw),s=Math.sin(yaw),L=(a,b2)=>[x+a*c+b2*s,z-a*s+b2*c],st=MATD.stone,dk=MATD.stoneDark;
@@ -362,6 +369,27 @@ function ruin(x,z,yaw,Ln,W,H){const c=Math.cos(yaw),s=Math.sin(yaw),L=(a,b2)=>[x
   // fallen blocks and rubble inside and around
   for(let i=0;i<14;i++){const[fx,fz]=L(sr(-W*.7,W*.7),sr(-fv-2,fv+3));boxAt(b,dk,fx,dY(fx,fz)+.2,fz,sr(.4,1.1),sr(.3,.6),sr(.4,.9),sr(0,3),grey(sr(.55,.7)),sr(-.3,.3),sr(-.3,.3));}}
 function demoRuins(){for(const[x,z,yaw,Ln,W,H]of DEMO.ruins)ruin(x,z,yaw,Ln,W,H);}
+/* ---------- mist banks and red ribbons ---------- */
+// soft banks of mist over the gorge, beyond the village and under the cliffs: camera-facing sheets of noise, fading out
+// near the camera so a player never walks through one
+const MIST=[];
+function genMist(){const W=256,H=128,c=mkC(W,H);pxFill(c,(u,v,o)=>{const n=tfbm(u,v,3,4,211),e=Math.sin(u*PI)*Math.pow(Math.sin(v*PI),1.4);
+    const a=Math.max(0,Math.min(1,(n-.32)*2.4))*e;o[0]=o[1]=o[2]=255;o[3]=a*255;});return c;}
+function demoMist(){TEXD.mist=toTex(genMist(),{rep:false});
+  const banks=[[30,-28,-4,34,12,.5],[29,-52,-6,36,14,.6],[28,-76,-4,40,14,.55],[27,-100,-2,44,16,.5],[24,-126,2,50,18,.45],
+    [-30,-100,4,60,20,.5],[0,-104,2,60,18,.5],[-58,-96,8,60,22,.4],[-20,-150,10,110,30,.45],[-90,-150,14,110,30,.4],[40,-160,16,120,30,.35],
+    [48,-100,10,30,14,.4],[44,-64,-8,24,12,.5],[-75,-40,10,70,24,.3]];
+  for(const[x,z,y,w,h,a]of banks){const m=new THREE.Mesh(geo('mistQ',()=>new THREE.PlaneGeometry(1,1)),new THREE.MeshBasicMaterial({map:TEXD.mist,color:scene.fog.color,transparent:true,depthWrite:false,opacity:a,fog:true}));
+    m.position.set(x,y,z);m.scale.set(w,h,1);m.renderOrder=5;m.userData.a=a;m.userData.ph=sr(0,TAU);scene.add(m);MIST.push(m);}}
+function updMist(){const cp=camera.position,t=U.time.value;
+  for(const m of MIST){const dx=cp.x-m.position.x,dz=cp.z-m.position.z,d=Math.hypot(dx,dz);m.rotation.y=Math.atan2(dx,dz);
+    m.material.opacity=m.userData.a*sstep(m.scale.x*.25,m.scale.x*.25+30,d)*(.85+.15*Math.sin(t*.15+m.userData.ph));}}
+// a strip of red cloth tied to a post or an arch, hanging and swaying in the wind
+function ribbon(x,y,z,yaw,len,w=.22,lean=0){DB.cloth.add(MATD.cloth,geo('bann',()=>{const g=new THREE.PlaneGeometry(1,1,1,6);g.translate(0,-.5,0);return g;}),M4(x,y,z,lean,yaw,0,w,len,1,'YXZ'),WHITE);}
+function demoRibbons(){const A=DX.arch,c=Math.cos(A.yaw),s=Math.sin(A.yaw),P=(u,v,w)=>[A.x+u*c+w*s,A.y+v,A.z-u*s+w*c];
+  for(const[u,v,w,len,wd]of[[1.9,A.H+1,.45,2.6,.26],[1.2,A.H+2.4,.35,3.4,.3],[-.4,A.H+3.6,.3,2.2,.2],[2.5,A.H+.9,-.4,1.8,.18]]){const[x,y,z]=P(u,v,w);ribbon(x,y,z,A.yaw+sr(-.3,.3),len,wd,sr(-.08,.08));}
+  // on the posts of the terrace's parapet and at the head of the stairs
+  for(const[x,z,len]of[[5.6,-8.2,1.6],[8.8,-8.2,2],[8.8,-3,1.2],[3.6,-8.3,1.3],[-4.3,-12,1.5]]){ribbon(x+.2,dY(x,z)+1.18,z+.2,sr(0,TAU),len,.2,.05);ribbon(x-.15,dY(x,z)+1.15,z+.22,sr(0,TAU),len*.8,.16,-.06);}}
 /* ---------- the waterfall: a falling ribbon off the cliff, spray at its foot ---------- */
 let FALL=null;
 function demoWaterfall(){const F=DEMO.fall,parts=[];const g=new THREE.PlaneGeometry(1,1,1,24),pa=g.attributes.position;
@@ -385,7 +413,7 @@ function demoUpdate(dt){const cp=camera.position;fill.position.copy(fill.target.
   if(PL){const v=G.state!=='title';PL.rig.root.visible=v;PL.cape.mesh.visible=v&&!G.fp;}
   if(FALL){const F=FALL.F,d2=(cp.x-F.x)**2+(cp.z-F.z)**2;FALL.e+=dt;if(d2<220*220)while(FALL.e>.05){FALL.e-=.05;
       FXN.emit(F.bx+rr(-3,3),F.y1+rr(0,3),F.bz+rr(-3,3),rr(-.6,.6),rr(.6,1.8),rr(-.6,.6),rr(3,5),2.5,9,.62,.66,.7,.5,-.02,.2);}}
-  for(const r of RAYS)r.material.uniforms.uT.value=U.time.value;}
+  for(const r of RAYS)r.material.uniforms.uT.value=U.time.value;updMist();}
 
 /* ---------- light shafts from the break in the clouds ---------- */
 const RAYS=[];
@@ -477,12 +505,12 @@ function demoMountains(){
 /* ---------- everything, in the order of the loading bar ---------- */
 function buildDemo(){
   DB.stone=new Batch();DB.metal=new Batch();DB.glow=new Batch();DB.cloth=new Batch();DB.wood=new Batch();DB.plaster=new Batch();DB.tile=new Batch();
-  demoTerrace();demoStairs();demoBridge();demoGate();demoZig();demoVillage();demoPalace();demoCave();demoRuins();demoWaterfall();demoRays();demoMountains();
+  demoTerrace();demoStairs();demoBridge();demoGate();demoZig();demoVillage();demoPalace();demoCave();demoRuins();demoRibbons();demoWaterfall();demoRays();demoMountains();demoMist();
   for(const k of['stone','metal','cloth','wood','plaster','tile'])DB[k].build();DB.glow.build(false);
   fill.intensity=1.35;fill.color.set(0xc9ccd0);demoTexts();DEMO.boxes=DBOX;}
 // the words of the demo's title and victory screens
 function demoTexts(){const q=(s)=>document.querySelector(s),set=(s,t)=>{const e=q(s);if(e)e.textContent=t;};
-  set('#title .rule','Demo · La Valle delle Lanterne');
+  set('#title .rule','Demo · La Valle delle Lanterne');set('#loading .rule','La Valle delle Lanterne');
   set('#title .tag','Un falò sotto l\'arco, un villaggio di lanterne, un ponte sulla gola e un palazzo sulla rupe. Due guardiani ti aspettano.');
   set('#title .foot','Prima demo · tutto costruito nel codice, ispirato alla tua immagine');
   set('#victory .rule','Fine della demo');set('#victory h2','La valle delle lanterne è libera');
