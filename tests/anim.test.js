@@ -68,3 +68,18 @@ T.test('toes bend at push-off', () => { meshyOn(); const peaks = []; let last = 
     if (ph < last) { if (cur || peaks.length) peaks.push(cur); cur = 0; } last = ph; cur = Math.max(cur, t); if (mid) midMax = Math.max(midMax, Math.abs(t)); });
   const full = peaks.slice(1); T.ok(full.length >= 2, 'strides ' + full.length); T.ok(full.every(p => p >= 15), 'toe peaks ' + full.map(p => p.toFixed(1)));
   T.ok(midMax <= 3, 'toes in mid-stance ' + midMax.toFixed(1) + '°'); });
+const poseDiff = (a, b) => { let m = 0; for (let j = 0; j < a.length; j++) m = Math.max(m, Math.abs(a[j] - b[j])); return m; };
+// runs light1 until its `at` time (cancel or dodge), then starts `next` and runs 10 more frames; returns per-frame pose changes and the chain frame
+function chainSteps(each, next = 'light2', at = 'cancel', o) { const P = S.P, M = S.CFG.moves, d = []; let prev = [...S.lastPose()];
+  const step = () => { T.sim(1); const p = S.lastPose(); d.push(poseDiff(p, prev)); prev = [...p]; if (each) each(); };
+  S.startAct('light1'); while (P.act && P.act.k === 'light1' && P.act.t < M.light1[at]) step();
+  S.startAct(next, o); const chain = d.length; for (let f = 0; f < 10; f++) step(); return {d, chain}; }
+// light1 -> light2 is authored to continue; heavy and the dodge start from the guard pose, so they jump today
+T.test('combo chain has no pose jump', () => { for (const [next, at, o] of [['light2', 'cancel'], ['heavy', 'cancel'], ['dodge', 'dodge', {dx: 0, dz: 1}]]) {
+  meshyOn(); T.sim(20); const {d, chain} = chainSteps(null, next, at, o), before = Math.max(...d.slice(chain - 5, chain));
+  T.ok(d[chain] <= before, 'light1 > ' + next + ': jump ' + (d[chain] / D2R).toFixed(1) + '° at the chain vs ' + (before / D2R).toFixed(1) + '° just before'); } });
+T.test('blend does not survive respawn', () => { meshyOn(); S.startAct('heavy'); T.sim(10); S.playerDie(); S.respawn(); T.sim(1);
+  const a = [...S.lastPose()]; T.sim(10); const m = poseDiff(a, S.lastPose()); T.ok(m < D2R, 'pose still moving after respawn: ' + (m / D2R).toFixed(1) + '°'); });
+T.test('first person keeps the head hidden', () => { meshyOn(); T.sim(5); S.setView(true); let worst = 0;
+  chainSteps(() => { worst = Math.max(worst, S.PL.rig.P.head.scale.x, S.MESHY.on ? S.MESHY.B.Head.scale.x : 0); }); S.setView(false);
+  T.ok(worst <= .001 + 1e-9, 'head scale ' + worst); });

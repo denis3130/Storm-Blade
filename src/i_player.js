@@ -58,11 +58,11 @@ const PA=CFG.moves;
 const ATTACKS=new Set(['light1','light2','light3','light4','heavy','runatk','spin','riposte']);
 const MOVE_ACTS=new Set(['block','charge','drink','parry']);
 const P={pos:V3(0,0,4),vel:V3(),av:V3(),yaw:0,hp:100,maxHp:100,st:100,maxSt:100,chip:100,stats:{vig:1,end:1,str:1},lvl:1,braci:0,drop:null,safe:{x:0,z:4},safeT:0,hero:'m',quests:{},flags:{},sword:0,flasks:3,flaskMax:3,dmgMul:1,
-  act:null,buf:null,blockPress:-9,iframe:0,stDelay:0,dead:false,lock:null,sprinting:false,spinYaw:0,combatK:0,lastAtk:null,heal:0,shrine:0,inWard:false,lastHit:-9,flinch:0,flinchV:0,kills:0,hyperT:0,
+  act:null,blendT:0,buf:null,blockPress:-9,iframe:0,stDelay:0,dead:false,lock:null,sprinting:false,spinYaw:0,combatK:0,lastAtk:null,heal:0,shrine:0,inWard:false,lastHit:-9,flinch:0,flinchV:0,kills:0,hyperT:0,
   cleared:[false,false,false,false],chests:[false,false,false,false],
   amx:0,amz:0,gait:{ph:0,w:0,seed:1.3},roll:0,pitchL:0,fo:0,yawRate:0,wade:0,accF:0,lastVF:0,stepSide:0};
 let PL=null;
-const _L=new Float32Array(NP),_A=new Float32Array(NP),_F=new Float32Array(NP);
+const _L=new Float32Array(NP),_A=new Float32Array(NP),_F=new Float32Array(NP),_B=new Float32Array(NP);   // _B: pose a new move blends in from
 // rotate a toward b: exponential response capped at maxW rad/s
 const turnYaw=(a,b,k,maxW,dt)=>{const d=angD(a,b);let s=d*(1-Math.exp(-k*dt));const m=maxW*dt;if(s>m)s=m;else if(s<-m)s=-m;return a+s;};
 function recalcStats(){const hpr=P.hp/P.maxHp;P.maxHp=CFG.hp.base+(P.stats.vig-1)*CFG.hp.perVig;P.maxSt=CFG.stam.base+(P.stats.end-1)*CFG.stam.perEnd;P.dmgMul=1+(P.stats.str-1)*CFG.str.per;
@@ -71,13 +71,15 @@ function createPlayer(hero){const F=hero==='f';
   const mats=heroMats();const rig=buildHuman({d:F?HEROINE_D:HERO_D,mats,build:F?(a,d)=>heroBuild(a,d,{f:1}):heroBuild});scene.add(rig.root);
   const flask=new THREE.Group();const fb=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8),new THREE.MeshStandardMaterial({color:col(0x6a1410),emissive:new THREE.Color(.9,.12,.05),roughness:.2,metalness:.1,transparent:true,opacity:.92}));
   const fn=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,.06,6),new THREE.MeshStandardMaterial({color:col(0x8a7a5a),roughness:.6}));fn.position.y=.06;flask.add(fb,fn);flask.position.set(0,-.08,-.02);flask.visible=false;rig.P.wrL.add(flask);
-  PL={rig,mats,cape:new Cape(rig),trail:new Trail(30),flask,sw:null,hero:F?'f':'m'};
+  PL={rig,mats,cape:new Cape(rig),trail:new Trail(30),flask,sw:null,hero:F?'f':'m',lastAct:null};
   setSword(0);}
 // change body (character select, "Continua"): rebuild rig, cape, trail, flask and sword; the Meshy model only dresses the hero
 function setHero(h){h=h==='f'?'f':'m';P.hero=h;if(PL&&PL.hero===h)return;
   if(PL){meshyDetach();scene.remove(PL.rig.root);for(const m of PL.rig.meshes)m.geometry.dispose();for(const k in PL.mats)PL.mats[k].dispose();
     scene.remove(PL.cape.mesh);PL.cape.mesh.geometry.dispose();PL.cape.mat.dispose();scene.remove(PL.trail.mesh);PL.trail.mesh.geometry.dispose();PL.trail.mesh.material.dispose();}
-  createPlayer(h);if(h==='m')meshyAttach();setSword(P.sword||0);setView(G.fp);}
+  createPlayer(h);if(h==='m')meshyAttach();setSword(P.sword||0);setView(G.fp);resetBlend();}
+// no blend carried across a respawn, a teleport or a new body: the pose starts clean (and the action weight at its target)
+function resetBlend(){P.blendT=0;if(PL)PL.lastAct=P.act;P.aw=P.act?1:0;}
 function setSword(t){if(PL.sw&&PL.sw.g.parent)PL.sw.g.parent.remove(PL.sw.g);PL.sw=buildSword(t);PL.sw.g.position.set(0,-.072,-.004);(MESHY.on?MESHY.proxR:PL.rig.P.wrR).add(PL.sw.g);
   const gl=SWORDS[t].glow;PL.trail.u.uC.value.copy(gl?new THREE.Color(gl[0],gl[1],gl[2]).multiplyScalar(.8):new THREE.Color(1.9,1.75,1.45));$('swordName').textContent=SWORDS[t].name;}
 function setView(fp){G.fp=fp;PL.rig.P.head.scale.setScalar(fp?.001:1);PL.cape.mesh.visible=!fp;$('fpCross').hidden=!fp||G.state!=='play';camera.near=fp?.05:.08;camera.updateProjectionMatrix();}
@@ -227,6 +229,8 @@ const _gopt={arm:1,armR:1,elbow:1,gnd:_gnd};
 function extrasLayer(p){const A=CFG.anim;for(let s=0;s<2;s++){const x=s?13:9,z=s?15:11,el=Math.acos(clamp(Math.cos(p[x])*Math.cos(p[z]),-1,1))/DEG;
   p[s?39:37]+=clamp((el-A.clavFrom)*A.clavGain,0,A.clavMax)*DEG;}}
 function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
+  // a move started or ended: remember the pose it interrupts, and blend the new one in from it
+  if(a!==PL.lastAct){_B.set(_F);P.blendT=CFG.anim.blend;PL.lastAct=a;}
   // root height and facing of this frame first: the feet ask the ground relative to them
   const fo=P.pos.y-gH(P.pos.x,P.pos.z);P.fo=Math.abs(fo-P.fo)>1.2?fo:damp(P.fo,fo,16,dt);
   let ry=P.yaw+P.spinYaw;if(a&&a.rollYaw!==undefined&&(k==='dodge'))ry=a.rollYaw;
@@ -255,6 +259,8 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   P.aw=damp(P.aw||0,w,w?30:12,dt);
   mixPose(_F,_L,_A,P.aw);
   _F[4]+=P.flinch*.5;_F[7]+=P.flinch*.6;_F[0]-=Math.abs(P.flinch)*.04;
+  // linear: the gap to the new move is spread evenly over the frames, so no frame jumps more than the motion around it
+  if(P.blendT>0){P.blendT=Math.max(0,P.blendT-dt);mixPose(_F,_B,_F,1-P.blendT/CFG.anim.blend);}
   extrasLayer(_F);R.apply(_F);
   // whole-body lean: into turns, forward when accelerating, back when braking
   const free=!k||MOVE_ACTS.has(k);
