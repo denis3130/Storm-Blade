@@ -29,6 +29,7 @@ function damageEnemy(e,a,D,nx,nz,hp){const C=CFG.combat;const l=Math.hypot(nx,nz
   if(e.hp<=0)killEnemy(e,D);}
 function killEnemy(e,D){if(e.dead)return;e.dead=true;e.deadT=0;e.atk=null;e.stun=0;e.stag=0;e.down=0;TOK.delete(e);e.fall=Math.random()<.5?1:-1;P.kills++;
   emberOrbs(e,e.braci);storyEvent('kill',{type:e.type,camp:e.camp,boss:!!e.boss});
+  if(!P.flags.braciTip){P.flags.braciTip=true;hint('Le <b>braci</b> dei nemici sono tue: spendile ai santuari per salire di livello.',5);}
   sfx(e.type==='goblin'||e.type==='archer'?'gobDie':e.type==='wolf'?'growl':e.type==='troll'?'roar':'wail',e.pos);
   if(P.lock===e)P.lock=autoRelock(e);
   if(e.boss){G.slow=1.6;G.slowS=.22;CAM.trauma=1;Post.u.flash.value=.45;sfx('bossDie');
@@ -325,9 +326,9 @@ function padMenu(pr,lx,ly){const yv=ly<-.5?-1:ly>.5?1:0,xv=lx<-.5?-1:lx>.5?1:0;l
 function pause(){if(G.state!=='play')return;G.state='pause';showScreen('pause');IN.atk=IN.blk=IN.hvy=false;if(document.pointerLockElement)document.exitPointerLock();}
 function resume(){G.state='play';showScreen(null);$('hud').hidden=false;if(!isTouch){try{const p=canvas.requestPointerLock&&canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(_){}}setView(G.fp);}
 function fillControls(){const pc=[['Muoversi',['W','A','S','D']],['Visuale','Mouse · frecce'],['Correre',['Shift']],['Attacco (combo di 4)',['Clic sinistro']],['Colpo pesante · tieni premuto: rotante caricato',['Q']],
-    ['Parata (deviazione al momento giusto)',['Clic destro']],['Schivata con invulnerabilità',['Spazio']],['Fiaschetta di cura',['R']],['Interagisci · riposa',['E']],['Aggancia bersaglio',['Tab','F']],['Cambia bersaglio','Rotella · muovi il mouse · C / X'],['Prima / terza persona',['V']],['Pausa',['Esc']]];
-  const tc=[['Muoversi','Pollice sinistro'],['Visuale','Trascina a destra'],['Correre','Spingi il pollice al bordo'],['Attacco (combo di 4)','Tocca la spada'],['Colpo pesante','Ascia · tienila premuta per caricare'],['Parata','Scudo'],['Schivata','Freccia curva'],['Fiaschetta','Ampolla rossa'],['Aggancia','Mirino'],['Interagisci','Compare quando serve']];
-  const gp=[['Attacco','RB'],['Colpo pesante · caricato','RT · tieni RT'],['Parata','LB'],['Schivata','B (tieni: corsa)'],['Fiaschetta','X'],['Interagisci','A'],['Aggancia','R3'],['Visuale','Y'],['Pausa','Start']];
+    ['Parata (deviazione al momento giusto)',['Clic destro']],['Schivata con invulnerabilità',['Spazio']],['Fiaschetta di cura',['R']],['Interagisci · riposa',['E']],['Aggancia bersaglio',['Tab','F']],['Cambia bersaglio','Rotella · muovi il mouse · C / X'],['Prima / terza persona',['V']],['Diario',['N']],['Dialoghi: avanti',['E','Spazio']],['Dialoghi: scelte',['1','2','3']],['Pausa',['Esc']]];
+  const tc=[['Muoversi','Pollice sinistro'],['Visuale','Trascina a destra'],['Correre','Spingi il pollice al bordo'],['Attacco (combo di 4)','Tocca la spada'],['Colpo pesante','Ascia · tienila premuta per caricare'],['Parata','Scudo'],['Schivata','Freccia curva'],['Fiaschetta','Ampolla rossa'],['Aggancia','Mirino'],['Interagisci','Compare quando serve'],['Diario','Libro in alto'],['Dialoghi','Tocca il riquadro o una scelta']];
+  const gp=[['Attacco','RB'],['Colpo pesante · caricato','RT · tieni RT'],['Parata','LB'],['Schivata','B (tieni: corsa)'],['Fiaschetta','X'],['Interagisci','A'],['Aggancia','R3'],['Visuale','Y'],['Pausa','Start'],['Dialoghi','A · croce per le scelte'],['Diario','Start → Diario']];
   const rows=(isTouch?tc:pc).concat(isTouch?[]:gp.map(r=>['Controller · '+r[0],r[1]]));
   $('keysList').innerHTML=rows.map(([a,b])=>`<div class="row"><span>${a}</span><span>${Array.isArray(b)?b.map(k=>`<kbd>${k}</kbd>`).join(''):b}</span></div>`).join('');}
 function syncSettingsUI(){const seg=(id,v)=>{for(const b of $(id).querySelectorAll('button'))b.classList.toggle('on',b.dataset.v===String(v));};

@@ -17,3 +17,7 @@ T.test('gamepad navigates shrine menu', () => {
   navigator.getGamepads = () => [pad()]; pressed = 1; T.sim(1); pressed = 0; T.sim(1);
   T.ok(__SB.G.state !== 'shrine', 'A on the focused button should act'); navigator.getGamepads = () => [];
 });
+T.test('first kill explains braci once', () => { T.newGame(); T.clearEnemies(); const S = __SB, P = S.P, H = document.getElementById('hint');
+  const kill = () => { const g = S.spawnEnemy('goblin', P.pos.x, P.pos.z - 1.6, {}); g.hp = 1; T.sim(2); S.startAct('light1'); T.sim(40); T.ok(g.dead, 'goblin not killed'); };
+  H.innerHTML = ''; kill(); T.ok(H.innerHTML.includes('braci'), 'no braci hint after the first kill');
+  H.innerHTML = ''; kill(); T.eq(H.innerHTML, '', 'hint repeated on the second kill'); });
