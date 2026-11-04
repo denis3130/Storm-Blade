@@ -337,11 +337,19 @@ function initMenus(){
   $('dRetry').onclick=()=>respawn();$('vCont').onclick=()=>{G.state='play';resume();};$('vTitle').onclick=()=>showTitle();
   if(isTouch)initTouch();}
 /* ============================== save ============================== */
-const SAVE_K='stormblade.save.v2';
-function save(){lsSet(SAVE_K,{v:CFG.ver,stats:P.stats,braci:P.braci,sword:P.sword,flaskMax:P.flaskMax,cleared:P.cleared,chests:P.chests,shrine:P.shrine,kills:P.kills,time:G.playTime,tips:{p:P.parryTip,s:P.stormTip}});}
-function resetPlayer(){Object.assign(P,{stats:{vig:1,end:1,str:1},braci:0,drop:null,sword:0,flaskMax:CFG.flask.start,cleared:[false,false,false,false],chests:[false,false,false,false],shrine:0,kills:0});G.playTime=0;G.won=false;syncDrop();}
-function loadSave(){const s=lsGet(SAVE_K);if(!s)return false;resetPlayer();Object.assign(P,{stats:s.stats||P.stats,braci:s.braci||0,sword:s.sword||0,flaskMax:s.flaskMax||3,cleared:s.cleared||P.cleared,chests:s.chests||P.chests,shrine:s.shrine||0,kills:s.kills||0});
-  G.playTime=s.time||0;if(s.tips){P.parryTip=s.tips.p;P.stormTip=s.tips.s;}return true;}
+// save data v4: a new key, so v2/v3 games (made for the old world) are never read nor deleted; settings live in their own key
+const SAVE_K='stormblade.save.v4';
+function save(){lsSet(SAVE_K,{v:CFG.ver,hero:P.hero,stats:P.stats,braci:P.braci,drop:P.drop,sword:P.sword,flasks:P.flasks,flaskMax:P.flaskMax,shrine:P.shrine,kills:P.kills,
+  time:G.playTime,quests:P.quests,flags:P.flags,cleared:P.cleared,chests:P.chests,tips:{p:P.parryTip,s:P.stormTip}});}
+function readSave(){const s=lsGet(SAVE_K);return s&&typeof s==='object'&&s.v===CFG.ver?s:null;}
+function resetPlayer(){Object.assign(P,{hero:'m',stats:{vig:1,end:1,str:1},braci:0,drop:null,sword:0,flaskMax:CFG.flask.start,cleared:[false,false,false,false],chests:[false,false,false,false],
+  shrine:0,kills:0,quests:{},flags:{}});G.playTime=0;G.won=false;syncDrop();}
+function loadSave(){const s=readSave();if(!s)return false;resetPlayer();
+  const st=s.stats,d=s.drop,okSt=st&&['vig','end','str'].every(k=>st[k]>=1),okD=d&&isFinite(d.x)&&isFinite(d.z)&&d.amount>0;
+  Object.assign(P,{hero:s.hero==='f'?'f':'m',stats:okSt?{vig:st.vig|0,end:st.end|0,str:st.str|0}:P.stats,braci:Math.max(0,Math.round(+s.braci||0)),
+    drop:okD?{x:+d.x,z:+d.z,amount:Math.round(d.amount)}:null,sword:s.sword||0,flasks:s.flasks||0,flaskMax:s.flaskMax||CFG.flask.start,
+    cleared:s.cleared||P.cleared,chests:s.chests||P.chests,shrine:s.shrine||0,kills:s.kills||0,quests:s.quests&&typeof s.quests==='object'?s.quests:{},flags:s.flags&&typeof s.flags==='object'?s.flags:{}});
+  G.playTime=s.time||0;if(s.tips){P.parryTip=s.tips.p;P.stormTip=s.tips.s;}syncDrop();return true;}
 /* ============================== flow ============================== */
 function syncWorldToSave(){CAMPS.forEach((c,i)=>{const ch=c.chest;ch.open=!!P.chests[i];ch.t=ch.open?1:0;ch.lid.rotation.x=ch.open?-1.9:0;ch.light.i=P.cleared[i]&&!ch.open?2.4:0;});}
 function startGame(cont){audioInit();if(!(cont&&loadSave()))resetPlayer();if(!cont)lsDel(SAVE_K);
@@ -360,7 +368,7 @@ function updTutorial(rdt){if(tutorial>=4)return;tutT-=rdt;if(tutT<=0&&bannerT<=0
 function respawn(){P.dead=false;recalcStats();P.hp=P.maxHp;P.st=P.maxSt;P.flasks=P.flaskMax;P.act=null;P.lock=null;P.chip=P.hp;P.heal=0;
   placeAtShrine(P.shrine);spawnWorld();Object.assign(ST,{phase:'calm',t:110});ST.k=0;STRIKES.length=0;Post.u.desat.value=0;
   G.state='play';showScreen(null);resume();banner(SHRINES[P.shrine].name,'Ti sei rialzato');}
-function showTitle(){G.state='title';$('hud').hidden=true;showScreen('title');$('loading').hidden=true;const s=lsGet(SAVE_K);const mc=$('mContinue');
+function showTitle(){G.state='title';$('hud').hidden=true;showScreen('title');$('loading').hidden=true;const s=readSave();const mc=$('mContinue');
   if(s){mc.hidden=false;const lv=(s.stats?s.stats.vig+s.stats.end+s.stats.str-2:1);$('mContinueInfo').textContent='Livello '+lv+' · '+(s.cleared?s.cleared.filter(Boolean).length:0)+' accampamenti su 4';}else mc.hidden=true;
   if(document.pointerLockElement)document.exitPointerLock();placeAtShrine(0);setTimeout(()=>{const b=mc.hidden?$('mNew'):mc;b.focus();},60);}
 let titleA=0;
