@@ -5,7 +5,7 @@ usage: python3 tests/run.py tests/<file>.test.js [--viewport WxH] [--touch] [--m
                             [--data FILE.json] [--dump FILE.json]
 
 Loads the test build (game_w.html, made by mk.sh) in headless Chrome, waits for the
-title screen, injects tests/lib.js and the test file, runs T.run() and prints one line
+title screen, injects tests/lib.js, tests/fixtures.js and the test file, runs T.run() and prints one line
 per test: "PASS name" or "FAIL name: message". Uncaught page errors print as PAGEERROR
 and console errors as CONSOLEERROR (blocked-font "Failed to load resource" lines are
 ignored). Exit code 1 if anything failed or errored.
@@ -64,6 +64,7 @@ async def main(a):
         await pg.goto('file://' + PAGE, wait_until='domcontentloaded')
         await pg.wait_for_function("window.__SB && __SB.G && __SB.G.state==='title'", timeout=60000)
         await pg.add_script_tag(content=open(os.path.join(SB, 'tests', 'lib.js')).read())
+        await pg.add_script_tag(content=open(os.path.join(SB, 'tests', 'fixtures.js')).read())
         if a.dump:
             await pg.add_script_tag(content='window.TDUMPMODE=true;')
         if a.data:
