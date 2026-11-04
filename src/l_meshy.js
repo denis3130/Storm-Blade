@@ -57,6 +57,9 @@ function setupMeshyHero(gltf){
       Qm0:worldQ(bone,new THREE.Quaternion()),C:new THREE.Quaternion(),parentQ:new THREE.Quaternion()};
     if(!r.fixed){const md=wp(B[r.mc],_mv).sub(wp(B[r.mp||r.m],_mv2)).normalize().clone();const pd=wp(P_[r.pd[1]],_mv).sub(wp(P_[r.pd[0]],_mv2)).normalize();row.C.setFromUnitVectors(md,pd);}
     row.CQm0=row.C.clone().multiply(row.Qm0);return row;}).filter(Boolean);
+  // per-frame scratch, made once: wq = this frame's target world rotation; pr = the row of the parent bone when it is synced
+  // earlier in the same frame (its wq is then fresh), pq = the parent's current world rotation otherwise
+  rows.forEach((r,i)=>{r.wq=new THREE.Quaternion();r.pq=new THREE.Quaternion();r.pr=rows.slice(0,i).find(o=>o.bone===r.bone.parent)||null;});
   const hipOff=P_.pel.worldToLocal(wp(B.Hips,new THREE.Vector3()));
   // attachment proxies: children of the meshy hands whose world rotation equals the procedural wrist's
   const proxy=(row)=>{const g=new THREE.Group();g.quaternion.copy(row.CQm0).invert().multiply(row.Qp0i.clone().invert());
@@ -64,20 +67,21 @@ function setupMeshyHero(gltf){
   const rowOf=n=>rows.find(r=>r.bone.name===n);
   R.root.position.copy(sp);R.root.rotation.set(0,sr,0);R.inner.rotation.copy(si);R.root.updateMatrixWorld(true);
   for(const m of R.meshes)m.visible=false;
-  Object.assign(MESHY,{on:true,holder,arm,B,rows,hipOff,skin,proxR:proxy(rowOf('RightHand')),proxL:proxy(rowOf('LeftHand'))});
+  Object.assign(MESHY,{on:true,holder,arm,armQ:new THREE.Quaternion(),B,rows,hipOff,skin,proxR:proxy(rowOf('RightHand')),proxL:proxy(rowOf('LeftHand'))});
   meshySync();return true;}
 // after animPlayer: copy the procedural pose onto the meshy skeleton, move attachments, keep the cape hidden
+// runs every frame, so it makes no objects: the per-row quaternions were made in setupMeshyHero
 function meshySync(){if(!MESHY.on)return;const R=PL.rig;
   MESHY.holder.updateMatrixWorld(true);
   const hw=R.P.pel.localToWorld(_mv.copy(MESHY.hipOff));MESHY.arm.worldToLocal(hw);MESHY.B.Hips.position.copy(hw);
-  const parentW=new Map();parentW.set(MESHY.arm,worldQ(MESHY.arm,new THREE.Quaternion()));
+  const armQ=worldQ(MESHY.arm,MESHY.armQ);
   for(const r of MESHY.rows){
     worldQ(r.p,_mq1).multiply(r.Qp0i);
     if(r.b){worldQ(r.b,_mq2).multiply(r.Qb0i);_mq1.slerp(_mq2,r.w);}
     _mq1.multiply(r.CQm0);                               // target world rotation
-    const pq=parentW.get(r.bone.parent)||worldQ(r.bone.parent,new THREE.Quaternion());
+    const par=r.bone.parent,pq=r.pr?r.pr.wq:par===MESHY.arm?armQ:worldQ(par,r.pq);
     r.bone.quaternion.copy(_mq3.copy(pq).invert().multiply(_mq1));
-    parentW.set(r.bone,_mq1.clone());}
+    r.wq.copy(_mq1);}
   MESHY.holder.updateMatrixWorld(true);
   if(PL.sw&&PL.sw.g.parent!==MESHY.proxR){MESHY.proxR.add(PL.sw.g);}
   if(PL.flask.parent!==MESHY.proxL)MESHY.proxL.add(PL.flask);

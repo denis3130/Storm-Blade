@@ -31,7 +31,8 @@ function dlgNext(){const c=DLG.cur;if(!c)return;if(c.typing){dlgDone();return;}i
   sfx('ui');if(c.n.next)dlgShow(c.n.next);else dlgEnd();}
 function dlgChoose(i){const c=DLG.cur;if(!c)return;if(c.typing)dlgDone();const o=c.n.choices&&c.n.choices[i];if(!o)return;
   sfx('ui');if(o.act)storyAct(o.act);if(o.next)dlgShow(o.next);else dlgEnd();}
-function dlgEnd(){const c=DLG.cur;DLG.cur=null;$('dialog').hidden=true;$('touch').hidden=!isTouch;if(G.state==='dialogue')G.state='play';if(c&&c.onEnd)c.onEnd();}
+// the end of a dialogue is a checkpoint: what it changed (flags such as selinMet, braci, quests) survives "Continua"
+function dlgEnd(){const c=DLG.cur;DLG.cur=null;$('dialog').hidden=true;$('touch').hidden=!isTouch;if(G.state==='dialogue')G.state='play';save();if(c&&c.onEnd)c.onEnd();}
 // keyboard during a dialogue: E / Space / Enter advance, 1-3 choose, arrows move between choices; Esc is ignored
 function dlgKey(e){const k=e.code;
   if(k==='Digit1'||k==='Digit2'||k==='Digit3'||k==='Numpad1'||k==='Numpad2'||k==='Numpad3'){dlgChoose(+k.slice(-1)-1);return;}

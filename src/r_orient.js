@@ -10,6 +10,9 @@ function viewH(){return ROT?innerWidth:innerHeight;}
 function touchXY(e){return ROT?{x:e.clientY,y:innerWidth-e.clientX}:{x:e.clientX,y:e.clientY};}
 function applyOrient(){ROT=wantRot();const app=$('app');
   if(app){app.classList.toggle('rot90',ROT);const W=viewW(),H=viewH();
+    // the rotated box is sized in px from innerWidth/innerHeight, never 100vh/100vw: on iOS 100vh is the height without the
+    // toolbar, so the right end of the game (attack button, objective) would sit under Safari's bar
+    app.style.width=ROT?W+'px':'';app.style.height=ROT?H+'px':'';app.style.transform=ROT?'translateX('+innerWidth+'px) rotate(90deg)':'';
     app.classList.toggle('w1000',W<=1000);app.classList.toggle('w640',W<=640);app.classList.toggle('h460',H<=460);
     const s=document.documentElement.style;s.setProperty('--vw',W/100+'px');s.setProperty('--vh',H/100+'px');}
   onResize();}
