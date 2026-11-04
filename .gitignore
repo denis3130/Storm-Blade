@@ -6,6 +6,7 @@
 !/src/
 !/docs/
 !/tests/
+!/tools/
 !/build.py
 !/mk.sh
 !/harness.py
