@@ -7,6 +7,9 @@
 /* Layout: full-bleed WebGL scene; HUD hugs the safe-area corners; full-screen overlays for loading, title, pause, settings, level-up, death, victory */
 :root{
   --vw:1vw; --vh:1vh;
+  /* safe areas: --sa-* are the phone's physical insets, --it/--ir/--ib/--il the insets of the GAME's top/right/bottom/left (see #app.rot90) */
+  --sa-t:env(safe-area-inset-top,0px); --sa-r:env(safe-area-inset-right,0px); --sa-b:env(safe-area-inset-bottom,0px); --sa-l:env(safe-area-inset-left,0px);
+  --it:var(--sa-t); --ir:var(--sa-r); --ib:var(--sa-b); --il:var(--sa-l);
   --ink:#ece5d3; --dim:#a69f8f; --faint:rgba(236,229,211,.13); --line:rgba(236,229,211,.24);
   --gold:#c9a862; --gold-hi:#efd79c; --hp:#962519; --hp-hi:#d04434; --chip:#e8c9a0; --st:#5f7f3c; --st-hi:#a3c066; --ember:#ff8a32; --ember-hi:#ffd9a0;
   --storm:#a88ff2; --ward:#8ad0ff; --panel:rgba(8,9,10,.76); --bg:#050607;
@@ -17,8 +20,10 @@
 }
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);overflow:hidden;font-family:var(--ui);touch-action:none;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-#app{position:fixed;inset:0;overflow:hidden}
-#app.rot90{left:0;top:0;right:auto;bottom:auto;width:100vh;height:100vw;transform:translateX(100vw) rotate(90deg);transform-origin:top left}
+#app{position:fixed;inset:0;overflow:hidden;--it:var(--sa-t);--ir:var(--sa-r);--ib:var(--sa-b);--il:var(--sa-l)}
+/* upright phone: #app is turned 90° clockwise; size and transform are set in px by applyOrient (r_orient.js).
+   The game's top edge is then the phone's right side, its right edge the bottom (home bar), its bottom the left, its left the top (notch) */
+#app.rot90{left:0;top:0;right:auto;bottom:auto;transform-origin:top left;--it:var(--sa-r);--ir:var(--sa-b);--ib:var(--sa-l);--il:var(--sa-t)}
 #game{position:fixed;inset:0;background:var(--bg)}
 #game canvas{display:block;width:100%;height:100%;outline:none}
 button{font-family:inherit;color:inherit}
@@ -26,7 +31,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 
 /* ---------- HUD ---------- */
 #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
-#status{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);left:calc(env(safe-area-inset-left,0px) + 18px);
+#status{position:absolute;top:calc(var(--it) + 16px);left:calc(var(--il) + 18px);
   display:grid;grid-template-columns:auto auto;gap:4px 12px;align-items:center}
 .medal{grid-row:span 3;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
   background:radial-gradient(circle at 50% 35%,#2a2620,#0c0b09 70%);border:1px solid var(--gold);box-shadow:0 0 0 3px rgba(0,0,0,.45),inset 0 0 8px rgba(201,168,98,.35)}
@@ -45,13 +50,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #braciN{font-family:var(--display);font-weight:600;font-size:14px;line-height:1;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--ember-hi);text-shadow:0 1px 2px #000,0 0 8px rgba(255,120,40,.35)}
 #braci.bump{animation:bump .32s ease-out}
 #hpBar{width:220px}#stBar{width:200px}
-#items{position:absolute;top:calc(env(safe-area-inset-top,0px) + 84px);left:calc(env(safe-area-inset-left,0px) + 18px);display:flex;gap:10px;align-items:center}
+#items{position:absolute;top:calc(var(--it) + 84px);left:calc(var(--il) + 18px);display:flex;gap:10px;align-items:center}
 .slot{display:flex;align-items:center;gap:6px;background:linear-gradient(90deg,rgba(0,0,0,.6),rgba(0,0,0,0));padding:4px 14px 4px 6px;border-left:1px solid var(--gold)}
 .slot svg{width:22px;height:22px;display:block}
 .slot b{font-family:var(--display);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
 .slot span{font-size:14px;font-weight:600;letter-spacing:.03em;color:var(--gold-hi);text-shadow:0 1px 2px #000}
 .slot.off b{color:#7b6f64}
-#compass{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);width:min(520px,calc(38*var(--vw)));height:30px;transform:translateX(-50%);
+#compass{position:absolute;left:50%;top:calc(var(--it) + 14px);width:min(520px,calc(38*var(--vw)));height:30px;transform:translateX(-50%);
   overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
 #compass::before{content:"";position:absolute;left:0;right:0;top:15px;height:1px;background:rgba(236,229,211,.3)}
 #compass .c{position:absolute;top:0;transform:translateX(-50%);font-family:var(--display);font-size:14px;font-weight:600;color:var(--ink);text-shadow:0 1px 3px #000}
@@ -64,8 +69,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #compass .m.chest{background:var(--gold-hi);box-shadow:0 0 6px var(--gold)}
 #compass .m.obj{width:0;height:0;background:none;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--gold-hi);top:20px;filter:drop-shadow(0 0 4px var(--gold))}
 #compass .d{position:absolute;top:31px}
-#compassDist{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 46px);transform:translateX(-50%);font-size:12px;font-weight:600;color:var(--gold-hi);text-shadow:0 1px 3px #000;letter-spacing:.06em}
-#objective{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(env(safe-area-inset-right,0px) + 18px);text-align:right;max-width:min(300px,calc(34*var(--vw)));display:flex;flex-direction:column;gap:3px}
+#compassDist{position:absolute;left:50%;top:calc(var(--it) + 46px);transform:translateX(-50%);font-size:12px;font-weight:600;color:var(--gold-hi);text-shadow:0 1px 3px #000;letter-spacing:.06em}
+#objective{position:absolute;top:calc(var(--it) + 16px);right:calc(var(--ir) + 18px);text-align:right;max-width:min(300px,calc(34*var(--vw)));display:flex;flex-direction:column;gap:3px}
 #objective .lab{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
 #objText{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.15;text-shadow:0 1px 4px #000}
 #stormLine{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--dim);text-shadow:0 1px 3px #000;font-variant-numeric:tabular-nums}
@@ -73,7 +78,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #stormLine.on{color:#fff}
 #stormLine.safe{color:var(--ward)}
 @keyframes pulse{50%{opacity:.5}}
-#boss{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 46px);transform:translateX(-50%);width:min(660px,calc(78*var(--vw)));display:flex;flex-direction:column;gap:6px}
+#boss{position:absolute;left:50%;bottom:calc(var(--ib) + 46px);transform:translateX(-50%);width:min(660px,calc(78*var(--vw)));display:flex;flex-direction:column;gap:6px}
 #bossName{font-family:var(--display);font-size:17px;font-weight:600;letter-spacing:.08em;text-shadow:0 1px 4px #000}
 #bossName small{font-family:var(--ui);font-size:12px;letter-spacing:.18em;color:var(--dim);margin-left:10px;text-transform:uppercase}
 .bar.boss{height:9px}
@@ -82,7 +87,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #lock{position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px}
 #lock::before,#lock::after{content:"";position:absolute;inset:3px;border:2px solid var(--gold-hi);transform:rotate(45deg);box-shadow:0 0 8px rgba(239,215,156,.8)}
 #lock::after{inset:8px;background:var(--gold-hi);border:0}
-#prompt{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 118px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;
+#prompt{position:absolute;left:50%;bottom:calc(var(--ib) + 118px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;
   padding:8px 18px 8px 10px;background:linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.7) 20%,rgba(0,0,0,.7) 80%,rgba(0,0,0,0));font-size:17px;font-weight:600;letter-spacing:.03em;text-shadow:0 1px 3px #000;white-space:nowrap}
 kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:22px;padding:0 5px;display:inline-grid;place-items:center;border:1px solid var(--gold);color:var(--gold-hi);background:rgba(0,0,0,.55);border-radius:3px;box-sizing:border-box}
 #banner{position:absolute;left:0;right:0;top:30%;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;transition:opacity .5s ease;padding-inline:16px;text-align:center}
@@ -94,13 +99,13 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 #banner::before,#banner::after{content:"";width:min(520px,calc(70*var(--vw)));height:1px;background:linear-gradient(90deg,transparent,rgba(239,215,156,.75),transparent)}
 #banner::after{order:3}
 #bannerSub{order:2;font-family:var(--serif);font-style:italic;font-size:clamp(17px,calc(2.4*var(--vw)),23px);color:#e4dccb;text-shadow:0 1px 6px #000}
-#toasts{position:absolute;left:calc(env(safe-area-inset-left,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+#toasts{position:absolute;left:calc(var(--il) + 18px);bottom:calc(var(--ib) + 22px);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .toast{background:linear-gradient(90deg,rgba(0,0,0,.75),rgba(0,0,0,0));border-left:2px solid var(--gold);padding:6px 30px 6px 10px;font-size:15px;font-weight:600;letter-spacing:.02em;
   animation:tin .35s ease both, tout .6s ease 3.6s both}
 .toast em{font-style:normal;color:var(--gold-hi)}
 @keyframes tin{from{opacity:0;transform:translateX(-12px)}}
 @keyframes tout{to{opacity:0}}
-#hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 170px);transform:translateX(-50%);display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;
+#hint{position:absolute;left:50%;bottom:calc(var(--ib) + 170px);transform:translateX(-50%);display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;
   max-width:min(760px,calc(92*var(--vw)));padding:10px 18px;background:rgba(6,7,8,.72);border:1px solid var(--faint);font-size:15px;font-weight:500;opacity:0;transition:opacity .5s}
 #hint.show{opacity:1}
 #hint span{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
@@ -117,7 +122,7 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 .medal.bump,.slot.bump{animation:bump .32s ease-out}
 .medal.ready{animation:ready .9s ease-out 1}
 @media (prefers-reduced-motion:reduce){.medal.bump,.slot.bump,#braci.bump,.medal.ready,.tb{animation:none;transition:none}}
-#fps{position:fixed;left:calc(env(safe-area-inset-left,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 6px);z-index:20;font:600 12px/1 var(--ui);letter-spacing:.04em;color:#e9e1cf;background:rgba(6,7,8,.62);padding:4px 7px;border:1px solid var(--faint);pointer-events:none;font-variant-numeric:tabular-nums}
+#fps{position:fixed;left:calc(var(--il) + 8px);bottom:calc(var(--ib) + 6px);z-index:20;font:600 12px/1 var(--ui);letter-spacing:.04em;color:#e9e1cf;background:rgba(6,7,8,.62);padding:4px 7px;border:1px solid var(--faint);pointer-events:none;font-variant-numeric:tabular-nums}
 #fpCross{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(255,255,255,.75);box-shadow:0 0 3px #000}
 #charge{position:absolute;left:50%;top:58%;width:64px;height:3px;margin-left:-32px;background:rgba(0,0,0,.5);opacity:0;transition:opacity .15s}
 #charge i{display:block;height:100%;width:0;background:var(--gold-hi);box-shadow:0 0 8px var(--gold)}
@@ -135,21 +140,21 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 #tHvy{border-color:rgba(214,150,96,.5)}
 .tb small{position:absolute;bottom:-17px;font-size:10px;color:var(--dim);text-shadow:0 1px 2px #000}
 /* thumb arc around the attack button (centres measured from the bottom-right corner) */
-#tAtk{width:84px;height:84px;right:calc(env(safe-area-inset-right,0px) + 22px);bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
-#tDdg{width:64px;height:64px;right:calc(env(safe-area-inset-right,0px) + 138px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}
-#tHvy{width:64px;height:64px;right:calc(env(safe-area-inset-right,0px) + 115px);bottom:calc(env(safe-area-inset-bottom,0px) + 109px)}
-#tBlk{width:62px;height:62px;right:calc(env(safe-area-inset-right,0px) + 52px);bottom:calc(env(safe-area-inset-bottom,0px) + 147px)}
-#tFlk{width:50px;height:50px;right:calc(env(safe-area-inset-right,0px) + 134px);bottom:calc(env(safe-area-inset-bottom,0px) + 212px)}
-#tLck{width:46px;height:46px;right:calc(env(safe-area-inset-right,0px) + 177px);bottom:calc(env(safe-area-inset-bottom,0px) + 182px)}
-#tAct{width:58px;height:58px;right:calc(env(safe-area-inset-right,0px) + 197px);bottom:calc(env(safe-area-inset-bottom,0px) + 101px);border-color:var(--gold);color:var(--gold-hi)}
-#tTop{position:absolute;top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 14px);display:flex;gap:8px;pointer-events:auto}
+#tAtk{width:84px;height:84px;right:calc(var(--ir) + 22px);bottom:calc(var(--ib) + 30px)}
+#tDdg{width:64px;height:64px;right:calc(var(--ir) + 138px);bottom:calc(var(--ib) + 20px)}
+#tHvy{width:64px;height:64px;right:calc(var(--ir) + 115px);bottom:calc(var(--ib) + 109px)}
+#tBlk{width:62px;height:62px;right:calc(var(--ir) + 52px);bottom:calc(var(--ib) + 147px)}
+#tFlk{width:50px;height:50px;right:calc(var(--ir) + 134px);bottom:calc(var(--ib) + 212px)}
+#tLck{width:46px;height:46px;right:calc(var(--ir) + 177px);bottom:calc(var(--ib) + 182px)}
+#tAct{width:58px;height:58px;right:calc(var(--ir) + 197px);bottom:calc(var(--ib) + 101px);border-color:var(--gold);color:var(--gold-hi)}
+#tTop{position:absolute;top:calc(var(--it) + 112px);right:calc(var(--ir) + 14px);display:flex;gap:8px;pointer-events:auto}
 #tTop .tb{position:static;width:40px;height:40px}
 #tTop .tb svg{width:52%;height:52%}
 
 /* ---------- screens ---------- */
 .screen{position:fixed;inset:0;z-index:10;display:flex;box-sizing:border-box;overflow-y:auto;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  padding-block:calc(env(safe-area-inset-top,0px) + 28px) calc(env(safe-area-inset-bottom,0px) + 28px)}
+  padding-left:max(16px,var(--il));padding-right:max(16px,var(--ir));
+  padding-block:calc(var(--it) + 28px) calc(var(--ib) + 28px)}
 .screen.dim{background:radial-gradient(ellipse at center,rgba(5,6,7,.55),rgba(5,6,7,.9))}
 .logo{font-family:var(--display);font-weight:700;letter-spacing:.08em;line-height:.95;margin:0;text-transform:uppercase;display:inline-block;white-space:nowrap;max-width:100%;padding-right:.08em;
   background:linear-gradient(180deg,#fffaf0 0%,#eadbb8 38%,var(--gold) 62%,#7b5b28 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
@@ -180,7 +185,7 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 #charsel .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(520px,100%)}
 #charsel .card svg{width:56px;height:56px}
 /* ---------- dialogue box: bottom of the screen, readable from 360 px of game height ---------- */
-#dialog{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;justify-content:center;pointer-events:auto}
+#dialog{position:absolute;left:0;right:0;bottom:calc(var(--ib) + 14px);display:flex;justify-content:center;pointer-events:auto}
 #dialog[hidden],#dlgChoices[hidden],#dlgMore[hidden]{display:none}
 #dialog .box{position:relative;width:min(780px,calc(100% - 32px));box-sizing:border-box;padding:12px 20px 14px;background:linear-gradient(180deg,rgba(16,15,12,.9),rgba(7,7,7,.95));
   border:1px solid var(--line);border-top-color:var(--gold);box-shadow:0 10px 40px rgba(0,0,0,.6);cursor:pointer}
@@ -255,15 +260,15 @@ input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
 #app.w640 #objText{font-size:15px}
 #app.w640 #hpBar{width:150px}
 #app.w640 #stBar{width:134px}
-#app.w640 #compass{top:calc(env(safe-area-inset-top,0px) + 112px);width:calc(70*var(--vw))}
-#app.w640 #compassDist{top:calc(env(safe-area-inset-top,0px) + 144px)}
-#app.w640 #items{top:calc(env(safe-area-inset-top,0px) + 74px)}
+#app.w640 #compass{top:calc(var(--it) + 112px);width:calc(70*var(--vw))}
+#app.w640 #compassDist{top:calc(var(--it) + 144px)}
+#app.w640 #items{top:calc(var(--it) + 74px)}
 /* game width/height classes set by applyOrient (r_orient.js) */
 #app.h460 #title .logo{font-size:clamp(40px,calc(8*var(--vw)),72px)}
 #app.h460 #title .in{gap:10px}
 #app.h460 .menu button{padding-block:4px}
-#app.h460 #boss{bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
-#app.h460 .screen.dim{padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px)}
+#app.h460 #boss{bottom:calc(var(--ib) + 16px)}
+#app.h460 .screen.dim{padding-block:calc(var(--it) + 12px) calc(var(--ib) + 12px)}
 #app.h460 .panel{gap:10px}
 #app.h460 .panel h2{font-size:26px}
 #app.h460 #levelup .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -271,7 +276,7 @@ input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
 #app.h460 .card span{display:none}
 #app.h460 .card svg{width:28px;height:28px}
 #app.h460 #charsel .card svg{width:44px;height:44px}
-#app.h460 #dialog{bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+#app.h460 #dialog{bottom:calc(var(--ib) + 8px)}
 #app.h460 #dialog .box{padding:8px 14px 10px}
 #app.h460 #dlgText{font-size:17px;min-height:2.5em}
 #app.h460 .dlgC{padding:5px 10px;font-size:15px}
@@ -2775,6 +2780,9 @@ function setupMeshyHero(gltf){
       Qm0:worldQ(bone,new THREE.Quaternion()),C:new THREE.Quaternion(),parentQ:new THREE.Quaternion()};
     if(!r.fixed){const md=wp(B[r.mc],_mv).sub(wp(B[r.mp||r.m],_mv2)).normalize().clone();const pd=wp(P_[r.pd[1]],_mv).sub(wp(P_[r.pd[0]],_mv2)).normalize();row.C.setFromUnitVectors(md,pd);}
     row.CQm0=row.C.clone().multiply(row.Qm0);return row;}).filter(Boolean);
+  // per-frame scratch, made once: wq = this frame's target world rotation; pr = the row of the parent bone when it is synced
+  // earlier in the same frame (its wq is then fresh), pq = the parent's current world rotation otherwise
+  rows.forEach((r,i)=>{r.wq=new THREE.Quaternion();r.pq=new THREE.Quaternion();r.pr=rows.slice(0,i).find(o=>o.bone===r.bone.parent)||null;});
   const hipOff=P_.pel.worldToLocal(wp(B.Hips,new THREE.Vector3()));
   // attachment proxies: children of the meshy hands whose world rotation equals the procedural wrist's
   const proxy=(row)=>{const g=new THREE.Group();g.quaternion.copy(row.CQm0).invert().multiply(row.Qp0i.clone().invert());
@@ -2782,20 +2790,21 @@ function setupMeshyHero(gltf){
   const rowOf=n=>rows.find(r=>r.bone.name===n);
   R.root.position.copy(sp);R.root.rotation.set(0,sr,0);R.inner.rotation.copy(si);R.root.updateMatrixWorld(true);
   for(const m of R.meshes)m.visible=false;
-  Object.assign(MESHY,{on:true,holder,arm,B,rows,hipOff,skin,proxR:proxy(rowOf('RightHand')),proxL:proxy(rowOf('LeftHand'))});
+  Object.assign(MESHY,{on:true,holder,arm,armQ:new THREE.Quaternion(),B,rows,hipOff,skin,proxR:proxy(rowOf('RightHand')),proxL:proxy(rowOf('LeftHand'))});
   meshySync();return true;}
 // after animPlayer: copy the procedural pose onto the meshy skeleton, move attachments, keep the cape hidden
+// runs every frame, so it makes no objects: the per-row quaternions were made in setupMeshyHero
 function meshySync(){if(!MESHY.on)return;const R=PL.rig;
   MESHY.holder.updateMatrixWorld(true);
   const hw=R.P.pel.localToWorld(_mv.copy(MESHY.hipOff));MESHY.arm.worldToLocal(hw);MESHY.B.Hips.position.copy(hw);
-  const parentW=new Map();parentW.set(MESHY.arm,worldQ(MESHY.arm,new THREE.Quaternion()));
+  const armQ=worldQ(MESHY.arm,MESHY.armQ);
   for(const r of MESHY.rows){
     worldQ(r.p,_mq1).multiply(r.Qp0i);
     if(r.b){worldQ(r.b,_mq2).multiply(r.Qb0i);_mq1.slerp(_mq2,r.w);}
     _mq1.multiply(r.CQm0);                               // target world rotation
-    const pq=parentW.get(r.bone.parent)||worldQ(r.bone.parent,new THREE.Quaternion());
+    const par=r.bone.parent,pq=r.pr?r.pr.wq:par===MESHY.arm?armQ:worldQ(par,r.pq);
     r.bone.quaternion.copy(_mq3.copy(pq).invert().multiply(_mq1));
-    parentW.set(r.bone,_mq1.clone());}
+    r.wq.copy(_mq1);}
   MESHY.holder.updateMatrixWorld(true);
   if(PL.sw&&PL.sw.g.parent!==MESHY.proxR){MESHY.proxR.add(PL.sw.g);}
   if(PL.flask.parent!==MESHY.proxL)MESHY.proxL.add(PL.flask);
@@ -2835,7 +2844,8 @@ function dlgNext(){const c=DLG.cur;if(!c)return;if(c.typing){dlgDone();return;}i
   sfx('ui');if(c.n.next)dlgShow(c.n.next);else dlgEnd();}
 function dlgChoose(i){const c=DLG.cur;if(!c)return;if(c.typing)dlgDone();const o=c.n.choices&&c.n.choices[i];if(!o)return;
   sfx('ui');if(o.act)storyAct(o.act);if(o.next)dlgShow(o.next);else dlgEnd();}
-function dlgEnd(){const c=DLG.cur;DLG.cur=null;$('dialog').hidden=true;$('touch').hidden=!isTouch;if(G.state==='dialogue')G.state='play';if(c&&c.onEnd)c.onEnd();}
+// the end of a dialogue is a checkpoint: what it changed (flags such as selinMet, braci, quests) survives "Continua"
+function dlgEnd(){const c=DLG.cur;DLG.cur=null;$('dialog').hidden=true;$('touch').hidden=!isTouch;if(G.state==='dialogue')G.state='play';save();if(c&&c.onEnd)c.onEnd();}
 // keyboard during a dialogue: E / Space / Enter advance, 1-3 choose, arrows move between choices; Esc is ignored
 function dlgKey(e){const k=e.code;
   if(k==='Digit1'||k==='Digit2'||k==='Digit3'||k==='Numpad1'||k==='Numpad2'||k==='Numpad3'){dlgChoose(+k.slice(-1)-1);return;}
@@ -2907,6 +2917,9 @@ function viewH(){return ROT?innerWidth:innerHeight;}
 function touchXY(e){return ROT?{x:e.clientY,y:innerWidth-e.clientX}:{x:e.clientX,y:e.clientY};}
 function applyOrient(){ROT=wantRot();const app=$('app');
   if(app){app.classList.toggle('rot90',ROT);const W=viewW(),H=viewH();
+    // the rotated box is sized in px from innerWidth/innerHeight, never 100vh/100vw: on iOS 100vh is the height without the
+    // toolbar, so the right end of the game (attack button, objective) would sit under Safari's bar
+    app.style.width=ROT?W+'px':'';app.style.height=ROT?H+'px':'';app.style.transform=ROT?'translateX('+innerWidth+'px) rotate(90deg)':'';
     app.classList.toggle('w1000',W<=1000);app.classList.toggle('w640',W<=640);app.classList.toggle('h460',H<=460);
     const s=document.documentElement.style;s.setProperty('--vw',W/100+'px');s.setProperty('--vh',H/100+'px');}
   onResize();}
