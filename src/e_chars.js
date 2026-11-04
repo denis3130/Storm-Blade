@@ -11,6 +11,17 @@ function evalTrack(tr,t,out){if(t<=tr[0].t){out.set(tr[0].p);return;}
   for(let i=1;i<tr.length;i++){if(t<=tr[i].t){const a=tr[i-1],b=tr[i];const k=b.e((t-a.t)/Math.max(1e-4,b.t-a.t));for(let j=0;j<NP;j++)out[j]=a.p[j]+(b.p[j]-a.p[j])*k;return;}}
   out.set(tr[tr.length-1].p);}
 function mixPose(out,a,b,k){for(let j=0;j<NP;j++)out[j]=a[j]+(b[j]-a[j])*k;}
+// baked walk and run cycles (src/n_anims.js, tools/anim/bake.sh): decoded once into radians and metres; null when there is none
+const _CYC={};
+function animCycle(name){if(name in _CYC)return _CYC[name];const a=ANIM&&ANIM[name];if(!a)return _CYC[name]=null;
+  const n=a.n,f=new Float32Array(n*NP),mean=new Float32Array(NP);
+  for(let k=0;k<n;k++)for(let j=0;j<NP;j++){const v=a.d[k*NP+j]*(j?.1*DEG:.001);f[k*NP+j]=v;mean[j]+=v/n;}
+  return _CYC[name]={n,f,mean,lift:Float32Array.from(a.lift,v=>v*.001),leg:a.leg*.001};}
+// pose of cycle c at phase (cycles per 1, wraps), linear between samples; makes no objects
+function sampleCycle(out,c,phase){const n=c.n,f=c.f,x=(phase-Math.floor(phase))*n,i=Math.floor(x)%n,i2=(i+1)%n,t=x-Math.floor(x);
+  for(let j=0;j<NP;j++){const a=f[i*NP+j];out[j]=a+(f[i2*NP+j]-a)*t;}}
+// left ankle height above its lowest point (m) at phase, same interpolation
+function cycleLift(c,phase){const n=c.n,x=(phase-Math.floor(phase))*n,i=Math.floor(x)%n,t=x-Math.floor(x),L=c.lift;return L[i]+(L[(i+1)%n]-L[i])*t;}
 /* ---------- procedural locomotion: stride-synced phase + 2-bone leg IK, so planted feet never slide ----------
    o: output pose, base: pose to walk from, st: per-character gait state, d: rig dims, sc: rig scale,
    vf/vs: actual local forward / rightward speed (m/s), opt.arm: arm-swing multiplier, opt.armR: sword-arm multiplier,

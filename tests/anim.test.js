@@ -94,3 +94,10 @@ T.test('animPlayer makes no objects per frame', () => { meshyOn(); move('jog'); 
     const C = madeDuring(() => { for (let i = 0; i < 20; i++) { S.animPlayer(1 / 60); if (!S.lastPose().every(Number.isFinite)) bad++; } });
     const total = Object.values(C).reduce((a, b) => a + b, 0); T.eq(total, 0, 'objects made in 20 frames ' + JSON.stringify(C)); } finally { move('stop'); }
   T.eq(bad, 0, 'frames with non-numeric pose values'); });
+T.test('baked cycles are complete', () => { T.ok(S.ANIM && S.animCycle, 'no baked animations (src/n_anims.js)'); const NP = S.HP.idle.length;
+  for (const k of ['walk', 'run']) { const c = S.animCycle(k); T.ok(c, k + ' cycle missing'); T.eq(c.n, 32, k + ' samples'); T.eq(c.f.length, 32 * NP, k + ' values');
+    T.ok(c.f.every(Number.isFinite) && c.mean.every(Number.isFinite), k + ' has non-numeric values');
+    for (let i = 0; i < 8; i++) { const l = S.cycleLift(c, i / 8); T.ok(Number.isFinite(l) && l >= 0, k + ' lift ' + l); }
+    T.ok(S.ANIM.err[k] < 2, k + ' round trip error ' + S.ANIM.err[k] + '°');
+    let lo = Infinity, hi = -Infinity; for (let i = 0; i < c.n; i++) { lo = Math.min(lo, c.f[i * NP + 2]); hi = Math.max(hi, c.f[i * NP + 2]); }
+    T.ok((hi - lo) / 2 / D2R > 2, k + ' pelvis turn amplitude ' + ((hi - lo) / 2 / D2R).toFixed(2) + '°'); } });
