@@ -241,6 +241,7 @@ addEventListener('keydown',e=>{if(e.repeat&&!['KeyW','KeyA','KeyS','KeyD'].inclu
     if(e.code==='KeyQ'){IN.hvy=true;IN.hvyP=true;}if(e.code==='KeyC')IN.lockSwitch=1;if(e.code==='KeyX')IN.lockSwitch=-1;
     if(e.code==='Escape'||e.code==='KeyP')IN.pauseP=true;}
   else if(e.code==='KeyP'&&G.state==='pause')resume();
+  else if(G.state==='dialogue')dlgKey(e);
   else menuKey(e);});
 addEventListener('keyup',e=>{KEYS[e.code]=false;if(e.code==='KeyJ')IN.atk=false;if(e.code==='KeyK')IN.blk=false;if(e.code==='KeyQ')IN.hvy=false;});
 addEventListener('blur',()=>{for(const k in KEYS)KEYS[k]=false;IN.atk=IN.blk=IN.hvy=false;if(G.state==='play'&&!isTouch)pause();});
@@ -274,6 +275,7 @@ function pollPad(dt){let gp=null;try{const l=navigator.getGamepads?navigator.get
     if(pr(5))IN.atkP=true;IN.atk=IN.atk||b(5);if(pr(7))IN.hvyP=true;IN.hvy=IN.hvy||b(7);if(pr(4)||pr(6))IN.blkP=true;IN.blk=IN.blk||b(4)||b(6);if(pr(1))IN.dodgeP=true;if(pr(0))IN.actP=true;if(pr(2))IN.flaskP=true;if(pr(3))IN.viewP=true;
     if(pr(11))IN.lockP=true;if(pr(9))IN.pauseP=true;if(b(10)||(b(1)&&PAD.bHeld>.35))IN.sprint=true;PAD.bHeld=b(1)?(PAD.bHeld||0)+dt:0;}
   else if(pr(9)&&G.state==='pause')resume();
+  else if(G.state==='dialogue')padDialogue(pr,lx,ly);
   else padMenu(pr,lx,ly);
   PAD.prev=gp.buttons.map(x=>x.pressed);if(!PAD.seen){PAD.seen=1;toast('Controller collegato');}}
 /* ---------- touch ---------- */
@@ -339,6 +341,7 @@ function initMenus(){
   for(const c of document.querySelectorAll('#levelup .card'))c.onclick=()=>pickStat(c.dataset.stat);
   $('luBack').onclick=()=>{sfx('ui');openShrineMenu();};$('smLevel').onclick=()=>{sfx('ui');openLevelUp();};$('smLeave').onclick=()=>{sfx('ui');resume();};
   $('dRetry').onclick=()=>respawn();$('vCont').onclick=()=>{G.state='play';resume();};$('vTitle').onclick=()=>showTitle();
+  $('dialog').addEventListener('click',()=>dlgNext());   // click / tap on the box advances (choice buttons stop the event)
   if(isTouch)initTouch();}
 /* ============================== save ============================== */
 // save data v4: a new key, so v2/v3 games (made for the old world) are never read nor deleted; settings live in their own key
@@ -406,6 +409,7 @@ function tick(rdt,doRender){
   pu.exposure.value=lerp(1.0,.92,ST.k);
   if(pu.lowhp.value>.5&&playing&&!P.dead){P.hbT=(P.hbT||0)-rdt;if(P.hbT<=0){P.hbT=.95;sfx('heart');}}
   renderer.getDrawingBufferSize(_db);PSCALE.value=_db.y/(2*Math.tan(camera.fov*DEG/2));
+  dlgTick(rdt);
   if(G.state!=='loading'&&G.state!=='title')updHUD(rdt);
   updAudio(rdt,ST.k,U.wind.value);
   MUS.combat=damp(MUS.combat,playing&&E.some(e=>!e.dead&&e.aggro&&!e.boss&&e.dist<26)?1:0,.6,rdt);MUS.boss=damp(MUS.boss,playing&&E.some(e=>!e.dead&&e.aggro&&e.boss&&e.dist<40)?1:0,.5,rdt);
@@ -428,5 +432,5 @@ async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('l
     L(1,'Pronto');await nextFrame();showTitle();}
   catch(e){console.error('BOOT',e&&e.stack||e);$('loadTxt').textContent='Errore di avvio: '+(e&&e.message);}
   requestAnimationFrame(frame);}
-window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient,HEROINE_D,setHero};
+window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient,HEROINE_D,setHero,gtxt,defineDialogue,dlgStart,dlgNext,dlgChoose,dlgActive,storyAct};
 boot();

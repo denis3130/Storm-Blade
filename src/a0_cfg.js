@@ -22,6 +22,7 @@ const CFG={
   prog:{chestBraci:90},                // braci from a camp chest = chestBraci × (camp index + 1)
   // braci (the souls of this world): level cost = lvlBase + lvlLin·(lvl−1) + lvlQuad·(lvl−1)²; pickR = pick-up radius of the pile left at death
   braci:{lvlBase:60, lvlLin:30, lvlQuad:4, pickR:1.3},
+  ui:{typeSpeed:48},                   // dialogue typewriter, characters per second
   swordDmg:[16,24,34,46,62],
   parry:{window:.28, guardTap:.25},
   block:{stMul:1.3, chip:.12, breakDmg:.6},
