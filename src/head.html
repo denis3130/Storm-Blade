@@ -177,6 +177,8 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 .menu button:disabled{opacity:.42;cursor:default}.menu button:disabled::before{display:none}
 .card.padf{border-color:var(--gold);box-shadow:0 0 24px rgba(201,168,98,.25)}
 .btn.padf{background:rgba(201,168,98,.28);outline:2px solid var(--gold);outline-offset:3px}
+#charsel .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(520px,100%)}
+#charsel .card svg{width:56px;height:56px}
 .luCost,.smStats{margin:0;text-align:center;font-size:15px;color:var(--dim)}
 .luCost b,.smStats b{font-family:var(--display);font-weight:600;color:var(--ember-hi)}
 .smStats{display:flex;gap:22px;justify-content:center;letter-spacing:.06em}
@@ -244,6 +246,7 @@ input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
 #app.h460 .card{padding:10px 8px;gap:4px}
 #app.h460 .card span{display:none}
 #app.h460 .card svg{width:28px;height:28px}
+#app.h460 #charsel .card svg{width:44px;height:44px}
 @media (prefers-reduced-motion:reduce){#stormLine.warn{animation:none}.toast{animation:none}#death h2{animation:none}}
 </style>
 
@@ -312,6 +315,18 @@ input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
       <button type="button" id="mControls">Comandi</button>
     </div>
     <div class="foot">Prototipo in Three.js · grafica, musica e suoni generati dal codice</div>
+  </div>
+</section>
+
+<section id="charsel" class="screen dim center" data-back="csBack" hidden>
+  <div class="panel" style="align-items:center">
+    <div class="rule" style="justify-content:center">Nuova partita</div>
+    <h2>Scegli l'erede</h2>
+    <div class="cards">
+      <button class="card" type="button" id="csM"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5c-6 0-10 5-10 11 0 4 2 7 4 9-5 2-9 7-10 15h32c-1-8-5-13-10-15 2-2 4-5 4-9 0-6-4-11-10-11z" fill="#2c3829" stroke="#c9a862" stroke-width="1.3"/><path d="M19 16c1-3 3-5 5-5s4 2 5 5c-1 3-3 5-5 5s-4-2-5-5z" fill="#0c0a08"/></svg><b>Eroe</b><span>La storia si rivolge a te al maschile.</span></button>
+      <button class="card" type="button" id="csF"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M30 16c0 4-2 7-6 7s-6-3-6-7 2-8 6-8 6 4 6 8z" fill="#7a5a48"/><path d="M18 16c0-6 3-9 6-9s6 3 6 9c-1-4-3-6-6-6s-5 2-6 6z" fill="#2b1d14"/><path d="M29.5 14c3 2 4 6 3 10l-1 6" fill="none" stroke="#2b1d14" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 1.5"/><path d="M10 42c1-8 6-13 14-14 8 1 13 6 14 14z" fill="#2c3829" stroke="#c9a862" stroke-width="1.3"/></svg><b>Eroina</b><span>La storia si rivolge a te al femminile.</span></button>
+    </div>
+    <div class="btns"><button class="btn ghost" type="button" id="csBack">Indietro</button></div>
   </div>
 </section>
 

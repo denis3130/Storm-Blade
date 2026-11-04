@@ -31,7 +31,16 @@ const worldQ=(o,q)=>q.setFromRotationMatrix(_mm.extractRotation(o.matrixWorld));
 function loadMeshyHero(){
   if(!THREE.GLTFLoader||location.protocol==='file:')return Promise.resolve(false);
   return new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v);}};setTimeout(()=>fin(false),20000);
-    new THREE.GLTFLoader().load(MESHY.url,g=>{try{fin(setupMeshyHero(g));}catch(e){console.warn('meshy hero',e);fin(false);}},null,()=>fin(false));});}
+    new THREE.GLTFLoader().load(MESHY.url,g=>{try{
+        // keep the bind pose: the model can be re-attached to a rebuilt rig (character select) after meshySync has posed its bones
+        MESHY.gltf=g;MESHY.bind=[];g.scene.traverse(o=>{if(o.isBone)MESHY.bind.push([o,o.quaternion.clone(),o.position.clone()]);});
+        fin(setupMeshyHero(g));}catch(e){console.warn('meshy hero',e);fin(false);}},null,()=>fin(false));});}
+// re-dress the current (rebuilt) hero rig with the loaded model; false when none is loaded (tests, offline)
+function meshyAttach(){if(!MESHY.gltf)return false;for(const[b,q,p]of MESHY.bind){b.quaternion.copy(q);b.position.copy(p);}
+  for(const k of['proxR','proxL'])if(MESHY[k]&&MESHY[k].parent)MESHY[k].parent.remove(MESHY[k]);
+  try{return setupMeshyHero(MESHY.gltf);}catch(e){console.warn('meshy hero',e);MESHY.on=false;return false;}}
+// the heroine has no Meshy model yet: take it off and let the procedural body (and its cape) show
+function meshyDetach(){if(MESHY.holder&&MESHY.holder.parent)MESHY.holder.parent.remove(MESHY.holder);MESHY.on=false;}
 function setupMeshyHero(gltf){
   const R=PL.rig,P_=R.P,B={};let skin=null;
   gltf.scene.traverse(o=>{if(o.isBone)B[o.name]=o;if(o.isSkinnedMesh){skin=o;o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;

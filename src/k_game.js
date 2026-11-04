@@ -295,7 +295,7 @@ function initTouch(){const z=$('touchZone'),J=$('joy'),K=$('joyK');
 function updTouchSprint(dt){const j=TOUCH.joy;if(j.id!==null&&Math.hypot(j.x,j.y)>.96){j.t+=dt;if(j.t>.9)TOUCH.sprint=true;}else{j.t=0;TOUCH.sprint=false;}}
 
 /* ============================== menus ============================== */
-const SCREENS=['title','pause','settings','controls','levelup','shrineMenu','death','victory'];let settingsBack='title';
+const SCREENS=['title','charsel','pause','settings','controls','levelup','shrineMenu','death','victory'];let settingsBack='title';
 function showScreen(id){for(const s of SCREENS)$(s).hidden=s!==id;$('fpCross').hidden=!(G.fp&&G.state==='play');for(const o of document.querySelectorAll('.padf'))o.classList.remove('padf');}
 /* ---------- menu navigation shared by keyboard (arrows, Esc) and controller (d-pad/stick, A, B); a screen's data-back names its "back" button ---------- */
 function menuScreen(){for(const id of SCREENS){const s=$(id);if(s&&!s.hidden)return s;}return null;}
@@ -322,7 +322,10 @@ function fillControls(){const pc=[['Muoversi',['W','A','S','D']],['Visuale','Mou
 function syncSettingsUI(){const seg=(id,v)=>{for(const b of $(id).querySelectorAll('button'))b.classList.toggle('on',b.dataset.v===String(v));};
   seg('sQuality',SET.quality);seg('sView',G.fp?'fp':'tp');seg('sInv',SET.invertY?'1':'0');seg('sNums',SET.nums?'1':'0');seg('sFps',SET.fps?'1':'0');$('sSens').value=SET.sens;$('sMusic').value=SET.music;$('sSfx').value=SET.sfx;}
 function initMenus(){
-  $('mNew').onclick=()=>{sfx('ui');lockLandscape();startGame(false);};$('mContinue').onclick=()=>{sfx('ui');lockLandscape();startGame(true);};
+  // "Nuova partita" opens the character select (still over the title camera); the choice starts the game with that body
+  $('mNew').onclick=()=>{sfx('ui');lockLandscape();showScreen('charsel');menuFocus($('csM'));};$('mContinue').onclick=()=>{sfx('ui');lockLandscape();startGame(true);};
+  $('csM').onclick=()=>{sfx('ui');startGame(false,'m');};$('csF').onclick=()=>{sfx('ui');startGame(false,'f');};
+  $('csBack').onclick=()=>{sfx('ui');showScreen('title');menuFocus($('mNew'));};
   $('mSettings').onclick=()=>{settingsBack='title';syncSettingsUI();showScreen('settings');};$('mControls').onclick=()=>{settingsBack='title';fillControls();showScreen('controls');};
   $('pResume').onclick=()=>resume();$('pSettings').onclick=()=>{settingsBack='pause';syncSettingsUI();showScreen('settings');};$('pControls').onclick=()=>{settingsBack='pause';fillControls();showScreen('controls');};
   $('pTitle').onclick=()=>{save();showTitle();};
@@ -353,7 +356,8 @@ function loadSave(){const s=readSave();if(!s)return false;resetPlayer();
   G.playTime=s.time||0;if(s.tips){P.parryTip=s.tips.p;P.stormTip=s.tips.s;}syncDrop();return true;}
 /* ============================== flow ============================== */
 function syncWorldToSave(){CAMPS.forEach((c,i)=>{const ch=c.chest;ch.open=!!P.chests[i];ch.t=ch.open?1:0;ch.lid.rotation.x=ch.open?-1.9:0;ch.light.i=P.cleared[i]&&!ch.open?2.4:0;});}
-function startGame(cont){audioInit();if(!(cont&&loadSave()))resetPlayer();if(!cont)lsDel(SAVE_K);
+function startGame(cont,hero){audioInit();if(!(cont&&loadSave())){resetPlayer();P.hero=hero==='f'?'f':'m';}if(!cont)lsDel(SAVE_K);
+  setHero(P.hero);
   recalcStats();P.hp=P.maxHp;P.st=P.maxSt;P.flasks=P.flaskMax;P.dead=false;P.act=null;P.lock=null;P.chip=P.hp;P.heal=0;setSword(P.sword);syncWorldToSave();
   placeAtShrine(P.shrine);spawnWorld();Object.assign(ST,{phase:'calm',t:cont?95:150,k:0});STRIKES.length=0;
   G.state='play';showScreen(null);$('hud').hidden=false;$('touch').hidden=!isTouch;setView(SET.fp);resume();
@@ -424,5 +428,5 @@ async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('l
     L(1,'Pronto');await nextFrame();showTitle();}
   catch(e){console.error('BOOT',e&&e.stack||e);$('loadTxt').textContent='Errore di avvio: '+(e&&e.message);}
   requestAnimationFrame(frame);}
-window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient};
+window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient,HEROINE_D,setHero};
 boot();

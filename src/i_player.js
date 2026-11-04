@@ -67,12 +67,17 @@ const _L=new Float32Array(NP),_A=new Float32Array(NP),_F=new Float32Array(NP);
 const turnYaw=(a,b,k,maxW,dt)=>{const d=angD(a,b);let s=d*(1-Math.exp(-k*dt));const m=maxW*dt;if(s>m)s=m;else if(s<-m)s=-m;return a+s;};
 function recalcStats(){const hpr=P.hp/P.maxHp;P.maxHp=CFG.hp.base+(P.stats.vig-1)*CFG.hp.perVig;P.maxSt=CFG.stam.base+(P.stats.end-1)*CFG.stam.perEnd;P.dmgMul=1+(P.stats.str-1)*CFG.str.per;
   P.lvl=P.stats.vig+P.stats.end+P.stats.str-2;P.hp=Math.min(P.maxHp,Math.max(1,hpr*P.maxHp));}
-function createPlayer(){
-  const mats=heroMats();const rig=buildHuman({d:HERO_D,mats,build:heroBuild});scene.add(rig.root);
+function createPlayer(hero){const F=hero==='f';
+  const mats=heroMats();const rig=buildHuman({d:F?HEROINE_D:HERO_D,mats,build:F?(a,d)=>heroBuild(a,d,{f:1}):heroBuild});scene.add(rig.root);
   const flask=new THREE.Group();const fb=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8),new THREE.MeshStandardMaterial({color:col(0x6a1410),emissive:new THREE.Color(.9,.12,.05),roughness:.2,metalness:.1,transparent:true,opacity:.92}));
   const fn=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,.06,6),new THREE.MeshStandardMaterial({color:col(0x8a7a5a),roughness:.6}));fn.position.y=.06;flask.add(fb,fn);flask.position.set(0,-.08,-.02);flask.visible=false;rig.P.wrL.add(flask);
-  PL={rig,mats,cape:new Cape(rig),trail:new Trail(30),flask,sw:null};
+  PL={rig,mats,cape:new Cape(rig),trail:new Trail(30),flask,sw:null,hero:F?'f':'m'};
   setSword(0);}
+// change body (character select, "Continua"): rebuild rig, cape, trail, flask and sword; the Meshy model only dresses the hero
+function setHero(h){h=h==='f'?'f':'m';P.hero=h;if(PL&&PL.hero===h)return;
+  if(PL){meshyDetach();scene.remove(PL.rig.root);for(const m of PL.rig.meshes)m.geometry.dispose();for(const k in PL.mats)PL.mats[k].dispose();
+    scene.remove(PL.cape.mesh);PL.cape.mesh.geometry.dispose();PL.cape.mat.dispose();scene.remove(PL.trail.mesh);PL.trail.mesh.geometry.dispose();PL.trail.mesh.material.dispose();}
+  createPlayer(h);if(h==='m')meshyAttach();setSword(P.sword||0);setView(G.fp);}
 function setSword(t){if(PL.sw&&PL.sw.g.parent)PL.sw.g.parent.remove(PL.sw.g);PL.sw=buildSword(t);PL.sw.g.position.set(0,-.072,-.004);(MESHY.on?MESHY.proxR:PL.rig.P.wrR).add(PL.sw.g);
   const gl=SWORDS[t].glow;PL.trail.u.uC.value.copy(gl?new THREE.Color(gl[0],gl[1],gl[2]).multiplyScalar(.8):new THREE.Color(1.9,1.75,1.45));$('swordName').textContent=SWORDS[t].name;}
 function setView(fp){G.fp=fp;PL.rig.P.head.scale.setScalar(fp?.001:1);PL.cape.mesh.visible=!fp;$('fpCross').hidden=!fp||G.state!=='play';camera.near=fp?.05:.08;camera.updateProjectionMatrix();}
@@ -219,7 +224,7 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   mixPose(_A,HP.idle,HP.guard,P.combatK);
   // turning on the spot: small shuffle steps instead of feet skating round
   let gs=vs;if(hs<.7&&Math.abs(P.yawRate)>1.1&&(!k||MOVE_ACTS.has(k)))gs+=clamp(P.yawRate*.24,-1.1,1.1);
-  const ev=gaitIK(_L,_A,P.gait,HERO_D,1,vf,gs,dt,{arm:1-P.combatK*.35,armR:1-P.combatK*.72,elbow:1-P.combatK*.55});
+  const ev=gaitIK(_L,_A,P.gait,PL.rig.d,1,vf,gs,dt,{arm:1-P.combatK*.35,armR:1-P.combatK*.72,elbow:1-P.combatK*.55});
   if(ev&&(!k||MOVE_ACTS.has(k))&&hs>.35){
     if(P.wade>.05){splash(P.pos,5+(P.sprinting?4:0),.8+P.wade);sfx('splash',P.pos,hs>3?1:.6);}
     else{sfx('step',P.pos,P.sprinting?1.5:hs<2.5?.55:1);if(P.sprinting&&Math.random()<.6)dust(P.pos,2,.4);}}

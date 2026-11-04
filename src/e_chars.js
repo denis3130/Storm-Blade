@@ -88,36 +88,50 @@ const gTor=(r,t,s=8,ts=16)=>new THREE.TorusGeometry(r,t,s,ts);
 
 /* ---------- hero ---------- */
 const HERO_D={hip:.96,spine:.1,torso:.5,neck:.07,shW:.215,shDrop:.075,upper:.29,fore:.26,hipW:.105,thigh:.44,shin:.43};
-function heroBuild(add,d){
-  const tun=0x34452f,tun2=0x283424,lea=0x3e2c20,lea2=0x251c15,skin=0x7a5a48,trou=0x2c2823,boot=0x2c2119,metal=0x9a9ea4,hood=0x2c3829;
+// provisional heroine (until her Meshy model): same outfit and palette, narrower shoulders and waist, hood down, hair braided to mid-back
+const HEROINE_D={hip:.93,spine:.1,torso:.47,neck:.07,shW:.19,shDrop:.07,upper:.28,fore:.25,hipW:.11,thigh:.43,shin:.42};
+function heroBuild(add,d,o){
+  const F=!!(o&&o.f),ty=F?d.torso/HERO_D.torso:1,sx=F?d.shW/HERO_D.shW:1,aR=F?.9:1,lR=F?.94:1;
+  const tr=(r,y)=>F?r*(y<=.2?.88:y<.54?.93:1):r;           // torso radius: thinner waist, slightly narrower chest
+  const prof=pts=>pts.map(([r,y])=>[tr(r,y),y*ty]);
+  const tun=0x34452f,tun2=0x283424,lea=0x3e2c20,lea2=0x251c15,skin=0x7a5a48,trou=0x2c2823,boot=0x2c2119,metal=0x9a9ea4,hood=0x2c3829,hair=0x2b1d14,hair2=0x1f150e;
   add('pel','b',gLathe([[0,-.13],[.14,-.12],[.18,-.05],[.178,.05],[.16,.12],[0,.13]],14),M4(0,0,0,0,0,0,1,1,.78),trou);
   add('pel','b',gTor(.176,.034,6,22),M4(0,.035,0,PI/2,0,0,1,.78,1),lea);
   add('pel','m',gBox(.06,.05,.02),M4(0,.035,-.125),metal);
   add('pel','b',gBox(.07,.08,.05),M4(.13,-.01,-.05,0,-.4,0),lea2);add('pel','b',gBox(.08,.09,.05),M4(-.06,-.01,.12,0,.2,0),lea2);
   add('pel','b',gBox(.25,.26,.025,1,3,1),M4(0,-.13,-.115,.08,0,0),tun2,{cf:(x,y,z,c)=>{if(y<-.1)c.multiplyScalar(.8);}});
   add('pel','b',gBox(.27,.28,.025,1,3,1),M4(0,-.13,.11,-.1,0,0),tun2);
-  add('spi','b',gLathe([[0,-.02],[.165,0],[.17,.1],[.168,.2],[.19,.32],[.208,.42],[.198,.49],[.13,.545],[.055,.575],[0,.58]],18),M4(0,0,0,0,0,0,1,1,.7),tun);
-  add('spi','b',gLathe([[.176,.12],[.19,.24],[.21,.36],[.214,.44],[.2,.5]],18),M4(0,0,0,0,0,0,1,1,.74),lea);
-  for(const s of[-1,1])add('spi','b',new THREE.SphereGeometry(.15,14,10,0,TAU,0,PI*.5),M4(s*.13,.47,.02,0,0,s*.35,1.15,.6,1.25),hood);
-  add('spi','b',gLathe([[.22,.3],[.2,.4],[.15,.5],[.08,.56]],18),M4(0,0,.03,0,0,0,1,1,.8),hood);
-  add('spi','b',gBox(.05,.6,.03),M4(0,.27,-.13,0,0,.72),lea2);
-  add('spi','m',gSph(.022,8,6),M4(.06,.33,-.142),metal);
-  add('spi','b',gTor(.085,.035,6,16),M4(0,.53,0,PI/2,0,0,1,.85,1),hood);
-  add('spi','b',gCaps(.045,.05,.07,8,2),M4(0,.6,0),skin);
+  add('spi','b',gLathe(prof([[0,-.02],[.165,0],[.17,.1],[.168,.2],[.19,.32],[.208,.42],[.198,.49],[.13,.545],[.055,.575],[0,.58]]),18),M4(0,0,0,0,0,0,1,1,.7),tun);
+  add('spi','b',gLathe(prof([[.176,.12],[.19,.24],[.21,.36],[.214,.44],[.2,.5]]),18),M4(0,0,0,0,0,0,1,1,.74),lea);
+  for(const s of[-1,1])add('spi','b',new THREE.SphereGeometry(.15,14,10,0,TAU,0,PI*.5),M4(s*.13*sx,.47*ty,.02,0,0,s*.35,1.15*sx,.6,1.25),hood);
+  add('spi','b',gLathe(prof([[.22,.3],[.2,.4],[.15,.5],[.08,.56]]),18),M4(0,0,.03,0,0,0,1,1,.8),hood);
+  add('spi','b',gBox(.05,.6*ty,.03),M4(0,.27*ty,F?-.121:-.13,0,0,.72),lea2);
+  add('spi','m',gSph(.022,8,6),M4(.06,.33*ty,F?-.132:-.142),metal);
+  add('spi','b',gTor(.085,.035,6,16),M4(0,.53*ty,0,PI/2,0,0,1,.85,1),hood);
+  add('spi','b',gCaps(.045,.05,.07,8,2),M4(0,.6*ty,0),skin);
+  if(F){// the hood lies folded on the nape; the braid hangs over the cape, bead by bead, down to mid-back
+    add('spi','b',gSph(.11,12,8),M4(0,.53*ty,.1,-.3,0,0,1.25,.55,.75),hood);
+    // the cape stands ~.21-.25 off the spine axis below the shoulders (measured), so the braid rides on top of it
+    [[.5,.2,.03,.008,-.75],[.42,.262,.029,-.008,-.1],[.34,.274,.027,.008,.04],[.27,.277,.025,-.006,.04]].forEach(([y,z,r,x,rx],i)=>
+      add('spi','b',gSph(r,8,6),M4(x,y*ty,z,rx,0,i%2?.25:-.25,1,1.6,.85),i%2?hair2:hair));
+    add('spi','b',gTor(.016,.007,5,10),M4(0,.235*ty,.278,PI/2,0,0),lea2);add('spi','b',gCone(.02,.06,6),M4(0,.2*ty,.279,PI,0,0),hair);}
   // head + hood + scarf
   add('head','b',gSph(.104,16,12),M4(0,.1,0,0,0,0,.92,1.06,1),skin);
-  add('head','b',new THREE.SphereGeometry(.133,18,12,PI*1.5+.62,TAU-1.24,0,PI*.78),M4(0,.112,.012,0,0,0,1,1.06,1.05),hood);
-  add('head','b',gCone(.1,.2,10),M4(0,.13,.12,-1.15,0,0,1,1,.6),hood);
+  if(!F){add('head','b',new THREE.SphereGeometry(.133,18,12,PI*1.5+.62,TAU-1.24,0,PI*.78),M4(0,.112,.012,0,0,0,1,1.06,1.05),hood);
+    add('head','b',gCone(.1,.2,10),M4(0,.13,.12,-1.15,0,0,1,1,.6),hood);}
+  else{// hair pulled back (open at the face), gathered into the braid's first bead at the back of the head
+    add('head','b',new THREE.SphereGeometry(.112,18,12,PI*1.5+.95,TAU-1.9,0,PI*.64),M4(0,.118,.006,0,0,0,.96,1.04,1.05),hair);
+    add('head','b',gSph(.034,8,6),M4(0,.03,.098,.3,0,0,1,1.5,.9),hair2);}
   add('head','b',gSph(.109,14,8),M4(0,.05,-.008,0,0,0,1,.55,1),0x1f2420);
   add('head','b',gSph(.012,6,4),M4(.034,.116,-.094),0x0c0a08);add('head','b',gSph(.012,6,4),M4(-.034,.116,-.094),0x0c0a08);
   for(const s of[-1,1]){const sh=s<0?'shL':'shR',el=s<0?'elL':'elR',wr=s<0?'wrL':'wrR';
-    add(sh,'b',gSph(.078,10,8),M4(0,0,0),tun);add(sh,'b',gCaps(.058,.066,.29,10,3),M4(0,0,0),tun);
+    add(sh,'b',gSph(.078*aR,10,8),M4(0,0,0),tun);add(sh,'b',gCaps(.058*aR,.066*aR,d.upper,10,3),M4(0,0,0),tun);
     add(sh,'b',new THREE.SphereGeometry(.105,12,8,0,TAU,0,PI*.55),M4(0,.016,0,0,0,s*.25,1,.82,1),s>0?lea:tun2);if(s>0)add(sh,'m',new THREE.SphereGeometry(.112,12,8,0,TAU,0,PI*.32),M4(0,.03,0,0,0,.25,1,.8,1),metal);
-    add(el,'b',gCaps(.046,.055,.26,10,3),M4(0,0,0),tun);add(el,'b',gCylO(.059,.052,.17,10),M4(0,-.15,0),lea);
+    add(el,'b',gCaps(.046*aR,.055*aR,d.fore,10,3),M4(0,0,0),tun);add(el,'b',gCylO(.059*aR,.052*aR,.17,10),M4(0,-.15,0),lea);
     add(wr,'b',gSph(.046,10,8),M4(0,-.045,-.005,0,0,0,.9,1.2,.7),lea2);add(wr,'b',gCaps(.016,.018,.05,6,2),M4(s*-.03,-.02,-.025,.6,0,s*.3),lea2);}
   for(const s of[-1,1]){const hp=s<0?'hipL':'hipR',kn=s<0?'knL':'knR',ft=s<0?'ftL':'ftR';
-    add(hp,'b',gCaps(.078,.1,.44,10,3),M4(0,0,0),trou);
-    add(kn,'b',gCaps(.056,.074,.43,10,3),M4(0,0,0),trou);add(kn,'b',gCaps(.064,.079,.28,10,3),M4(0,-.15,0),boot);add(kn,'b',gTor(.079,.018,6,14),M4(0,-.15,0,PI/2,0,0),lea2);
+    add(hp,'b',gCaps(.078*lR,.1*lR,d.thigh,10,3),M4(0,0,0),trou);
+    add(kn,'b',gCaps(.056*lR,.074*lR,d.shin,10,3),M4(0,0,0),trou);add(kn,'b',gCaps(.064,.079,.28,10,3),M4(0,-.15,0),boot);add(kn,'b',gTor(.079,.018,6,14),M4(0,-.15,0,PI/2,0,0),lea2);
     add(kn,'b',gSph(.062,8,6),M4(0,.0,-.03,0,0,0,1,1,.8),lea);
     add(ft,'b',gSph(.075,10,8),M4(0,-.035,-.06,0,0,0,1,.7,2.05),boot);add(ft,'b',gBox(.12,.022,.28),M4(0,-.075,-.06),lea2);}
 }
