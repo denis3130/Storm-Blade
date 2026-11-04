@@ -348,7 +348,7 @@ function chineseRoof(x,yr,z,yaw,w,d,tiers,h2,ov=1.6,steep=.38,up=.9){const c=Mat
       yr+=rise*.5+h2;w*=.66;d*=.66;}}
   return yr;}
 function b2cone(x,y,z,r,h){DB.stone.add(MATD.slate,geo('spire',()=>{const g=new THREE.ConeGeometry(1,1,8);g.translate(0,.5,0);return g;}),M4(x,y,z,0,PI/8,0,r,h,r),new THREE.Color(.6,.62,.66));}
-function statue(x,y,z,yaw){const stM=MATD.statue,sm={b:stM,m:stM},st=buildHuman({d:HERO_D,s:2.6,mats:sm,build:heroBuild});st.root.position.set(x,y+1.6,z);st.root.rotation.y=yaw;
+function statue(x,y,z,yaw){addCol(x,z,.75,4);const stM=MATD.statue,sm={b:stM,m:stM},st=buildHuman({d:HERO_D,s:2.6,mats:sm,build:heroBuild});st.root.position.set(x,y+1.6,z);st.root.rotation.y=yaw;
   st.apply(pose({spi:[4,0,0],head:[8,0,0],shR:[30,-10,8],elR:60,wrR:[-90,0,0],shL:[30,10,-8],elL:60,wrL:[0,0,0],hipL:[2,0,-4],hipR:[2,0,4]}));
   const sw=buildSword(2);sw.g.traverse(o=>{if(o.isMesh)o.material=stM;});sw.g.scale.setScalar(1.3);st.P.wrR.add(sw.g);scene.add(st.root);
   boxAt(DB.stone,MATD.stoneDark,x,y+.8,z,2.4,1.6,2.4,yaw,grey(.6));boxAt(DB.stone,MATD.stone,x,y+1.65,z,2.7,.2,2.7,yaw,grey(.72));dBox(x,z,2.4,2.4,yaw,4);}
@@ -557,6 +557,16 @@ function demoCrags(){let n=0;const nearWalk=(x,z,r)=>{for(const F of FLOORS){con
     if(DEMO.falls.some(F=>Math.hypot(x-F.x,z-F.z)<5||Math.hypot(x-F.bx,z-F.bz)<5)||Math.hypot(x-DEMO.cave.x,z-DEMO.cave.z)<9||Math.hypot(x-DEMO.gate.x,z-DEMO.gate.z)<8)continue;
     const w=sr(1.6,4.2),hh=sr(3.5,9),g=sr(.42,.62);boxAt(DB.stone,MATD.rock,x,h-hh*.18,z,w,hh,w*sr(.6,1),sr(0,TAU),new THREE.Color(g,g*1.01,g*1.03),sr(-.12,.12),sr(-.12,.12));n++;}
   return n;}
+// every solid block standing across the body's height gets its footprint as a wall (a circle for a column), unless a collider
+// already covers it: crags, cave walls, gate towers, ruins and the palace stop the player, the enemies and the camera like the houses
+function demoSolids(){const P=new THREE.Vector3(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),E=new THREE.Euler();let n=0;
+  for(const bk of['stone','wood','plaster'])for(const[,parts]of DB[bk].m)for(const p of parts){const t=p.g.type,gp=p.g.parameters||{};
+    const box=t==='BoxGeometry'||(t==='SphereGeometry'&&gp.widthSegments===8&&gp.heightSegments===6),cyl=t==='CylinderGeometry';if(!box&&!cyl)continue;
+    p.m.decompose(P,Q,S);E.setFromQuaternion(Q,'YXZ');if(Math.abs(E.x)>.35||Math.abs(E.z)>.35)continue;
+    const w=S.x*(cyl?2:1),d=S.z*(cyl?2:1);if(w<.35||d<.35)continue;const g=gY(P.x,P.z),y0=P.y-S.y/2,y1=P.y+S.y/2;if(!(y0<g+.5&&y1>g+1.1))continue;
+    const c=Math.cos(E.y),s=Math.sin(E.y);
+    if([[w/2-.07,0],[-w/2+.07,0],[0,d/2-.07],[0,-d/2+.07]].every(([u,v])=>collide({x:P.x+u*c+v*s,z:P.z-u*s+v*c},.05,true)))continue;if(cyl)addCol(P.x,P.z,Math.max(w,d)/2,y1-g);else addBox(P.x,P.z,w,d,E.y,y1-g);n++;}
+  return n;}
 /* ---------- walkable ramps (bridge, stairs on the cliff) ---------- */
 function addRamp(ax,az,ya,bx,bz,yb,hw){const dx=bx-ax,dz=bz-az,L2=dx*dx+dz*dz;FLOORS.push({s:1,ax,az,ya,dx,dz,dy:yb-ya,L2,hw,x:(ax+bx)/2,z:(az+bz)/2,r2:(Math.sqrt(L2)/2+hw)**2,y:Math.max(ya,yb)});}
 
@@ -642,7 +652,7 @@ function buildDemo(){_seed=20261104;
   DB.stone=new Batch();DB.metal=new Batch();DB.glow=new Batch();DB.cloth=new Batch();DB.wood=new Batch();DB.plaster=new Batch();DB.tile=new Batch();DB.leaf=new Batch();
   TEXD.ivy=toTex(genIvy(),{rep:false});MATD.ivy=new THREE.MeshStandardMaterial({map:TEXD.ivy,vertexColors:true,alphaTest:.5,side:THREE.DoubleSide,roughness:.75});
   // each builder draws from its own seed, so an edit in one does not reshuffle the others; the terrace and the stairs are rough masonry
-  [demoTerrace,demoStairs,demoBridge,demoGate,demoZig,demoVillage,demoPalace,demoCave,demoRuins,demoRibbons,demoWaterfall,demoRays,demoMountains,demoMist].forEach((f,k)=>{_seed=20261104+k*7919;RB=k<2?1:0;f();});_seed=31337;RB=1;demoCrags();RB=0;
+  [demoTerrace,demoStairs,demoBridge,demoGate,demoZig,demoVillage,demoPalace,demoCave,demoRuins,demoRibbons,demoWaterfall,demoRays,demoMountains,demoMist].forEach((f,k)=>{_seed=20261104+k*7919;RB=k<2?1:0;f();});_seed=31337;RB=1;demoCrags();RB=0;DEMO.solids=demoSolids();
   for(const k of['stone','metal','cloth','wood','plaster','tile','leaf'])DB[k].build();DB.glow.build(false);
   fill.intensity=1.35;fill.color.set(0xc9ccd0);demoTexts();DEMO.boxes=DBOX;}
 // the words of the demo's title and victory screens

@@ -46,3 +46,15 @@ T.test('the chests open once their camps are cleared', () => { T.newGame({hero: 
     T.key('KeyE'); T.sim(2); T.key('KeyE', false); T.ok(!P.chests[i], 'chest ' + i + ' opened while its camp stands');
     P.cleared[i] = true; T.key('KeyE'); T.sim(2); T.key('KeyE', false); T.sim(2); T.ok(P.chests[i], 'chest ' + i + ' did not open'); });
   T.ok(P.chests.every(Boolean), 'both chests open'); });
+// every block of masonry, rock or timber that stands across the body's height is solid: the player cannot walk into it
+// (looked for in the demo's batches: boxes, rough blocks and columns; each face, just inside, must touch a collider)
+T.test('solid blocks of the map stop the player', () => { T.newGame({hero: 'm'}); const DB = S.DB, TH = S.THREE, P = new TH.Vector3(), Q = new TH.Quaternion(), Sc = new TH.Vector3(), E = new TH.Euler();
+  let solids = 0; const open = [];
+  for (const bk of ['stone', 'wood', 'plaster']) for (const [, parts] of DB[bk].m) for (const p of parts) { const t = p.g.type, gp = p.g.parameters || {};
+    const box = t === 'BoxGeometry' || (t === 'SphereGeometry' && gp.widthSegments === 8 && gp.heightSegments === 6), cyl = t === 'CylinderGeometry'; if (!box && !cyl) continue;
+    p.m.decompose(P, Q, Sc); E.setFromQuaternion(Q, 'YXZ'); if (Math.abs(E.x) > .35 || Math.abs(E.z) > .35) continue;
+    const w = Sc.x * (cyl ? 2 : 1), d = Sc.z * (cyl ? 2 : 1); if (w < .35 || d < .35) continue; const g = S.gY(P.x, P.z);
+    if (!(P.y - Sc.y / 2 < g + .5 && P.y + Sc.y / 2 > g + 1.1)) continue; solids++; const c = Math.cos(E.y), s = Math.sin(E.y);
+    const faces = [[w / 2 - .07, 0], [-w / 2 + .07, 0], [0, d / 2 - .07], [0, -d / 2 + .07]].filter(([u, v]) => !S.collide({x: P.x + u * c + v * s, z: P.z - u * s + v * c}, .05, true));
+    if (faces.length) open.push(bk + ' at ' + P.x.toFixed(1) + ',' + P.z.toFixed(1) + ' (' + w.toFixed(1) + 'x' + d.toFixed(1) + ')'); }
+  T.ok(solids > 300, 'solid blocks found: ' + solids); T.ok(!open.length, open.length + ' blocks with an open face, e.g. ' + open.slice(0, 5).join('; ')); });

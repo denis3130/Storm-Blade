@@ -326,7 +326,7 @@ function updCamera(rdt,dt){const C=CFG.cam;
     let want=(tgt?C.distLock:C.dist)+(P.sprinting?C.distSprint:0)+(tgt&&tgt.type==='troll'?C.distTroll:0)+(G.cine>0?-1.4:0);
     const sh=C.shoulder;const ex=CAM.piv.x-fx*want+rx*sh,ez=CAM.piv.z-fz*want+rz*sh;
     const t=rayCols(CAM.piv.x,CAM.piv.z,ex,ez,.3);if(t<1)want=Math.max(1.2,want*t-.3);
-    for(let i=1;i<=6;i++){const s=i/6*want,x=CAM.piv.x-fx*s,z=CAM.piv.z-fz*s,y=CAM.piv.y-fy*s;if(gH(x,z)+.4>y){want=Math.max(1.0,s*.92);break;}}
+    for(let i=1,N=DEMO?12:6;i<=N;i++){const s=i/N*want,x=CAM.piv.x-fx*s,z=CAM.piv.z-fz*s,y=CAM.piv.y-fy*s;if(gH(x,z)+.4>y){want=Math.max(1.0,s*.92);break;}}
     CAM.cur=want<CAM.cur?damp(CAM.cur,want,18,rdt):damp(CAM.cur,want,3,rdt);
     const k=CAM.cur/Math.max(want,1);camera.position.set(CAM.piv.x-fx*CAM.cur+rx*sh*Math.min(1,k),CAM.piv.y-fy*CAM.cur,CAM.piv.z-fz*CAM.cur+rz*sh*Math.min(1,k));
     const gh=gY(camera.position.x,camera.position.z)+.35;if(camera.position.y<gh)camera.position.y=gh;}
