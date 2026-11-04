@@ -2,7 +2,7 @@
 """In-page test runner for Stormblade.
 
 usage: python3 tests/run.py tests/<file>.test.js [--viewport WxH] [--touch] [--mobile] [--seed N]
-                            [--data FILE.json] [--dump FILE.json] [--http]
+                            [--data FILE.json] [--dump FILE.json] [--http] [--page demo_w.html]
 
 Loads the test build (game_w.html, made by mk.sh) in headless Chrome, waits for the
 title screen, injects tests/lib.js, tests/fixtures.js and the test file, runs T.run() and prints one line
@@ -14,6 +14,7 @@ ignored). Exit code 1 if anything failed or errored.
 (used to record references).
 --http serves the repository on 127.0.0.1 and opens game_w.html from there, so the Meshy hero loads
 (GLTFLoader from the CDN is replaced by tests/vendor/mini_gltf.js).
+--page opens another test build of the repository instead of game_w.html (demo_w.html: the demo map).
 """
 import argparse, asyncio, functools, http.server, json, os, socketserver, sys, threading
 from playwright.async_api import async_playwright
@@ -84,7 +85,8 @@ async def main(a):
 
         base = serve(SB) if a.http else None
         await pg.route('**/*', lambda r: route_assets(r, base))
-        await pg.goto(base + 'game_w.html' if base else 'file://' + PAGE, wait_until='domcontentloaded')
+        page = os.path.join(SB, a.page)
+        await pg.goto(base + a.page if base else 'file://' + page, wait_until='domcontentloaded')
         await pg.wait_for_function("window.__SB && __SB.G && __SB.G.state==='title'", timeout=60000)
         await pg.add_script_tag(content=open(os.path.join(SB, 'tests', 'lib.js')).read())
         await pg.add_script_tag(content=open(os.path.join(SB, 'tests', 'fixtures.js')).read())
@@ -127,4 +129,5 @@ if __name__ == '__main__':
     ap.add_argument('--data', help='JSON file exposed to the test as window.TDATA')
     ap.add_argument('--dump', help='write window.TDUMP to this JSON file after the tests')
     ap.add_argument('--http', action='store_true', help='serve the repository over http so the Meshy hero loads')
+    ap.add_argument('--page', default='game_w.html', help='test build to open (demo_w.html for the demo map)')
     sys.exit(asyncio.run(main(ap.parse_args())))

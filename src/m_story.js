@@ -63,7 +63,7 @@ function questAdvance(id){const d=QUESTS[id],q=P.quests[id];if(!d||!q||q.done)re
   if(q.step>=d.steps.length){q.done=true;toast('Missione completata: <em>'+gtxt(d.title)+'</em>');sfx('level');if(d.done)storyAct(d.done);}
   save();}
 // an event advances every active quest whose current step listens to it: same type and every other key of `on` equal in data
-function storyEvent(type,data={}){for(const id of QORDER){const d=QUESTS[id],q=P.quests[id];if(!q||q.done)continue;const st=d.steps[q.step],on=st&&st.on;
+function storyEvent(type,data={}){if(DEMO)return;for(const id of QORDER){const d=QUESTS[id],q=P.quests[id];if(!q||q.done)continue;const st=d.steps[q.step],on=st&&st.on;
     if(!on||on.type!==type)continue;let ok=true;for(const k in on)if(k!=='type'&&on[k]!==data[k]){ok=false;break;}if(!ok)continue;
     if(st.count){q.n++;if(q.n>=st.count)questAdvance(id);}else questAdvance(id);}}
 function questHint(id){const d=QUESTS[id],q=P.quests[id];if(!d||!q||q.done)return'';const st=d.steps[q.step];return st?gtxt(st.hint).replace('{n}',q.n):'';}

@@ -60,7 +60,7 @@ camera.rotation.order='YXZ';
 const U={time:{value:0},wind:{value:1},player:{value:V3(0,0,0)},grassFade:{value:40},wet:{value:0},storm:{value:0}};
 
 /* ---------- global fog: distance + ground mist + sun in-scattering (replaces three's fog chunks) ---------- */
-const SUN_DIR=V3(.56,.29,-.78).normalize();
+const SUN_DIR=(DEMO?V3(DEMO.sun[0],DEMO.sun[1],DEMO.sun[2]):V3(.56,.29,-.78)).normalize();
 const FOG_BASE=-1.5;
 const gv=v=>`vec3(${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)})`;
 THREE.ShaderChunk.fog_pars_vertex='#ifdef USE_FOG\nvarying vec3 vFogWP;\nvarying float vFogD;\n#endif\n';
@@ -74,7 +74,7 @@ THREE.ShaderChunk.fog_fragment=`#ifdef USE_FOG
   gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor*(1.0+sunA*0.95),fogF);
 #endif
 `;
-const FOGC=col(0x6c7783);
+const FOGC=col(DEMO?DEMO.sky.fog:0x6c7783);
 scene.fog=new THREE.Fog(FOGC.clone(),.0085,.55); // near=density, far=ground-mist amount (custom chunk)
 const FOG_GLSL=`
 uniform vec3 uFogColor;uniform float uFogD;uniform float uFogH;
@@ -140,7 +140,8 @@ void main(){
   #include <encodings_fragment>
 }`;
 const SKYC={
-  calm:{hor:col(0x8b949b),zen:col(0x2a3540),cloud:col(0x6a7178),sun:new THREE.Color(1.0,.74,.46),fog:col(0x6d7884),hemiS:col(0x95a3b0),hemiG:col(0x2b261d)},
+  calm:DEMO?{hor:col(DEMO.sky.hor),zen:col(DEMO.sky.zen),cloud:col(DEMO.sky.cloud),sun:new THREE.Color(...DEMO.sky.sun),fog:col(DEMO.sky.fog),hemiS:col(DEMO.sky.hemiS),hemiG:col(DEMO.sky.hemiG)}
+    :{hor:col(0x8b949b),zen:col(0x2a3540),cloud:col(0x6a7178),sun:new THREE.Color(1.0,.74,.46),fog:col(0x6d7884),hemiS:col(0x95a3b0),hemiG:col(0x2b261d)},
   storm:{hor:col(0x4b3e66),zen:col(0x140f22),cloud:col(0x3a3050),sun:new THREE.Color(.5,.4,.7),fog:col(0x3c3352),hemiS:col(0x6c5f8e),hemiG:col(0x1a1620)}};
 const skyU={uSunDir:{value:SUN_DIR},uHorizon:{value:SKYC.calm.hor.clone()},uZenith:{value:SKYC.calm.zen.clone()},uSunCol:{value:SKYC.calm.sun.clone()},
   uCloud:{value:SKYC.calm.cloud.clone()},uTime:U.time,uStorm:U.storm,uFlash:{value:0}};

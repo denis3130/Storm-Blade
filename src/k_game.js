@@ -54,7 +54,7 @@ function updOrbs(rdt){if(!ORBS.length)return;hudXY($('braciN'),_ot);const tx=_ot
     if(u>=1){o.d.remove();ORBS.splice(i,1);addBraci(o.v);}}}
 function bump(el,cls='bump'){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
 function checkCamp(i){if(P.cleared[i])return;if(E.some(o=>o.camp===i&&!o.dead))return;P.cleared[i]=true;storyEvent('camp',{i});const c=CAMPS[i];c.chest.light.i=2.4;
-  const n=P.cleared.filter(Boolean).length;banner('Accampamento distrutto',c.name+' · '+n+' di 4');sfx('banner');save();
+  const n=P.cleared.filter(Boolean).length;banner('Accampamento distrutto',c.name+' · '+n+' di '+CAMPS.length);sfx('banner');save();
   setTimeout(()=>toast('Il forziere del capo è <em>aperto</em>'),2600);}
 function openChest(i){const c=CAMPS[i];if(c.chest.open)return;c.chest.open=true;P.chests[i]=true;storyEvent('chest',{i});sfx('chest',c.chest.g.position);
   magic(V3(c.chest.x,c.chest.g.position.y+1,c.chest.z),50,[3,2.2,.8],4,1.2);
@@ -81,7 +81,7 @@ function pickStat(s){if(levelUp(s))toast('Livello <em>'+P.lvl+'</em>');openShrin
 function restAtShrine(s){P.hp=P.maxHp;P.flasks=P.flaskMax;P.st=P.maxSt;P.shrine=s.id;sfx('rest');healFx(P.pos);magic(V3(s.x,s.y+2.3,s.z),40,[.5,1.4,2.6],2.5,1.2);
   if(ST.phase!=='storm'&&ST.phase!=='warn')spawnWorld(true);save();toast('Hai riposato a <em>'+s.name+'</em>. I nemici sono tornati.');
   // the first rest wakes Selin (read before the event: her dialogue sets the flag); the shrine menu opens when she has spoken
-  const meet=!P.flags.selinMet;storyEvent('rest',{shrine:s.id});
+  const meet=!DEMO&&!P.flags.selinMet;storyEvent('rest',{shrine:s.id});
   if(meet&&dlgStart('selin1',{onEnd:()=>openShrineMenu(s)}))return;
   openShrineMenu(s);}
 /* ---------- braci left where the player fell (last safe ground); touching the pile takes them back, dying first loses them ---------- */
@@ -115,6 +115,7 @@ function victory(){if(G.won)return;G.won=true;G.state='victory';showScreen('vict
 /* ============================== world population ============================== */
 function spawnWorld(keepNear){
   for(const e of[...E]){if(keepNear&&!e.dead&&e.aggro)continue;removeEnemy(e);}for(const p of PROJ)scene.remove(p.mesh);PROJ.length=0;TOK.clear();
+  if(DEMO){spawnDemo();return;}
   CAMPS.forEach((c,i)=>{if(P.cleared[i])return;const t=c.tier,ng=3+t,na=1+(t>=2?1:0),nw=2+(t>=1?1:0);
     for(let k=0;k<ng;k++){const[x,z]=c.spawnR[k];spawnEnemy('goblin',x,z,{camp:i,tier:t,sit:k%2===0,yaw:yawTo(c.x-x,c.z-z)});}
     spawnEnemy('archer',c.tower.x,c.tower.z,{camp:i,tier:t,static:true,baseY:c.tower.y,yaw:c.ent});
@@ -125,7 +126,7 @@ function spawnWorld(keepNear){
   [[-30,60,1],[74,40,0],[-62,-88,2],[122,-62,1],[22,-112,1],[-140,40,2]].forEach(([x,z,t])=>{for(let k=0;k<2+(t>1?1:0);k++)spawnEnemy('wolf',x+rr(-3,3),z+rr(-3,3),{tier:t});});
   [[-62,22,0],[36,78,1],[104,-8,1]].forEach(([x,z,t])=>{for(let k=0;k<2;k++)spawnEnemy('goblin',x+rr(-2,2),z+rr(-2,2),{tier:t});});}
 function placeAtShrine(id){const s=SHRINES[id]||SHRINES[0];const a=Math.atan2(-s.z,-s.x)+PI+.6;P.pos.set(s.x+Math.cos(a)*3,0,s.z+Math.sin(a)*3);P.pos.y=gH(P.pos.x,P.pos.z);
-  P.yaw=yawTo(P.pos.x-s.x,P.pos.z-s.z);if(id===0){P.pos.set(1.5,0,5.5);P.pos.y=gH(1.5,5.5);P.yaw=yawTo(CAMPS[0].x-1.5,CAMPS[0].z-5.5);}
+  P.yaw=yawTo(P.pos.x-s.x,P.pos.z-s.z);if(id===0){if(DEMO){const S0=DEMO.start;P.pos.set(S0.x,0,S0.z);P.pos.y=gH(S0.x,S0.z);P.yaw=S0.yaw;}else{P.pos.set(1.5,0,5.5);P.pos.y=gH(1.5,5.5);P.yaw=yawTo(CAMPS[0].x-1.5,CAMPS[0].z-5.5);}}
   CAM.yaw=P.yaw;CAM.pitch=-.18;CAM.init=false;P.vel.set(0,0,0);if(PL)PL.cape.reset();P.safe.x=P.pos.x;P.safe.z=P.pos.z;P.safeT=.5;if(PL)resetBlend();}
 
 /* ============================== storm ============================== */
@@ -137,12 +138,12 @@ function setStormPhase(ph){ST.phase=ph;ST.t=SDUR[ph];
     if(!P.stormTip){P.stormTip=1;hint('Le barriere azzurre dei <b>santuari</b> proteggono dalla tempesta. Segui il cerchio blu sulla bussola',6);}}
   else if(ph==='storm'){banner('La tempesta è qui',P.inWard?'Resta dentro la barriera':'Corri al santuario più vicino','storm');ST.strikeT=3;}
   else if(ph==='clear'){toast('La tempesta si placa');for(const e of E)if(e.type==='spirit'&&!e.dead){e.dead=true;e.deadT=0;}}}
-function updStorm(dt){ST.t-=dt;if(ST.t<=0){setStormPhase(ST.phase==='calm'?'warn':ST.phase==='warn'?'storm':ST.phase==='storm'?'clear':'calm');}
+function updStorm(dt){if(!DEMO)ST.t-=dt;if(ST.t<=0){setStormPhase(ST.phase==='calm'?'warn':ST.phase==='warn'?'storm':ST.phase==='storm'?'clear':'calm');}
   const tk=ST.phase==='storm'?1:ST.phase==='warn'?.6*(1-ST.t/SDUR.warn):ST.phase==='clear'?ST.t/SDUR.clear:0;
-  ST.k=damp(ST.k,tk,1.1,dt);const k=ST.k;U.storm.value=k;U.wind.value=1+k*2.6;U.wet.value=damp(U.wet.value,ST.phase==='storm'?1:ST.phase==='clear'?.7:0,ST.phase==='calm'?.08:.35,dt);
+  ST.k=damp(ST.k,tk,1.1,dt);const k=ST.k;U.storm.value=k;U.wind.value=1+k*2.6;U.wet.value=damp(U.wet.value,ST.phase==='storm'?1:ST.phase==='clear'?.7:DEMO?DEMO.wet:0,ST.phase==='calm'?.08:.35,dt);
   ST.flash=Math.max(0,ST.flash-dt*3.2);
   const C=SKYC.calm,S=SKYC.storm;skyU.uHorizon.value.copy(C.hor).lerp(S.hor,k);skyU.uZenith.value.copy(C.zen).lerp(S.zen,k);skyU.uCloud.value.copy(C.cloud).lerp(S.cloud,k);skyU.uSunCol.value.copy(C.sun).lerp(S.sun,k);
-  skyU.uFlash.value=ST.flash;scene.fog.color.copy(C.fog).lerp(S.fog,k).multiplyScalar(1+ST.flash*1.4);scene.fog.near=lerp(.0085,.0165,k);scene.fog.far=lerp(.55,.95,k);FOGU.uFogD.value=scene.fog.near;FOGU.uFogH.value=scene.fog.far;
+  skyU.uFlash.value=ST.flash;scene.fog.color.copy(C.fog).lerp(S.fog,k).multiplyScalar(1+ST.flash*1.4);scene.fog.near=lerp(DEMO?DEMO.fog[0]:.0085,.0165,k);scene.fog.far=lerp(DEMO?DEMO.fog[1]:.55,.95,k);FOGU.uFogD.value=scene.fog.near;FOGU.uFogH.value=scene.fog.far;
   hemi.color.copy(C.hemiS).lerp(S.hemiS,k);hemi.groundColor.copy(C.hemiG).lerp(S.hemiG,k);hemi.intensity=lerp(.5,.34,k)+ST.flash*2.6;sun.intensity=lerp(2.6,.22,k);
   const env=k>.5?ENV_STORM:ENV_CALM;if(scene.environment!==env)scene.environment=env;
   if(vortex){vortex.visible=k>.04;vortex.material.uniforms.uA.value=k;if(ST.vx!==undefined){const dx=ST.vx-P.pos.x,dz=ST.vz-P.pos.z,d=Math.hypot(dx,dz);if(d<95){ST.vx=P.pos.x+dx/d*95;ST.vz=P.pos.z+dz/d*95;}
@@ -193,10 +194,10 @@ function objective(){
   if((ST.phase==='warn'||ST.phase==='storm')&&!P.inWard){const[s,d]=nearestShrine();return{t:'Raggiungi un santuario: '+s.name,p:s};}
   const o=campObjective(),mh=mainHint();if(mh)o.t=mh;return o;}
 function campObjective(){
-  for(let i=0;i<4;i++)if(P.cleared[i]&&!P.chests[i])return{t:'Apri il forziere: '+CAMPS[i].name,p:{x:CAMPS[i].chest.x,z:CAMPS[i].chest.z}};
-  let best=-1;for(let i=0;i<4;i++)if(!P.cleared[i]){best=i;break;}
+  for(let i=0;i<CAMPS.length;i++)if(P.cleared[i]&&!P.chests[i])return{t:'Apri il forziere: '+CAMPS[i].name,p:{x:CAMPS[i].chest.x,z:CAMPS[i].chest.z}};
+  let best=-1;for(let i=0;i<CAMPS.length;i++)if(!P.cleared[i]){best=i;break;}
   if(best<0)return{t:'La valle è libera',p:null};const n=P.cleared.filter(Boolean).length;
-  return{t:'Distruggi '+CAMPS[best].name+' ('+n+'/4)',p:CAMPS[best]};}
+  return{t:'Distruggi '+CAMPS[best].name+' ('+n+'/'+CAMPS.length+')',p:CAMPS[best]};}
 const EBARS=[],HUDC={};
 function updHUD(rdt){
   const hw=Math.min(380,220+(P.maxHp-100)*1.1),sw=Math.min(360,200+(P.maxSt-100)*1.2);
@@ -230,7 +231,7 @@ function updHUD(rdt){
 /* ---------- interaction ---------- */
 let interactT=null;
 function updInteract(){interactT=null;if(P.dead||P.act&&P.act.k!=='block')return showPrompt(null);
-  for(let i=0;i<4;i++){const c=CAMPS[i].chest;if(c.open)continue;if(Math.hypot(P.pos.x-c.x,P.pos.z-c.z)<2.4){interactT={k:'chest',i,locked:!P.cleared[i]};break;}}
+  for(let i=0;i<CAMPS.length;i++){const c=CAMPS[i].chest;if(c.open)continue;if(Math.hypot(P.pos.x-c.x,P.pos.z-c.z)<2.4){interactT={k:'chest',i,locked:!P.cleared[i]};break;}}
   if(!interactT){for(const s of SHRINES){if(Math.hypot(P.pos.x-s.x,P.pos.z-s.z)<2.9){interactT={k:'shrine',s};break;}}}
   if(!interactT)return showPrompt(null);
   if(interactT.k==='chest')showPrompt(interactT.locked?'Bloccato: sconfiggi '+CAMPS[interactT.i].boss:'Apri il forziere',!interactT.locked);
@@ -355,11 +356,11 @@ function initMenus(){
   if(isTouch)initTouch();}
 /* ============================== save ============================== */
 // save data v4: a new key, so v2/v3 games (made for the old world) are never read nor deleted; settings live in their own key
-const SAVE_K='stormblade.save.v4';
+const SAVE_K=DEMO?'stormblade.demo.v1':'stormblade.save.v4';
 function save(){lsSet(SAVE_K,{v:CFG.ver,hero:P.hero,stats:P.stats,braci:P.braci,drop:P.drop,sword:P.sword,flasks:P.flasks,flaskMax:P.flaskMax,shrine:P.shrine,kills:P.kills,
   time:G.playTime,quests:P.quests,flags:P.flags,cleared:P.cleared,chests:P.chests,tips:{p:P.parryTip,s:P.stormTip}});}
 function readSave(){const s=lsGet(SAVE_K);return s&&typeof s==='object'&&s.v===CFG.ver?s:null;}
-function resetPlayer(){Object.assign(P,{hero:'m',stats:{vig:1,end:1,str:1},braci:0,drop:null,sword:0,flaskMax:CFG.flask.start,cleared:[false,false,false,false],chests:[false,false,false,false],
+function resetPlayer(){Object.assign(P,{hero:'m',stats:{vig:1,end:1,str:1},braci:0,drop:null,sword:0,flaskMax:CFG.flask.start,cleared:CAMPS.map(()=>false),chests:CAMPS.map(()=>false),
   shrine:0,kills:0,quests:{},flags:{}});G.playTime=0;G.won=false;syncDrop();}
 function loadSave(){const s=readSave();if(!s)return false;resetPlayer();
   const st=s.stats,d=s.drop,okSt=st&&['vig','end','str'].every(k=>st[k]>=1),okD=d&&isFinite(d.x)&&isFinite(d.z)&&d.amount>0;
@@ -392,7 +393,7 @@ function showTitle(){G.state='title';$('hud').hidden=true;showScreen('title');$(
   if(s){mc.hidden=false;const lv=(s.stats?s.stats.vig+s.stats.end+s.stats.str-2:1);$('mContinueInfo').textContent='Livello '+lv+' · '+(s.cleared?s.cleared.filter(Boolean).length:0)+' accampamenti su 4';}else mc.hidden=true;
   if(document.pointerLockElement)document.exitPointerLock();placeAtShrine(0);setTimeout(()=>{const b=mc.hidden?$('mNew'):mc;b.focus();},60);}
 let titleA=0;
-function titleCam(rdt){titleA+=rdt*.045;const cx=4,cz=8,R=17;const x=cx+Math.cos(titleA)*R,z=cz+Math.sin(titleA)*R;camera.position.set(x,gH(x,z)+3.6,z);
+function titleCam(rdt){if(DEMO)return demoTitleCam(rdt);titleA+=rdt*.045;const cx=4,cz=8,R=17;const x=cx+Math.cos(titleA)*R,z=cz+Math.sin(titleA)*R;camera.position.set(x,gH(x,z)+3.6,z);
   camera.lookAt(0,gH(0,0)+2.2,0);U.player.value.set(x,gH(x,z),z);}
 /* ============================== main loop ============================== */
 let last=performance.now();const _db=new THREE.Vector2();
@@ -430,12 +431,12 @@ function tick(rdt,doRender){
   if(doRender)Post.render(Q.rays?(1-ST.k)*.9:0);}
 async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('loadTxt').textContent=t;};
   applyOrient();
-  try{L(.04,'Forgiando le texture');await nextFrame();makeTextures();makeMaterials();makeWardMat();
+  try{L(.04,'Forgiando le texture');await nextFrame();makeTextures();makeMaterials();makeWardMat();if(DEMO)makeDemoTextures();
     L(.16,'Modellando la valle');await nextFrame();buildPaths();setupFlats();buildTerrain();buildMountains();
     L(.34,'Riempiendo il lago');await nextFrame();buildWater();initShore();
     L(.42,'Piantando la foresta');await nextFrame();buildForest();initGrass();initFX();initRain();initVortex();
-    L(.6,'Erigendo santuari e rovine');await nextFrame();SHRINES.forEach(buildShrine);RUINS.forEach(buildRuin);
-    L(.72,'Accendendo i fuochi dei goblin');await nextFrame();CAMPS.forEach(buildCamp);
+    L(.6,'Erigendo santuari e rovine');await nextFrame();if(DEMO)buildDemo();SHRINES.forEach(DEMO?demoShrine:buildShrine);RUINS.forEach(buildRuin);
+    L(.72,'Accendendo i fuochi dei goblin');await nextFrame();CAMPS.forEach(DEMO?demoCamp:buildCamp);
     L(.82,'Risvegliando le creature');await nextFrame();initHeroPoses();initEnemyPoses();enemyBaseMats();createPlayer();buildCompass();initMenus();
     L(.86,'Vestendo l\'eroe');await loadMeshyHero();
     L(.9,'Compilando la luce');await nextFrame();ENV_CALM=makeEnv(SKYC.calm,0);ENV_STORM=makeEnv(SKYC.storm,1);scene.environment=ENV_CALM;
@@ -444,5 +445,5 @@ async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('l
     L(1,'Pronto');await nextFrame();showTitle();}
   catch(e){console.error('BOOT',e&&e.stack||e);$('loadTxt').textContent='Errore di avvio: '+(e&&e.message);}
   requestAnimationFrame(frame);}
-window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;resetBlend();},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient,HEROINE_D,setHero,gtxt,defineDialogue,dlgStart,dlgNext,dlgChoose,dlgActive,storyAct,defineQuest,questStart,questStep,questIsDone,questAdvance,storyEvent,mainHint,openJournal,setupMeshyHero,meshySync,evalTrack,pose,FLOORS,lastPose:()=>_F,resetBlend,ANIM,animCycle,sampleCycle,cycleLift};
+window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;resetBlend();},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient,HEROINE_D,setHero,gtxt,defineDialogue,dlgStart,dlgNext,dlgChoose,dlgActive,storyAct,defineQuest,questStart,questStep,questIsDone,questAdvance,storyEvent,mainHint,openJournal,setupMeshyHero,meshySync,evalTrack,pose,FLOORS,lastPose:()=>_F,resetBlend,ANIM,animCycle,sampleCycle,cycleLift,titleCam,DEMO,gY};
 boot();

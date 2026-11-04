@@ -1,17 +1,17 @@
 /* ============================== world layout ============================== */
-const WR=170;
-const TSZ=480,TSEG=isTouch?192:288,TN=TSEG+1,TSTEP=TSZ/TSEG,THALF=TSZ/2;
-const LAKE={x:30,z:40,r:18};let WATER_Y=0;
-const CAMPS=[
+const WR=DEMO?DEMO.wr:170;
+const TSZ=DEMO?DEMO.tsz:480,TSEG=isTouch?192:288,TN=TSEG+1,TSTEP=TSZ/TSEG,THALF=TSZ/2;
+const LAKE=DEMO?DEMO.lake:{x:30,z:40,r:18};let WATER_Y=0;
+const CAMPS=DEMO?DEMO.camps:[
   {x:62,z:-46,name:'Accampamento del Fango',boss:'Gruk il Fangoso',tier:0},
   {x:-94,z:48,name:'Rupe dei Teschi',boss:'Morva Spaccaossa',tier:1},
   {x:46,z:120,name:'Fossa Nera',boss:"Thrak l'Insonne",tier:2},
   {x:-112,z:-112,name:'Trono del Re Troll',boss:'Re Ogrul',tier:3}];
-const SHRINES=[[0,0,"Santuario dell'Alba"],[34,-20,'Pietra del Guado'],[90,-84,'Altare Spezzato'],[-40,10,'Cerchio dei Corvi'],[-70,-52,'Fonte Cinerea'],
+const SHRINES=(DEMO?DEMO.shrines.map(s=>[s.x,s.z,s.name]):[[0,0,"Santuario dell'Alba"],[34,-20,'Pietra del Guado'],[90,-84,'Altare Spezzato'],[-40,10,'Cerchio dei Corvi'],[-70,-52,'Fonte Cinerea'],
   [-22,-82,'Arco del Vento'],[104,22,'Santuario del Lupo'],[6,74,'Riva Silente'],[-128,8,'Guglia Grigia'],[-118,80,'Tomba del Re'],
-  [84,118,'Lanterna Muta'],[-78,-100,'Soglia del Trono'],[-48,-140,'Ultimo Lume'],[140,-30,'Santuario Orientale']].map((s,i)=>({x:s[0],z:s[1],name:s[2],id:i}));
-const RUINS=[{t:'tower',x:-34,z:-34,r:8},{t:'arch',x:74,z:8,r:5},{t:'arch',x:-84,z:88,r:5},{t:'circle',x:-4,z:-114,r:11},{t:'statue',x:-56,z:-22,r:5},{t:'wall',x:118,z:60,r:6},{t:'wall',x:-10,z:40,r:5}];
-const PATHS=[[[0,0],[34,-20],[62,-46]],[[0,0],[-40,10],[-94,48]],[[0,0],[4,34],[6,74],[46,120]],[[-40,10],[-70,-52],[-78,-100],[-112,-112]],
+  [84,118,'Lanterna Muta'],[-78,-100,'Soglia del Trono'],[-48,-140,'Ultimo Lume'],[140,-30,'Santuario Orientale']]).map((s,i)=>({x:s[0],z:s[1],name:s[2],id:i}));
+const RUINS=DEMO?[]:[{t:'tower',x:-34,z:-34,r:8},{t:'arch',x:74,z:8,r:5},{t:'arch',x:-84,z:88,r:5},{t:'circle',x:-4,z:-114,r:11},{t:'statue',x:-56,z:-22,r:5},{t:'wall',x:118,z:60,r:6},{t:'wall',x:-10,z:40,r:5}];
+const PATHS=DEMO?DEMO.paths:[[[0,0],[34,-20],[62,-46]],[[0,0],[-40,10],[-94,48]],[[0,0],[4,34],[6,74],[46,120]],[[-40,10],[-70,-52],[-78,-100],[-112,-112]],
   [[34,-20],[104,22],[140,-30]],[[34,-20],[90,-84]],[[-70,-52],[-22,-82],[-48,-140]],[[-40,10],[-128,8],[-118,80]],[[6,74],[84,118]],[[104,22],[118,60]]];
 const PSEG=[];
 function buildPaths(){for(const p of PATHS){const pts=[];
@@ -22,7 +22,7 @@ function pathDist(x,z){let b=1e9;for(const s of PSEG){const dx=s[2]-s[0],dz=s[3]
   const ex=s[0]+dx*t-x,ez=s[1]+dz*t-z,d=ex*ex+ez*ez;if(d<b)b=d;}return Math.sqrt(b);}
 
 /* ---------- height ---------- */
-function H0(x,z){const r=Math.hypot(x,z);
+function H0(x,z){if(DEMO)return DEMO.h0(x,z);const r=Math.hypot(x,z);
   let h=(fbm(x*.0072+3.1,z*.0072-1.7,4)-.5)*30;
   h+=(fbm(x*.027+50,z*.027-20,3)-.5)*6;
   const rg=1-Math.abs(fbm(x*.011-30,z*.011+70,3)*2-1);h+=rg*rg*7;
@@ -37,6 +37,7 @@ function H(x,z){let h=Hb(x,z);for(const f of FLATS){const dx=x-f.x,dz=z-f.z,d2=d
 function setupFlats(){
   let mn=1e9;for(let i=0;i<48;i++){const a=i/48*TAU;for(const k of[1.05,1.25,1.45])mn=Math.min(mn,H0(LAKE.x+Math.cos(a)*LAKE.r*k,LAKE.z+Math.sin(a)*LAKE.r*k));}
   WATER_Y=Math.min(mn-.45,H0(LAKE.x,LAKE.z)-.4);
+  if(DEMO)return;
   const add=(x,z,r)=>FLATS.push({x,z,r,h:Hb(x,z)});
   add(0,0,9);CAMPS.forEach(c=>add(c.x,c.z,17));SHRINES.forEach(s=>add(s.x,s.z,6.5));RUINS.forEach(r=>add(r.x,r.z,r.r));}
 
@@ -49,7 +50,7 @@ function gH(x,z){const fx=(x+THALF)/TSTEP,fz=(z+THALF)/TSTEP;let ix=Math.floor(f
   const tx=clamp(fx-ix,0,1),tz=clamp(fz-iz,0,1),i=iz*TN+ix;const ha=HG[i],hb=HG[i+1],hc=HG[i+TN],hd=HG[i+TN+1];
   return tx+tz<=1?ha+(hb-ha)*tx+(hc-ha)*tz:hd+(hc-hd)*(1-tx)+(hb-hd)*(1-tz);}
 function gNrm(x,z,o){const e=.8;o.set(gH(x-e,z)-gH(x+e,z),2*e,gH(x,z-e)-gH(x,z+e)).normalize();return o;}
-function splatCalc(x,z,h,ny,pd){
+function splatCalc(x,z,h,ny,pd){if(DEMO)return demoSplat(x,z,h,ny,pd);
   const fd=forestD(x,z);let m=sstep(.47,.6,fd);const g=1-m;
   let d=sstep(.62,.74,fbm(x*.045+11,z*.045-7,2))*.55;
   d=Math.max(d,1-sstep(1.0,2.5,pd+(vnoise(x*.4,z*.4)-.5)*.9));
@@ -62,7 +63,7 @@ function splatCalc(x,z,h,ny,pd){
 let terrain=null;
 function terrainMaterial(){
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.97,metalness:0});
-  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{tG:{value:TEX.grass},tD:{value:TEX.dirt},tR:{value:TEX.rock},tM:{value:TEX.moss},uWet:U.wet});
+  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{tG:{value:TEX.grass},tD:{value:DEMO?TEXD.cobble:TEX.dirt},tR:{value:TEX.rock},tM:{value:TEX.moss},uWet:U.wet});
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec4 splat;\nvarying vec4 vSplat;\nvarying vec3 vTW;\nvarying vec3 vTN;')
       .replace('#include <begin_vertex>','#include <begin_vertex>\nvSplat=splat;\nvTW=(modelMatrix*vec4(transformed,1.0)).xyz;\nvTN=normal;');
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D tG;\nuniform sampler2D tD;\nuniform sampler2D tR;\nuniform sampler2D tM;\nuniform float uWet;\nvarying vec4 vSplat;\nvarying vec3 vTW;\nvarying vec3 vTN;')
@@ -102,7 +103,7 @@ function nyAt(x,z){return NYG[gIdx(x,z)];}
 
 /* ---------- distant mountain silhouettes ---------- */
 const MTN=[];
-function buildMountains(){
+function buildMountains(){if(DEMO)return;
   [[305,22,95,1],[400,55,165,2]].forEach(([R,h0,h1,sd],li)=>{const seg=220,P=[],I=[];
     for(let i=0;i<=seg;i++){const a=i/seg*TAU,n=fbm(Math.cos(a)*2.6+sd*10,Math.sin(a)*2.6+sd*7,5),ridge=1-Math.abs(fbm(Math.cos(a)*7+sd,Math.sin(a)*7,3)*2-1);
       const h=lerp(h0,h1,Math.pow(n,1.4))+ridge*12;P.push(Math.cos(a)*R,-40,Math.sin(a)*R,Math.cos(a)*R,h,Math.sin(a)*R);}
@@ -192,7 +193,9 @@ function moveBody(p,mx,mz,r,v,noWater){const L=Math.hypot(mx,mz),n=Math.min(12,M
 /* raised walkable floors (shrine platforms): bodies stand on top instead of sinking into the stone */
 const FLOORS=[];
 function addFloor(x,z,r,y){FLOORS.push({x,z,r2:r*r,y});}
-function gY(x,z){let h=gH(x,z);for(let i=0;i<FLOORS.length;i++){const f=FLOORS[i],dx=x-f.x,dz=z-f.z;if(f.y>h&&dx*dx+dz*dz<f.r2)h=f.y;}return h;}
+// floors are discs at one height, or (s:1, the demo's bridge and cliff stairs) strips from a to b, sloping from ya to ya+dy
+function gY(x,z){let h=gH(x,z);for(let i=0;i<FLOORS.length;i++){const f=FLOORS[i],dx=x-f.x,dz=z-f.z;if(f.y<=h||dx*dx+dz*dz>=f.r2)continue;
+    if(!f.s){h=f.y;continue;}let t=((x-f.ax)*f.dx+(z-f.az)*f.dz)/f.L2;if(t<0||t>1)continue;const ex=f.ax+f.dx*t-x,ez=f.az+f.dz*t-z;if(ex*ex+ez*ez<f.hw*f.hw){const y=f.ya+f.dy*t;if(y>h)h=y;}}return h;}
 /* camera / line-of-sight ray against tall colliders; returns first hit fraction (1 = clear) */
 function rayCircle(ax,az,dx,dz,L2,cx,cz,R){const fx=ax-cx,fz=az-cz,cc=fx*fx+fz*fz-R*R;if(cc<0)return 9;const b=fx*dx+fz*dz,disc=b*b-L2*cc;if(disc<0)return 9;const t=(-b-Math.sqrt(disc))/L2;return t>=0?t:9;}
 function rayCapsule(ax,az,dx,dz,L2,c,R){
@@ -296,7 +299,7 @@ function buildForest(){
     rockA:{g:rockGeo(1),m:MAT.rock},boulder:{g:rockGeo(3,2),m:MAT.rock},pebble:{g:rockGeo(4,1),m:MAT.rock,small:1,noShadow:1},
     log:{g:logGeo(),m:MAT.wood},shC:{g:shroomGeo(true),m:MAT.shroom,small:1,noShadow:1}};
   const tint=(h,s=.08)=>new THREE.Color(1+sr(-s,s),1+sr(-s,s),1+sr(-s,s)).multiplyScalar(h);
-  let trees=0;const N=Math.round(15000*DENS);
+  let trees=0;const N=DEMO?0:Math.round(15000*DENS);
   for(let i=0;i<N;i++){const a=sr(0,TAU),r=Math.sqrt(srnd())*222,x=Math.cos(a)*r,z=Math.sin(a)*r,fd=forestD(x,z);
     const lone=srnd()<.05;if(fd<(r<WR?.49:.4)&&!lone)continue;
     if(nearStruct(x,z,3)||pdAt(x,z)<3.4)continue;if(!occFree(x,z,2.1))continue;const ny=nyAt(x,z);if(ny<.8)continue;
@@ -308,7 +311,7 @@ function buildForest(){
     else if(type==='oak'){plant('oaT',x,y,z,s,ry,tint(1,.05));const au=srnd()<.3;plant('oaL',x,y,z,s,ry,au?new THREE.Color(1.35,1.0,.55):tint(1));}
     else plant('dead',x,y,z,s,ry,tint(1,.05));
     occMark(x,z);addCol(x,z,(type==='oak'?.5:type==='spruce'?.42:type==='pine'?.38:.36)*s,8);trees++;}
-  const NU=Math.round(9000*DENS);
+  const NU=DEMO?0:Math.round(9000*DENS);
   for(let i=0;i<NU;i++){const a=sr(0,TAU),r=Math.sqrt(srnd())*205,x=Math.cos(a)*r,z=Math.sin(a)*r,fd=forestD(x,z);
     if(nearStruct(x,z,1)||pdAt(x,z)<1.8)continue;const ny=nyAt(x,z),y=gH(x,z),roll=srnd();
     if(roll<.42){if(fd>.44&&ny>.82)plant('fern',x,y-.05,z,sr(.7,1.3),sr(0,TAU),tint(1));}
@@ -319,7 +322,8 @@ function buildForest(){
     else if(roll<.95){if(fd>.5&&ny>.85&&occFree(x,z,2)){const ls=sr(.8,1.2),lr=sr(0,TAU),hl=(2.5-.36)*ls,cx=Math.cos(lr)*hl,cz=-Math.sin(lr)*hl;plant('log',x,y,z,ls,lr,tint(1,.05));addSeg(x-cx,z-cz,x+cx,z+cz,.36*ls,1);}}
     else if(fd>.56&&ny>.85){plant('shC',x,y-.03,z,sr(.8,1.4),sr(0,TAU),WHITE);}}
   // reeds around the lake shore
-  for(let i=0;i<Math.round(260*DENS);i++){const a=sr(0,TAU),r=LAKE.r*sr(.82,1.18),x=LAKE.x+Math.cos(a)*r,z=LAKE.z+Math.sin(a)*r,y=gH(x,z);
+  if(DEMO)trees+=demoVeg(tint);
+  for(let i=0;i<(DEMO?0:Math.round(260*DENS));i++){const a=sr(0,TAU),r=LAKE.r*sr(.82,1.18),x=LAKE.x+Math.cos(a)*r,z=LAKE.z+Math.sin(a)*r,y=gH(x,z);
     if(Math.abs(y-WATER_Y)<.6&&pdAt(x,z)>1.5)plant('fern',x,y-.1,z,sr(.9,1.3),sr(0,TAU),new THREE.Color(.95,1.05,.75));}
   const mtx=new THREE.Matrix4();
   for(const c of CELLS.values()){

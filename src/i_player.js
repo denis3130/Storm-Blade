@@ -59,7 +59,7 @@ const ATTACKS=new Set(['light1','light2','light3','light4','heavy','runatk','spi
 const MOVE_ACTS=new Set(['block','charge','drink','parry']);
 const P={pos:V3(0,0,4),vel:V3(),av:V3(),yaw:0,hp:100,maxHp:100,st:100,maxSt:100,chip:100,stats:{vig:1,end:1,str:1},lvl:1,braci:0,drop:null,safe:{x:0,z:4},safeT:0,hero:'m',quests:{},flags:{},sword:0,flasks:3,flaskMax:3,dmgMul:1,
   act:null,blendT:0,buf:null,blockPress:-9,iframe:0,stDelay:0,dead:false,lock:null,sprinting:false,spinYaw:0,combatK:0,lastAtk:null,heal:0,shrine:0,inWard:false,lastHit:-9,flinch:0,flinchV:0,kills:0,hyperT:0,
-  cleared:[false,false,false,false],chests:[false,false,false,false],
+  cleared:CAMPS.map(()=>false),chests:CAMPS.map(()=>false),
   amx:0,amz:0,gait:{ph:0,w:0,seed:1.3},roll:0,pitchL:0,fo:0,yawRate:0,wade:0,accF:0,lastVF:0,stepSide:0};
 let PL=null;
 const _L=new Float32Array(NP),_A=new Float32Array(NP),_F=new Float32Array(NP),_B=new Float32Array(NP);   // _B: pose a new move blends in from
