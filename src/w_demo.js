@@ -46,7 +46,8 @@ const DEMO=(()=>{
     const plat=(p)=>{const d=box(x,z,p[0],p[1],p[2],p[3],p[4]),v=p[5]-p[6]*Math.max(0,d);if(v>h){h=v;side=Math.min(1,Math.max(0,d)*.35)*p[7];flat=p[8]?0:1;}};
     for(const p of PLAT)if(!p[9])plat(p);
     // stairs are paved: no unevenness on them
-    for(const r of RAMP){const q=seg(x,z,r[0],r[1],r[3],r[4]),v=r[2]+(r[5]-r[2])*q.t-r[7]*Math.max(0,q.d-r[6]);if(v>h){h=v;side=Math.min(1,Math.max(0,q.d-r[6])*.35);flat=side>0?1:0;}}
+    // the main stairs' steps are boxes over the ground: there the ground sinks half a metre and a strip floor carries the walk
+    for(const r of RAMP){const q=seg(x,z,r[0],r[1],r[3],r[4]),v=r[2]+(r[5]-r[2])*q.t-r[7]*Math.max(0,q.d-r[6])-(r===RAMP[0]&&q.d<r[6]-.1?.5:0);if(v>h){h=v;side=Math.min(1,Math.max(0,q.d-r[6])*.35);flat=side>0?1:0;}}
     // north of the village the ground breaks off into the sea of mist
     if(z<-84&&x<20)h-=sm((-z-84)/26)*sm((20-x)/8)*Math.max(0,h+40)*(x<-30?.5:1);
     for(const p of PLAT)if(p[9])plat(p);
@@ -87,7 +88,7 @@ const DEMO=(()=>{
     maples:[[-4,-50,1.55],[-30,-40,1.1],[-18,-63,1.0,'a'],[4,-40,.9],[-14,8,1.0,'a'],[-12.5,-19,.62],[14,-66,1.05],[-44,-82,.9,'a'],[-40,-58,1.0]],
     pineAreas:[[-15,-21,3,1],[-10,16,12,6],[13,6,6,3],[-52,-80,14,5],[78,-58,12,6],[88,-98,12,8],[60,-150,30,12],[47,-50,4,2],[-30,-28,10,4],[-62,-40,18,8],[46,-104,6,2],[8,-92,8,3]],
     firAreas:[[-70,-60,30,14],[-60,20,20,8],[10,30,20,6],[95,-60,14,6]],
-    pampas:[[-8.6,-8,-8.6,6,9],[8.6,-8,8.6,6,6],[-4.5,-10,-4.5,-32,10],[4.5,-10,4.5,-32,10],[16,-46,16,-58,8],[-10,10,10,10,8],[44,-58,52,-58,4],[4,-7.6,8.3,-7.6,5],[-12.4,-15.9,-5,-15.9,7]],
+    pampas:[[-8.6,-8,-8.6,6,9],[8.6,-8,8.6,6,6],[-4.5,-18,-4.5,-32,7],[4.5,-15,4.5,-32,8],[-10,10,10,10,8],[4,-7.6,8.3,-7.6,5],[-12.4,-15.9,-5,-15.9,7]],
     leaves:[[0,-1,8.5,7.5,140],[-8.5,-12,4,4,70],[0,-20,3,12,60],[-6,-50,10,8,90]],
     // title screen: the picture's view from the terrace
     title:{p:[1,24.8,-3.5],t:[2.71,15.26,-52.55]},

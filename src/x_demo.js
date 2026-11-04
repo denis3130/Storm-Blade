@@ -119,8 +119,8 @@ function bonfire(x,y,z){const b=DB.stone;
 
 /* ---------- the stairs down to the village ---------- */
 function demoStairs(){const b=DB.stone,R=DEMO.RAMP[0],ax=R[0],az=R[1],ya=R[2],bx=R[3],bz=R[4],yb=R[5],hw=R[6];
-  const L=Math.hypot(bx-ax,bz-az),n=Math.round((ya-yb)/.28),yaw=-Math.atan2(bz-az,bx-ax)+PI/2;
-  for(let i=0;i<n;i++){const t=(i+.5)/n,px=lerp(ax,bx,t),pz=lerp(az,bz,t),yy=lerp(ya,yb,(i+1)/n);
+  const L=Math.hypot(bx-ax,bz-az),n=Math.round((ya-yb)/.24),yaw=-Math.atan2(bz-az,bx-ax)+PI/2;addRamp(ax,az,ya,bx,bz,yb,hw);
+  for(let i=0;i<n;i++){const t=(i+.5)/n,px=lerp(ax,bx,t),pz=lerp(az,bz,t),yy=lerp(ya,yb,t)+.02;
     // each step: a few long blocks, slightly uneven, worn
     let u=-hw;while(u<hw){const w=Math.min(sr(1.1,2.6),hw-u),g=sr(.58,.82),mo=srnd()<.25;boxAt(b,MATD.stone,px+(u+w/2),yy-.2+sr(-.02,.02),pz+sr(-.04,.04),w-.06,.44,L/n+.04,yaw+sr(-.02,.02),mo?new THREE.Color(g*.86,g*.92,g*.78):grey(g,.04),sr(-.015,.015),sr(-.015,.015));u+=w;}}
   // side walls with the balustrades on top, lantern posts every few metres
