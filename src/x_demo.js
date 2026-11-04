@@ -66,7 +66,7 @@ function makeDemoTextures(){demoTexts();TEXD.ashlar=toTex(genAshlar(),{srgb:fals
   MATD.canvas=new THREE.MeshStandardMaterial({color:col(0xb8a98e),roughness:.95,side:THREE.DoubleSide});
   MATD.window=new THREE.MeshBasicMaterial({color:new THREE.Color(1.4,.7,.28)});MATD.windowDim=new THREE.MeshBasicMaterial({color:new THREE.Color(.72,.36,.15)});MATD.windowFaint=new THREE.MeshBasicMaterial({color:new THREE.Color(.035,.03,.034)});
   MATD.dark=new THREE.MeshBasicMaterial({color:col(0x0b0a09)});
-  MATD.caveGlow=new THREE.MeshBasicMaterial({color:new THREE.Color(1.9,.82,.3)});
+  MATD.caveGlow=new THREE.MeshBasicMaterial({vertexColors:true,color:new THREE.Color(1.9,.82,.3)});
   MATD.cloth=windMat({map:TEXD.cloth,alphaTest:.5,side:THREE.DoubleSide,roughness:.9},0,0,false);
   const bc=MAT.banner.onBeforeCompile;MATD.cloth.onBeforeCompile=bc;
   {const F=genFlags();TEXD.flags=toTex(F.a);TEXD.flagsN=toTex(F.n,{srgb:false});TEXD.flagsR=toTex(F.r,{srgb:false});
@@ -447,18 +447,20 @@ function palaceStairs(R){const[ax,az,ya,bx,bz,yb,hw]=R,L=Math.hypot(bx-ax,bz-az)
 
 /* ---------- the cave in the rock wall, the ruined churches ---------- */
 // a dark mouth framed by rough blocks, warm light deep inside, lanterns at the threshold
-function demoCave(){const C=DEMO.cave,y=dY(C.x-2,C.z),c=Math.cos(C.yaw),s=Math.sin(C.yaw),L=(a,b2)=>[C.x+a*c+b2*s,C.z-a*s+b2*c];
-  {const[x,z]=L(0,-2.6);DB.glow.add(MATD.dark,geo('dbox',()=>new THREE.BoxGeometry(1,1,1)),M4(x,y+3,z,0,C.yaw,0,8.6,6.4,5.2,'YXZ'),WHITE);}
-  {const[x,z]=L(.6,-4.9);DB.glow.add(MATD.caveGlow,geo('dbox',()=>new THREE.BoxGeometry(1,1,1)),M4(x,y+2.3,z,0,C.yaw,0,7,4.6,.2,'YXZ'),WHITE);}
+function demoCave(){const C=DEMO.cave,y=dY(C.x-2,C.z),c=Math.cos(C.yaw),s=Math.sin(C.yaw),L=(a,b2)=>[C.x+a*c+b2*s,C.z-a*s+b2*c],rb=RB;RB=1;
+  // a real recess in the rock: side walls, a ceiling and a back wall, lit warm from inside by a lamp and two lanterns
+  {const[x,z]=L(0,-5.6);boxAt(DB.stone,MATD.rock,x,y+3.4,z,9.6,7.4,1.5,C.yaw,grey(.16));const[bx,bz]=L(0,-4.3);DB.glow.add(MATD.dark,geo('dquad',()=>new THREE.PlaneGeometry(1,1)),M4(bx,y+2.4,bz,0,C.yaw,0,6.6,4.8,1,'YXZ'),WHITE);}
+  for(const sd of[-1,1]){const[x,z]=L(sd*4.45,-2.7);boxAt(DB.stone,MATD.rock,x,y+3.3,z,1.7,7.2,5.8,C.yaw+sd*.04,grey(.2));}
+  {const[x,z]=L(0,-2.7);boxAt(DB.stone,MATD.rock,x,y+6,z,9.8,1.8,5.8,C.yaw,grey(.18));}
   for(let i=0;i<=16;i++){const a=i/16*PI,[x,z]=L(Math.cos(a)*4.7,.15),ry=y+Math.sin(a)*6.6,sz=sr(1.2,2.1);
     boxAt(DB.stone,MATD.rock,x,ry,z,sz,sz*sr(.8,1.2),sr(1.2,2),C.yaw+sr(-.3,.3),grey(sr(.6,.76)),sr(-.4,.4),sr(-.4,.4));}
-  // warm light spilling on the floor of the mouth, a second glow deeper in
-  {const[x,z]=L(0,-1.2);DB.glow.add(MATD.caveGlow,geo('dbox',()=>new THREE.BoxGeometry(1,1,1)),M4(x,y+.04,z,0,C.yaw,0,6.5,.05,3,'YXZ'),new THREE.Color(.35,.22,.12));}
-  {const[x,z]=L(-1.6,-3.8);DB.glow.add(MATD.caveGlow,geo('dbox',()=>new THREE.BoxGeometry(1,1,1)),M4(x,y+2.2,z,0,C.yaw+.4,0,2.2,3.4,.2,'YXZ'),new THREE.Color(.7,.55,.4));}
-  for(const sd of[-1,1]){const[x,z]=L(sd*3.4,1.3);lanternPost(x,dY(x,z),z,sd>0);}
-  for(let i=0;i<4;i++){const[x,z]=L(sr(-2,2),sr(-1.5,-.3));boxAt(DB.wood,MATD.timber,x,y+.35,z,sr(.6,.9),.7,sr(.6,.9),sr(0,3),WOOD());}
-  {const[x,z]=L(0,-3.4);addLight(V3(x,y+2.4,z),col(0xff9a4a),3,16,1);}
-  {const[a1,a2]=L(-4.3,-.4),[b1,b2]=L(-4.3,-5.4),[c1,c2]=L(4.3,-.4),[d1,d2]=L(4.3,-5.4),[e1,e2]=L(-4.3,-5.2),[f1,f2]=L(4.3,-5.2);addSeg(a1,a2,b1,b2,.4,5);addSeg(c1,c2,d1,d2,.4,5);addSeg(e1,e2,f1,f2,.4,5);}
+  // a soft pool of lamplight on the floor inside
+  {const[x,z]=L(0,-2.4);DB.glow.add(MATD.caveGlow,geo('dbox',()=>new THREE.BoxGeometry(1,1,1)),M4(x,dY(x,z)+.03,z,0,C.yaw,0,3.4,.04,2.4,'YXZ'),new THREE.Color(.05,.035,.02));}
+  for(const sd of[-1,1]){const[x,z]=L(sd*3.4,1.3);lanternPost(x,dY(x,z),z,sd>0);const[hx,hz]=L(sd*2.3,-3.3);hangLantern(hx,y+3.6,hz,sd<0);}
+  for(let i=0;i<4;i++){const[x,z]=L(sr(-2.4,2.4),sr(-4.2,-2.6));boxAt(DB.wood,MATD.timber,x,y+.35,z,sr(.6,.9),.7,sr(.6,.9),sr(0,3),WOOD());}
+  {const[x,z]=L(0,-3);addLight(V3(x,y+2.2,z),col(0xff9a4a),2.4,10,1);}
+  {const[a1,a2]=L(-3.65,-.4),[b1,b2]=L(-3.65,-5),[c1,c2]=L(3.65,-.4),[d1,d2]=L(3.65,-5),[e1,e2]=L(-3.9,-4.85),[f1,f2]=L(3.9,-4.85);addSeg(a1,a2,b1,b2,.4,5);addSeg(c1,c2,d1,d2,.4,5);addSeg(e1,e2,f1,f2,.4,5);}
+  RB=rb;
   DX.cave={x:C.x,y,z:C.z};}
 // a ruined Gothic church: the west front with its great window, broken side walls with lancets and buttresses, fallen blocks.
 // Local u runs across the nave, v along it; the front faces +v

@@ -3,6 +3,8 @@
 const CFG={
   ver:4,                       // save-data version
   // player animation
+  // eye adaptation (demo): the mean scene brightness the exposure aims at, how far it may darken or brighten, how fast it adapts (1/s)
+  light:{key:.085, min:.5, max:2.3, speed:1.6},
   anim:{reach:.985, footMaxDrop:.15, footMaxRise:.25, dropDown:45, dropRate:14, reachFrom:.15,   // feet on the terrain: leg share before the pelvis drops; terrain offset limits (m); pelvis drop down / back up (1/s); stance share before the drop counts
     clavFrom:60, clavGain:.3, clavMax:22, toeGain:.9, toeMax:35,   // clavicles rise with the arm above clavFrom° (gain, max °); toes bend at push-off (gain of the foot angle, max °)
     blend:.08,   // seconds over which a new move blends in from the pose it interrupts

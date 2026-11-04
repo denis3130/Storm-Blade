@@ -190,14 +190,23 @@ const Post=(()=>{
     for(int i=0;i<30;i++){uv-=d;acc+=texture2D(tex,uv).rgb*dec*exp(-length(uv-sun)*3.2);dec*=0.962;}
     gl_FragColor=vec4(acc*(str/30.0),1.0);}`,{tex:{value:null},sun:{value:new THREE.Vector2(.5,.5)},str:{value:0}});
   const cu={tS:{value:null},tB:{value:null},tR:{value:null},bloom:{value:.62},rays:{value:0},exposure:{value:1},time:U.time,res:{value:new THREE.Vector2(1,1)},
-    hurt:{value:0},storm:{value:0},lowhp:{value:0},flash:{value:0},sat:{value:DEMO?.74:.88},contrast:{value:DEMO?1.16:1.06},vig:{value:DEMO?.55:.4},grain:{value:.03},aberr:{value:.0022},fade:{value:0},desat:{value:0},ward:{value:0}};
-  const mC=mk(`uniform sampler2D tS,tB,tR;uniform float bloom,rays,exposure,time,hurt,storm,lowhp,flash,sat,contrast,vig,grain,aberr,fade,desat,ward;uniform vec2 res;varying vec2 vUv;
+    hurt:{value:0},storm:{value:0},lowhp:{value:0},flash:{value:0},sat:{value:DEMO?.74:.88},contrast:{value:DEMO?1.24:1.06},vig:{value:DEMO?.55:.4},grain:{value:.03},aberr:{value:.0022},fade:{value:0},desat:{value:0},ward:{value:0}};
+  if(DEMO)Object.assign(cu,{tA:{value:null},aeKey:{value:CFG.light.key},aeMin:{value:CFG.light.min},aeMax:{value:CFG.light.max}});
+  // eye adaptation (demo): the scene's mean brightness (log, centre weighted, a 16x9 grid) drifts towards each view and sets the
+  // exposure within a range, so a view into the light and one into the shade both read; stored as (log2 L + 14) / 16 in a 1x1 target
+  const AE=!!DEMO,aeO=Object.assign({},opts,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});let aeA=AE?new THREE.WebGLRenderTarget(1,1,aeO):null,aeB=AE?new THREE.WebGLRenderTarget(1,1,aeO):null,aeT=-1;
+  const mAE=AE?mk(`uniform sampler2D tex,prev;uniform float k;varying vec2 vUv;
+    void main(){float s=0.0,w=0.0;for(int j=0;j<9;j++)for(int i=0;i<16;i++){vec2 q=vec2((float(i)+0.5)/16.0,(float(j)+0.5)/9.0);
+      float cw=1.0+1.6*(1.0-smoothstep(0.0,0.55,length((q-0.5)*vec2(1.0,0.85))));float l=dot(texture2D(tex,q).rgb,vec3(0.2126,0.7152,0.0722));
+      s+=clamp(log2(max(l,1e-4)),-14.0,2.0)*cw;w+=cw;}
+      float cur=(s/w+14.0)/16.0,old=texture2D(prev,vec2(0.5)).r;gl_FragColor=vec4(mix(old,cur,k),0.0,0.0,1.0);}`,{tex:{value:null},prev:{value:null},k:{value:1}}):null;
+  const mC=mk(`uniform sampler2D tS,tB,tR${AE?',tA':''};uniform float bloom,rays,exposure,time,hurt,storm,lowhp,flash,sat,contrast,vig,grain,aberr,fade,desat,ward${AE?',aeKey,aeMin,aeMax':''};uniform vec2 res;varying vec2 vUv;
     vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}
     float hh(vec2 p){p=fract(p*vec2(443.897,441.423));p+=dot(p,p.yx+19.19);return fract((p.x+p.y)*p.x);}
     void main(){vec2 uv=vUv;vec2 cc=uv-0.5;float r2=dot(cc,cc);float ca=aberr*(1.0+hurt*3.0);
       vec3 c=vec3(texture2D(tS,uv-cc*ca).r,texture2D(tS,uv).g,texture2D(tS,uv+cc*ca).b);
-      c+=texture2D(tB,uv).rgb*bloom;c+=texture2D(tR,uv).rgb*rays;c*=exposure;c=aces(c);
-      float l=dot(c,vec3(0.2126,0.7152,0.0722));c=mix(vec3(l),c,sat*(1.0-desat));c=(c-0.5)*contrast+0.5;
+      c+=texture2D(tB,uv).rgb*bloom;c+=texture2D(tR,uv).rgb*rays;c*=exposure;${AE?'c*=clamp(aeKey/exp2(texture2D(tA,vec2(0.5)).r*16.0-14.0),aeMin,aeMax);':''}c=aces(c);
+      float l=dot(c,vec3(0.2126,0.7152,0.0722));c=mix(vec3(l),c,sat*(1.0-desat));${AE?'':'c=(c-0.5)*contrast+0.5;'}
       c*=vec3(1.025,1.0,0.965);c+=vec3(0.003,0.008,0.016)*(1.0-l);
       c*=1.0-vig*smoothstep(0.16,0.95,r2*1.85);
       float e=smoothstep(0.05,0.62,r2*1.6);
@@ -205,7 +214,7 @@ const Post=(()=>{
       c=mix(c,c*vec3(0.72,0.6,1.12),storm*0.32);
       c=mix(c,c*vec3(0.8,0.95,1.15),ward*e*0.5);
       c+=flash*vec3(0.85,0.82,1.0);
-      c=pow(max(c,0.0),vec3(1.0/2.2));
+      c=pow(max(c,0.0),vec3(1.0/2.2));${AE?'c=(c-0.5)*contrast+0.5;':''}
       c+=(hh(uv*res+fract(time*7.31)*97.0)-0.5)*grain;
       c*=1.0-fade;
       gl_FragColor=vec4(c,1.0);}`,cu);
@@ -222,6 +231,8 @@ const Post=(()=>{
   }
   function render(raysStr){
     renderer.setRenderTarget(rtS);renderer.render(scene,camera);
+    if(AE){const now=performance.now(),dt=aeT<0?1e3:Math.min(30,(now-aeT)/1000);aeT=now;mAE.uniforms.tex.value=rtS.texture;mAE.uniforms.prev.value=aeA.texture;
+      mAE.uniforms.k.value=1-Math.exp(-dt*(HDR?CFG.light.speed:CFG.light.speed*3));pass(mAE,aeB);const t=aeA;aeA=aeB;aeB=t;cu.tA.value=aeA.texture;}
     mPre.uniforms.tex.value=rtS.texture;mPre.uniforms.tx.value.set(1/rtS.width,1/rtS.height);pass(mPre,D[0]);
     for(let i=1;i<D.length;i++){mDn.uniforms.tex.value=D[i-1].texture;mDn.uniforms.tx.value.set(1/D[i-1].width,1/D[i-1].height);pass(mDn,D[i]);}
     let src=D[D.length-1];
@@ -236,7 +247,10 @@ const Post=(()=>{
     cu.tS.value=rtS.texture;cu.tB.value=src.texture;cu.tR.value=rtR.texture;
     pass(mC,null);
   }
-  return {resize,render,u:cu};
+  // the adapted brightness (linear), for tests and tuning
+  function aeL(){if(!AE)return 1;const t=aeA.texture.type,b=t===THREE.HalfFloatType?new Uint16Array(4):t===THREE.FloatType?new Float32Array(4):new Uint8Array(4);renderer.readRenderTargetPixels(aeA,0,0,1,1,b);
+    let v=b[0];if(b instanceof Uint16Array){const e=(v>>10)&31,m=v&1023;v=(e?(1+m/1024)*Math.pow(2,e-15):m/1024*Math.pow(2,-14))*((v>>15)?-1:1);}else if(b instanceof Uint8Array)v/=255;return Math.pow(2,v*16-14);}
+  return {resize,render,u:cu,aeL};
 })();
 
 function applyQuality(){
