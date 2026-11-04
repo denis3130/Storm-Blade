@@ -29,6 +29,15 @@ function cycleLift(c,phase){const n=c.n,x=(phase-Math.floor(phase))*n,i=Math.flo
    given the target's offsets from that hip in the body frame. Returns a bitmask of heel strikes this frame (1 = left, 2 = right). */
 // per-leg scratch of gaitIK: [xf, xs, lift, toe, ground, planted for the pelvis drop, not in the push-off] for the left leg, then the right
 const _GT=new Float32Array(14);
+// walk/run clips in gaitIK: torso values added as angle changes (_CLIP_T); arm joints turned as rotations (clipJoint), since the
+// clip's arm angles are far from the pose they are added to. Pelvis tilt and roll (1, 3) stay out: the leg IK puts the hips on the
+// pelvis pivot, the Meshy hips hang 10 cm below it, so a rocking pelvis would slide the planted feet
+const _CLIP_T=[2,4,5,6,7,8,33,34,35,36,37,38,39,40],_CS=new Float32Array(NP),_CR=new Float32Array(NP);
+const _cq1=new THREE.Quaternion(),_cq2=new THREE.Quaternion(),_cq3=new THREE.Quaternion(),_ce=new THREE.Euler(0,0,0,'YXZ');
+const qE=(q,a,i)=>q.setFromEuler(_ce.set(a[i],a[i+1],a[i+2],'YXZ'));
+// joint i..i+2 (YXZ) turned, in its parent's frame, by k of the clips' change from their mean at this phase (walk and run mixed by run)
+function clipJoint(o,i,k,run,CW,CR){qE(_cq1,CW.mean,i).invert().premultiply(qE(_cq2,_CS,i));qE(_cq3,CR.mean,i).invert().premultiply(qE(_cq2,_CR,i));
+  _cq1.slerp(_cq3,run);_cq2.set(0,0,0,1).slerp(_cq1,k);qE(_cq1,o,i).premultiply(_cq2);_ce.setFromQuaternion(_cq1,'YXZ');o[i]=_ce.x;o[i+1]=_ce.y;o[i+2]=_ce.z;}
 function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
   o.set(base);const T=U.time.value;o[4]+=Math.sin(T*1.7+st.seed)*1.3*DEG;o[0]+=Math.sin(T*1.7+st.seed)*.004;
   const A=d.thigh,B=d.shin,LEG=A+B,v=Math.hypot(vf,vs)/sc;          // rig units
@@ -39,14 +48,18 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
   let ev=0;if(((prev)%1)>((st.ph)%1))ev|=1;if(((prev+.5)%1)>((st.ph+.5)%1))ev|=2;
   const w=sstep(.04,.45,vn);st.w=w;if(w<.001){st.drop=0;return 0;}
   const f=v>1e-4?(vf/sc)/v:1,sdir=v>1e-4?(vs/sc)/v:0,amp=Math.min(1,Ls/(.42*LEG));
+  // clips (player only) weigh the forward share of the motion; the computed swings and twists weigh the rest (tw)
+  const CW=opt&&opt.clip?animCycle('walk'):null,CR=CW&&animCycle('run'),fw=CR?clamp(f,0,1):0,ck=w*fw*CFG.anim.clipGain,tw=1-fw*Math.min(1,CFG.anim.clipGain);
   const phL=st.ph,cL=Math.cos(TAU*phL);
   // pelvis: inverted-pendulum walk (high at mid-stance) → spring run (low at mid-stance), twist with the legs
   const bob=lerp(.02,-.036,run)*(LEG/.9)*amp*Math.cos(4*PI*(phL-duty/2))-(.02*run+.02*sprint)*(LEG/.9);
   o[0]+=bob*w;o[1]=lerp(o[1],o[1]*.3-(3*run+5*sprint)*DEG,w);
-  o[2]=lerp(o[2],-lerp(5,9,run)*DEG*amp*cL*f,w);o[3]=lerp(o[3],0,w);
-  o[5]=lerp(o[5],o[5]*.3+lerp(5,9,run)*DEG*.8*amp*cL*f,w);o[6]=lerp(o[6],0,w*.7);
+  o[2]=lerp(o[2],-lerp(5,9,run)*DEG*amp*cL*f*tw,w);o[3]=lerp(o[3],0,w);
+  o[5]=lerp(o[5],o[5]*.3+lerp(5,9,run)*DEG*.8*amp*cL*f*tw,w);o[6]=lerp(o[6],0,w*.7);
   const lean=(5*run+11*sprint)*DEG*Math.max(0,f)-4*DEG*Math.max(0,-f)+(opt&&opt.lean||0);
   o[4]-=lean*w;o[7]+=lean*.65*w;
+  // before the leg IK, which follows the pelvis turn and tilt
+  if(ck>0){sampleCycle(_CS,CW,st.ph);sampleCycle(_CR,CR,st.ph);for(let n=0;n<_CLIP_T.length;n++){const j=_CLIP_T[n];o[j]+=((_CS[j]-CW.mean[j])*(1-run)+(_CR[j]-CR.mean[j])*run)*ck;}}
   const hipH0=LEG+o[0],pel=o[1],AN=CFG.anim,cy=Math.cos(o[2]),sy=Math.sin(o[2]);
   // pass 1: each foot's target (stride position, lift, toe) relative to its hip joint, and the ground under it
   for(let i=0;i<2;i++){const ph=(st.ph+i*.5)%1,stn=ph<duty;let x,lift=0,toe=0;
@@ -77,8 +90,12 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
     o[41+i]=lerp(o[41+i],!_GT[k+6]&&toe<0?Math.min(-toe*AN.toeGain,AN.toeMax*DEG):0,w);}
   // arms swing against the legs; elbows fold as speed grows
   const arm=(opt&&opt.arm!==undefined?opt.arm:1)*lerp(16,40,run)*DEG*amp*f,armR=opt&&opt.armR!==undefined?opt.armR:1;
-  o[9]+=-arm*cL*w;o[13]+=arm*cL*w*armR;o[12]+=lerp(6,62,run)*DEG*w*(opt&&opt.elbow!==undefined?opt.elbow:1);o[16]+=lerp(6,50,run)*DEG*w*armR;
+  o[9]+=-arm*cL*w*tw;o[13]+=arm*cL*w*armR*tw;o[12]+=lerp(6,62,run)*DEG*w*(opt&&opt.elbow!==undefined?opt.elbow:1);o[16]+=lerp(6,50,run)*DEG*w*armR;
   o[11]-=lerp(2,8,run)*DEG*w;o[15]+=lerp(2,8,run)*DEG*w*armR;
+  // clip arms: elbows as angle changes, shoulders and wrists as rotations; the sword arm by armR, the other by opt.arm
+  if(ck>0){const kl=ck*(opt.arm!==undefined?opt.arm:1),kr=ck*armR;
+    o[12]+=((_CS[12]-CW.mean[12])*(1-run)+(_CR[12]-CR.mean[12])*run)*kl;o[16]+=((_CS[16]-CW.mean[16])*(1-run)+(_CR[16]-CR.mean[16])*run)*kr;
+    clipJoint(o,9,kl,run,CW,CR);clipJoint(o,30,kl,run,CW,CR);clipJoint(o,13,kr,run,CW,CR);clipJoint(o,17,kr,run,CW,CR);}
   return ev;}
 function skinBuild(holder,P,L,mats){holder.updateMatrixWorld(true);const bones=Object.values(P),bi=new Map(bones.map((b,i)=>[b,i]));
   const inv=new THREE.Matrix4().copy(holder.matrixWorld).invert(),byMat={};

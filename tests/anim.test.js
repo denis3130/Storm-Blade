@@ -101,3 +101,27 @@ T.test('baked cycles are complete', () => { T.ok(S.ANIM && S.animCycle, 'no bake
     T.ok(S.ANIM.err[k] < 2, k + ' round trip error ' + S.ANIM.err[k] + '°');
     let lo = Infinity, hi = -Infinity; for (let i = 0; i < c.n; i++) { lo = Math.min(lo, c.f[i * NP + 2]); hi = Math.max(hi, c.f[i * NP + 2]); }
     T.ok((hi - lo) / 2 / D2R > 2, k + ' pelvis turn amplitude ' + ((hi - lo) / 2 / D2R).toFixed(2) + '°'); } });
+T.test('walk upper body follows the clip', () => { meshyOn(); const NP = S.HP.idle.length, c = S.animCycle('walk'), s = new Float32Array(NP);
+  S.tp(0, 30); S.CAM.yaw = 0; S.P.yaw = 0; move('walk'); let worst = 0, at = '';
+  try { T.sim(120); for (let f = 0; f < 20; f++) { T.sim(1); const g = S.P.gait, p = S.lastPose(); S.sampleCycle(s, c, g.ph);
+      for (let j = 34; j <= 40; j++) { const e = Math.abs(p[j] - (s[j] - c.mean[j]) * g.w); if (e > worst) { worst = e; at = 'value ' + j + ' at phase ' + g.ph.toFixed(2); } } } }
+  finally { move('stop'); }
+  T.ok(worst < D2R, 'chest and clavicles off the walk clip by ' + (worst / D2R).toFixed(2) + '° (' + at + ')'); });
+// the swing foot arrives on the ground and leaves it without a jump: the biggest one-frame change of the ankle's height above the
+// ground under it across a landing (last swing frame to first stance frame) or a toe-off (last stance frame to first swing frame)
+function swingEnds(mode) { const h = i => { const p = wpos(meshyFoot(i)); return p.y - S.gY(p.x, p.z); };
+  const prevPh = [null, null], prevH = [0, 0]; let worst = 0;
+  stance(mode, 240, i => { const g = S.P.gait, ph = (g.ph + i / 2) % 1, hh = h(i);
+    if (prevPh[i] !== null && (ph < prevPh[i] || (prevPh[i] < g.duty && ph >= g.duty))) worst = Math.max(worst, Math.abs(hh - prevH[i]));
+    prevPh[i] = ph; prevH[i] = hh; });
+  return worst; }
+T.test('swing foot lands and lifts off as without the clips', () => { meshyOn(); const A = S.CFG.anim, g0 = A.clipGain, cm = v => (v * 100).toFixed(1);
+  try { for (const mode of ['walk', 'jog']) { A.clipGain = 0; const before = swingEnds(mode); A.clipGain = g0; const after = swingEnds(mode);
+      T.ok(after <= before + .01, mode + ': the foot jumps ' + cm(after) + ' cm in one frame at a landing or toe-off, ' + cm(before) + ' without the clips'); } }
+  finally { A.clipGain = g0; } });
+T.test("backpedal keeps today's arm swing", () => { meshyOn(); const P = S.P; S.tp(0, 30); S.CAM.yaw = 0; P.yaw = 0; T.sim(10);
+  const e = S.spawnEnemy('goblin', P.pos.x, P.pos.z - 6, {}); e.aggro = false; e.state = 'idle'; e.static = true; S.toggleLock();
+  T.ok(P.lock === e, 'locked on the goblin'); let worst = 0;
+  try { S.KEYS.KeyS = true; T.sim(30); for (let f = 0; f < 90; f++) { T.sim(1); const p = S.lastPose(); for (let j = 34; j <= 36; j++) worst = Math.max(worst, Math.abs(p[j])); } }
+  finally { S.KEYS.KeyS = false; if (P.lock) S.toggleLock(); }
+  T.ok(worst < .5 * D2R, 'chest moved ' + (worst / D2R).toFixed(2) + '° while backing away'); });

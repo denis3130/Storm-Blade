@@ -223,7 +223,7 @@ function updPlayer(dt){
 // ground under a foot for gaitIK: body position and facing of this frame (set in animPlayer), measures of the legs in use
 let _gx=0,_gz=0,_gy=0,_gyaw=0,_gd=null;
 function _gnd(i,fwd,right){const Fx=-Math.sin(_gyaw),Fz=-Math.cos(_gyaw),o=(i?1:-1)*_gd.hipW+right;return gY(_gx+Fx*fwd-Fz*o,_gz+Fz*fwd+Fx*o)-_gy;}
-const _gopt={arm:1,armR:1,elbow:1,gnd:_gnd};
+const _gopt={arm:1,armR:1,elbow:1,gnd:_gnd,clip:1};
 // clavicles follow the arms: above clavFrom° of elevation (angle from hanging straight down) the shoulder rises with the arm.
 // For Euler YXZ the hanging arm (0,-1,0) ends with y = -cos(x)·cos(z), so the elevation needs no objects.
 function extrasLayer(p){const A=CFG.anim;for(let s=0;s<2;s++){const x=s?13:9,z=s?15:11,el=Math.acos(clamp(Math.cos(p[x])*Math.cos(p[z]),-1,1))/DEG;
