@@ -240,7 +240,7 @@ function buildSword(t){const s=SWORDS[t],g=new THREE.Group();
   const base=new THREE.Object3D();base.position.z=-.1;g.add(base);const tip=new THREE.Object3D();tip.position.z=-.07-s.len;g.add(tip);
   return{g,base,tip,bm,s};}
 /* ---------- cape (verlet cloth) ---------- */
-class Cape{constructor(rig){this.rig=rig;this.W=6;this.H=9;const W=this.W,H=this.H,n=W*H;this.p=new Float32Array(n*3);this.o=new Float32Array(n*3);this.init=false;
+class Cape{constructor(rig){this.rig=rig;this.W=6;this.H=9;this.sc=[[V3(0,.3,.03),.21],[V3(0,.08,.02),.2],[V3(0,-.12,0),.2]];this.scw=[V3(),V3(),V3()];const W=this.W,H=this.H,n=W*H;this.p=new Float32Array(n*3);this.o=new Float32Array(n*3);this.init=false;
     const P=new Float32Array(n*3),UV=[],I=[];for(let j=0;j<H;j++)for(let i=0;i<W;i++){UV.push(i/(W-1),1-j/(H-1));}
     for(let j=0;j<H-1;j++)for(let i=0;i<W-1;i++){const a=j*W+i;I.push(a,a+W,a+1,a+1,a+W,a+W+1);}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(UV,2));g.setIndex(I);g.computeVertexNormals();
@@ -254,7 +254,7 @@ class Cape{constructor(rig){this.rig=rig;this.W=6;this.H=9;const W=this.W,H=this
   update(dt,wind,windDir){const W=this.W,H=this.H,p=this.p,o=this.o,sp=this.rig.P.spi;sp.updateWorldMatrix(true,false);const mw=sp.matrixWorld;this.inv.copy(mw).invert();
     if(!this.init){for(let j=0;j<H;j++)for(let i=0;i<W;i++){_v1.copy(this.anc[i]);_v1.y-=j*this.restV;_v1.z+=j*.02;_v1.applyMatrix4(mw);const k=(j*W+i)*3;p[k]=o[k]=_v1.x;p[k+1]=o[k+1]=_v1.y;p[k+2]=o[k+2]=_v1.z;}this.init=true;}
     this.acc+=Math.min(dt,.05);const step=1/90;let steps=0;
-    const sc=[[V3(0,.3,.03),.21],[V3(0,.08,.02),.2],[V3(0,-.12,0),.2]],scw=sc.map(s=>s[0].clone().applyMatrix4(mw));
+    const sc=this.sc,scw=this.scw;for(let s=0;s<3;s++)scw[s].copy(sc[s][0]).applyMatrix4(mw);   // body spheres the cloth slides over
     while(this.acc>=step&&steps<4){this.acc-=step;steps++;const t=step*step;
       for(let j=1;j<H;j++)for(let i=0;i<W;i++){const k=(j*W+i)*3;for(let a=0;a<3;a++){const v=(p[k+a]-o[k+a])*.985;o[k+a]=p[k+a];p[k+a]+=v;}
         p[k+1]-=9.8*t;const fl=Math.sin(U.time.value*3+i*.9+j*.7)*.5+.6;p[k]+=windDir.x*wind*fl*t*3;p[k+2]+=windDir.z*wind*fl*t*3;}

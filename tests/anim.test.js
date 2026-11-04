@@ -83,3 +83,14 @@ T.test('blend does not survive respawn', () => { meshyOn(); S.startAct('heavy');
 T.test('first person keeps the head hidden', () => { meshyOn(); T.sim(5); S.setView(true); let worst = 0;
   chainSteps(() => { worst = Math.max(worst, S.PL.rig.P.head.scale.x, S.MESHY.on ? S.MESHY.B.Head.scale.x : 0); }); S.setView(false);
   T.ok(worst <= .001 + 1e-9, 'head scale ' + worst); });
+// every THREE math object made (constructed or cloned) while fn runs
+function madeDuring(fn) { const names = ['Vector3', 'Quaternion', 'Euler', 'Matrix4', 'Color'], C = {}, undo = [];
+  for (const n of names) { const Q = TH[n], clone = Q.prototype.clone; C[n] = 0;
+    TH[n] = new Proxy(Q, {construct(t, a, nt) { C[n]++; return Reflect.construct(t, a, nt); }}); Q.prototype.clone = function () { C[n]++; return clone.call(this); };
+    undo.push(() => { TH[n] = Q; Q.prototype.clone = clone; }); }
+  try { fn(); } finally { undo.forEach(u => u()); } return C; }
+T.test('animPlayer makes no objects per frame', () => { meshyOn(); move('jog'); T.sim(30); let bad = 0;
+  try { S.startAct('light1'); T.sim(10);   // the sword trail is on during the swing
+    const C = madeDuring(() => { for (let i = 0; i < 20; i++) { S.animPlayer(1 / 60); if (!S.lastPose().every(Number.isFinite)) bad++; } });
+    const total = Object.values(C).reduce((a, b) => a + b, 0); T.eq(total, 0, 'objects made in 20 frames ' + JSON.stringify(C)); } finally { move('stop'); }
+  T.eq(bad, 0, 'frames with non-numeric pose values'); });

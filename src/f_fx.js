@@ -56,7 +56,9 @@ function updFires(dt){const cp=camera.position;for(const f of FIRES){const d=f.p
   while(f.e>.07){f.e-=.07;const s=f.s;FXA.emit(f.p.x+rr(-.3,.3)*s,f.p.y+.4*s,f.p.z+rr(-.3,.3)*s,rr(-.3,.3),rr(1.2,2.6)*s,rr(-.3,.3),rr(.8,1.8),.06*s+.03,.02,3,1.3,.35,1,-.3,.6,1);
     if(Math.random()<.35)FXN.emit(f.p.x+rr(-.2,.2),f.p.y+1.4*s,f.p.z+rr(-.2,.2),rr(-.2,.2)+U.wind.value*.25,rr(.6,1.1),rr(-.2,.2),rr(2.2,3.6),.5*s,2.6*s,.11,.1,.1,.2,-.05,.25);}}}
 /* ---------- sword trail ---------- */
-class Trail{constructor(n=30){this.n=n;this.b=[];this.t=[];this.on=false;this.fade=0;const P=new Float32Array(n*2*3),A=new Float32Array(n*2),I=[];
+// sword trail: a ring of n blade samples (base and tip), newest first, made once and reused every frame
+const _trB=V3(),_trT=V3(),_trB2=V3(),_trT2=V3();
+class Trail{constructor(n=30){this.n=n;this.B=[];this.T=[];for(let i=0;i<n;i++){this.B.push(V3());this.T.push(V3());}this.len=0;this.head=0;this.on=false;this.fade=0;const P=new Float32Array(n*2*3),A=new Float32Array(n*2),I=[];
     for(let i=0;i<n-1;i++){const a=i*2;I.push(a,a+1,a+2,a+1,a+3,a+2);}for(let i=0;i<n;i++){A[i*2]=A[i*2+1]=1-i/(n-1);}
     const g=new THREE.BufferGeometry();this.pa=new THREE.BufferAttribute(P,3);this.pa.setUsage(THREE.DynamicDrawUsage);g.setAttribute('position',this.pa);g.setAttribute('ta',new THREE.BufferAttribute(A,1));
     const side=new Float32Array(n*2);for(let i=0;i<n;i++){side[i*2]=0;side[i*2+1]=1;}g.setAttribute('ts',new THREE.BufferAttribute(side,1));g.setIndex(I);
@@ -65,11 +67,14 @@ class Trail{constructor(n=30){this.n=n;this.b=[];this.t=[];this.on=false;this.fa
       vertexShader:'attribute float ta;attribute float ts;varying float vA;varying float vS;void main(){vA=ta;vS=ts;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
       fragmentShader:'uniform vec3 uC;uniform float uO;varying float vA;varying float vS;void main(){float a=vA*vA*smoothstep(0.0,0.6,vS)*uO;gl_FragColor=vec4(uC,a);}'}));
     this.mesh.frustumCulled=false;this.mesh.renderOrder=9;scene.add(this.mesh);}
-  push(b,t){if(this.b.length){const lb=this.b[0],lt=this.t[0];for(let k=1;k<=2;k++){const f=k/3;this.b.unshift(lb.clone().lerp(b,f));this.t.unshift(lt.clone().lerp(t,f));}}
-    this.b.unshift(b.clone());this.t.unshift(t.clone());while(this.b.length>this.n){this.b.pop();this.t.pop();}}
-  update(dt,base,tip){if(this.on){this.push(base,tip);this.fade=1;}else{this.fade=Math.max(0,this.fade-dt*5);if(this.fade<=0)this.b.length=this.t.length=0;}
-    this.u.uO.value=this.fade*.9;const a=this.pa.array;const m=this.b.length;
-    for(let i=0;i<this.n;i++){const j=Math.min(i,m-1);if(j<0){a.fill(0);break;}const B=this.b[j],T=this.t[j];a.set([B.x,B.y,B.z,T.x,T.y,T.z],i*6);}this.pa.needsUpdate=true;}}
+  at(i){return(this.head-i+this.n)%this.n;}   // ring slot of the i-th newest sample
+  add(b,t){this.head=(this.head+1)%this.n;this.B[this.head].copy(b);this.T[this.head].copy(t);this.len=Math.min(this.n,this.len+1);}
+  // two in-between samples smooth fast swings, then the new one
+  push(b,t){if(this.len){_trB.copy(this.B[this.head]);_trT.copy(this.T[this.head]);for(let k=1;k<=2;k++){const f=k/3;this.add(_trB2.copy(_trB).lerp(b,f),_trT2.copy(_trT).lerp(t,f));}}
+    this.add(b,t);}
+  update(dt,base,tip){if(this.on){this.push(base,tip);this.fade=1;}else{this.fade=Math.max(0,this.fade-dt*5);if(this.fade<=0)this.len=0;}
+    this.u.uO.value=this.fade*.9;const a=this.pa.array,m=this.len;
+    for(let i=0;i<this.n;i++){const j=Math.min(i,m-1);if(j<0){a.fill(0);break;}const q=this.at(j),B=this.B[q],T=this.T[q],o=i*6;a[o]=B.x;a[o+1]=B.y;a[o+2]=B.z;a[o+3]=T.x;a[o+4]=T.y;a[o+5]=T.z;}this.pa.needsUpdate=true;}}
 /* ---------- rain ---------- */
 let rain=null;const RAIN_N=isTouch?650:1500;
 function initRain(){const P=new Float32Array(RAIN_N*6),g=new THREE.BufferGeometry();for(let i=0;i<RAIN_N;i++){const x=rr(-30,30),y=rr(-4,26),z=rr(-30,30);P.set([x,y,z,x,y+.9,z],i*6);}

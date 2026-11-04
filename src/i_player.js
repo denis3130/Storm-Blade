@@ -228,6 +228,8 @@ const _gopt={arm:1,armR:1,elbow:1,gnd:_gnd};
 // For Euler YXZ the hanging arm (0,-1,0) ends with y = -cos(x)·cos(z), so the elevation needs no objects.
 function extrasLayer(p){const A=CFG.anim;for(let s=0;s<2;s++){const x=s?13:9,z=s?15:11,el=Math.acos(clamp(Math.cos(p[x])*Math.cos(p[z]),-1,1))/DEG;
   p[s?39:37]+=clamp((el-A.clavFrom)*A.clavGain,0,A.clavMax)*DEG;}}
+// pose values the gait keeps during a moving action (guard, charge, drink): pelvis height and rotation, legs, toes
+const _GAIT_LEGS=[0,1,2,3,20,21,22,23,24,25,26,27,28,29,41,42];
 function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   // a move started or ended: remember the pose it interrupts, and blend the new one in from it
   if(a!==PL.lastAct){_B.set(_F);P.blendT=CFG.anim.blend;PL.lastAct=a;}
@@ -255,7 +257,7 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
       if(k==='dodge'){mixPose(_A,HP.guard,HP.tuck,Math.sin(t*PI));_A[1]-=TAU*eIO(t);_A[0]=lerp(HP.guard[0],-.5,Math.sin(t*PI));}
       else{_A.set(HP.guard);_A[0]+=Math.sin(t*PI)*.08;_A[4]+=12*DEG*Math.sin(t*PI);_A[20]-=20*DEG*Math.sin(t*PI);_A[24]+=14*DEG*Math.sin(t*PI);}}
     // moving guard / charge / drink: upper body from the action, legs keep their planted gait
-    if(MOVE_ACTS.has(k)){for(const i of[0,1,2,3,20,21,22,23,24,25,26,27,28,29])_A[i]=_L[i];}}
+    if(MOVE_ACTS.has(k)){for(let n=0;n<_GAIT_LEGS.length;n++)_A[_GAIT_LEGS[n]]=_L[_GAIT_LEGS[n]];}}
   P.aw=damp(P.aw||0,w,w?30:12,dt);
   mixPose(_F,_L,_A,P.aw);
   _F[4]+=P.flinch*.5;_F[7]+=P.flinch*.6;_F[0]-=Math.abs(P.flinch)*.04;

@@ -40,6 +40,11 @@
 - **Storia** (`src/m_story.js`): i testi hanno varianti `{maschile|femminile}`, risolte da `gtxt` prima di essere scritti. Durante un dialogo il mondo è fermo. La tempesta ha la precedenza sull'obiettivo della missione nel riquadro in alto a destra.
 - **Modello Meshy**: `meshySync` gira a ogni frame e non crea oggetti (i quaternioni li prepara `setupMeshyHero`). `tests/meshy.test.js` lo verifica con uno scheletro finto.
 - **Misure**: le sonde della v5 sono in `tests/probes/`, con i risultati di riferimento. Limiti: 1 goblin ≤ 2,64 s, 3 goblin ≤ 5,16 s (20 prove); logica per frame entro +0,1 ms dalla v5.
+- **Animazioni** (design `docs/superpowers/specs/2026-11-04-stormblade-animazioni-design.md`, ramo `animazioni`):
+  - il vettore di pose ha 43 valori: dopo i 34 di prima ci sono petto (34-36), clavicole (37-38 e 39-40: alza, avanti) e punte dei piedi (41, 42). Sono giunture virtuali (`rig.V`), senza mesh, che usa solo il modello Meshy;
+  - il passo usa le misure delle gambe del modello Meshy (`MESHY.legD`), posa i piedi sul terreno e abbassa il bacino quando un piede a terra non ci arriva (`CFG.anim`);
+  - ogni mossa nuova si fonde con quella che interrompe in `CFG.anim.blend` secondi; `resetBlend()` la azzera a ogni rinascita, teletrasporto o cambio di corpo;
+  - `tests/anim_ref.json` è il riferimento della lama (arco e portata di ogni attacco): un cambio di animazione deve restare entro il 10%.
 
 ## Tutti i test
 ```
@@ -47,7 +52,13 @@ bash mk.sh
 for f in smoke regression braci drop save charsel dialogue quest meshy; do python3 tests/run.py tests/$f.test.js || break; done
 python3 tests/run.py tests/orient.test.js --viewport 360x640 --touch --mobile
 python3 tests/run.py tests/orient_desktop.test.js --viewport 1280x720
+python3 tests/run.py tests/anim.test.js --data tests/anim_zero.json
+python3 tests/run.py tests/blade.test.js --data tests/anim_ref.json
+python3 tests/run.py tests/meshy_http.test.js --http
 ```
+- `tests/fixtures.js` (scheletro vero dell'eroe Meshy, `meshyOn()`) viene caricato da `run.py` prima di ogni test.
+- `--http` apre la pagina da un piccolo server locale, così il modello Meshy si carica; il GLTFLoader del CDN è sostituito da `tests/vendor/mini_gltf.js`.
+- Video prima/dopo: `python3 tools/anim/video.py --before <copia con game_w.html> --after . --scene stage1 --out video.mp4` (circa 10 minuti).
 
 ## Idee tenute per dopo (non costruirle finché Denis non lo chiede)
 - Parte 2 della storia (capitoli 2 e 3, poteri dei frammenti, boss finale, due finali).
