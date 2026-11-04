@@ -25,3 +25,25 @@ Eseguito da me in questa conversazione, una tappa alla volta, ognuna con test e 
    carsiche e mare di nubi; raggi di sole; foglie che cadono; luci (falò, lanterne, grotta) con la riserva di 4 luci.
 5. **Gioco e consegna**: nemici (villaggio, ponte, porta, guardiano del palazzo), obiettivi e vittoria; FPS prima/dopo;
    prova a 360 px su telefono; suite del gioco verde; pubblicazione della pagina; schermate per Denis.
+
+## Stato (4 novembre 2026)
+Tappe 1-5 fatte sul ramo `demo`; la pagina è pubblicata a parte (vedi `docs/HANDOFF.md`).
+
+**Decisioni prese da me** (Denis ha chiesto di non fargli domande), con il loro costo se sbagliate:
+- La composizione segue la foto: la camera del titolo e i punti chiave (arco, falò, ponte, porta, cascata, grotta, palazzo,
+  rovine) sono stati messi dove li ha la foto, risolvendo la proiezione all'indietro dalla camera (`dbg/inv.py`, fuori dal repo).
+  Costo: alcuni elementi sono più vicini tra loro di come sarebbero in una mappa "di gioco".
+- Il palazzo sta a 33 m (prima 52), quasi all'altezza degli occhi dal falò, come nella foto: la salita è più corta
+  (scale a zig-zag fino alla terrazza del padiglione a 28 m, poi una scalinata). Costo: meno "verticalità".
+- Nel titolo l'eroe è nascosto (la foto non ha personaggi); compare all'avvio della partita.
+- Scalinata principale: i gradini sono blocchi sopra il terreno, si cammina su un pavimento in salita (`addRamp`): i piedi
+  possono stare fino a 12 cm sopra o dentro un gradino.
+- Nella demo niente missioni del gioco, niente tempesta (cielo coperto fisso) e niente Selin.
+- Il ponte è diagonale (dal villaggio alla porta) come nella foto; il ponte e le scale sulla rupe usano la pendenza del
+  pavimento, non quella della roccia sotto (`slopeAt` nella demo).
+
+**Misure** (640×360, qualità media, Chromium software): nella lotta al villaggio la demo disegna 154 chiamate e 588k triangoli
+contro 413 e 1,67M del gioco al primo accampamento; logica per frame 0,37-0,84 ms contro 0,47-0,99 ms (`tests/probes/demo_perf.json`).
+
+**Idee per dopo** (non costruite): ramo di pino ed edera sopra l'arco; interno della grotta; scale a zig-zag sotto la grotta;
+più torri e portici nel palazzo; cascata a più salti; una scena d'ingresso per il guardiano del palazzo.

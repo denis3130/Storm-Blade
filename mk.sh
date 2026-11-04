@@ -7,6 +7,7 @@ python3 build.py game_w.html 1 $FILES >/dev/null
 python3 build.py index.html 0 $FILES
 python3 build.py demo_w.html 1 $DFILES >/dev/null
 python3 build.py demo.html 0 $DFILES >/dev/null
+sed -i '1s#<title>Stormblade</title>#<title>Stormblade Demo</title>#' demo_w.html demo.html
 python3 - <<PY
 for p in ("index.html","demo.html"):
   s=open(p).read();i=s.find("window.__SB={");j=s.find("\nboot();",i)

@@ -15,6 +15,17 @@
 - **Meshy**: l'eroe usa un modello Meshy (`assets/meshy/hero/`), caricato da `src/l_meshy.js` solo via http; in locale e nei test resta il personaggio procedurale. L'eroina non ha ancora un modello Meshy.
 - **Registro dell'esecuzione**: `docs/superpowers/plans/2026-11-03-stormblade-tappa1-basi.ledger.md`. Contiene ogni decisione presa con il suo costo e i punti minori della revisione rimandati.
 
+## Demo "La Valle delle Lanterne" (ramo `demo`)
+- Prima demo del gioco, con la mappa costruita sulla foto di Denis (la foto NON è nel repository, che è pubblico).
+  Spec e piano: `docs/superpowers/specs/2026-11-04-stormblade-demo-design.md`, `docs/superpowers/plans/2026-11-04-stormblade-demo.md`
+  (lì anche le decisioni prese e le idee per dopo).
+- `bash mk.sh` produce anche `demo_w.html` (test) e `demo.html` (da pubblicare). La mappa è in `src/w_demo.js`, le costruzioni
+  in `src/x_demo.js`; nel gioco `src/w_main.js` mette `DEMO=null` e tutto resta com'era.
+- Test: `python3 tests/run.py tests/demo.test.js --page demo_w.html` (6 test: partenza dal falò, percorso fino al palazzo,
+  nemici fuori dalle case, scalinata, ponte, forzieri).
+- Pagina pubblicata a parte (non è la pagina "Stormblade"): DEMO_URL. Si pubblica `demo.html` con gli stessi file
+  del modello Meshy della pagina del gioco.
+
 ## Ordine consigliato (lo decide Denis)
 1. Meshy: modello dell'eroina. Prima mostra a Denis il saldo e il costo stimato, poi fai un solo modello di prova.
 2. Piano della Tappa 2 "Mondo": il design dice di scrivere un piano alla volta, dopo aver consegnato la tappa precedente.
