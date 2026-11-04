@@ -76,3 +76,10 @@ T.test('floor edge keeps the pelvis sane', () => { meshyOn(); const f = S.FLOORS
   try { for (let k = 0; k < 120; k++) { T.sim(1); worst = Math.max(worst, S.P.gait.drop);
     T.ok(S.lastPose().every(Number.isFinite), 'non-numeric pose value at frame ' + k); } } finally { move('stop'); }
   T.ok(worst <= S.CFG.anim.footMaxDrop + 1e-6, 'pelvis dropped ' + worst); });
+T.test('raised arm lifts the clavicle', () => { meshyOn(); T.sim(30); T.ok(Math.abs(S.lastPose()[39]) < .5 * D2R, 'idle clavicle ' + S.lastPose()[39] / D2R);
+  S.startAct('light4'); while (S.P.act.t < .19) T.sim(1); T.ok(S.lastPose()[39] >= 15 * D2R, 'overhead clavicle ' + (S.lastPose()[39] / D2R).toFixed(1) + '°'); });
+T.test('toes bend at push-off', () => { meshyOn(); const peaks = []; let last = 1, cur = 0, midMax = 0;
+  stance('jog', 120, (i, mid) => { if (i) return; const ph = S.P.gait.ph % 1, t = S.lastPose()[41] / D2R;
+    if (ph < last) { if (cur || peaks.length) peaks.push(cur); cur = 0; } last = ph; cur = Math.max(cur, t); if (mid) midMax = Math.max(midMax, Math.abs(t)); });
+  const full = peaks.slice(1); T.ok(full.length >= 2, 'strides ' + full.length); T.ok(full.every(p => p >= 15), 'toe peaks ' + full.map(p => p.toFixed(1)));
+  T.ok(midMax <= 3, 'toes in mid-stance ' + midMax.toFixed(1) + '°'); });

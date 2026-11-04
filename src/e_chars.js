@@ -16,8 +16,8 @@ function mixPose(out,a,b,k){for(let j=0;j<NP;j++)out[j]=a[j]+(b[j]-a[j])*k;}
    vf/vs: actual local forward / rightward speed (m/s), opt.arm: arm-swing multiplier, opt.armR: sword-arm multiplier,
    opt.lean: extra forward lean (rad), opt.gnd(i, fwd, right): ground height (m) under leg i's foot target relative to the root plane,
    given the target's offsets from that hip in the body frame. Returns a bitmask of heel strikes this frame (1 = left, 2 = right). */
-// per-leg scratch of gaitIK: [xf, xs, lift, toe, ground, planted] for the left leg, then the right
-const _GT=new Float32Array(12);
+// per-leg scratch of gaitIK: [xf, xs, lift, toe, ground, planted for the pelvis drop, not in the push-off] for the left leg, then the right
+const _GT=new Float32Array(14);
 function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
   o.set(base);const T=U.time.value;o[4]+=Math.sin(T*1.7+st.seed)*1.3*DEG;o[0]+=Math.sin(T*1.7+st.seed)*.004;
   const A=d.thigh,B=d.shin,LEG=A+B,v=Math.hypot(vf,vs)/sc;          // rig units
@@ -43,17 +43,17 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
     else{const u=(ph-duty)/(1-duty);x=E*(-.5+(1-Math.cos(PI*u))/2);lift=(.045+.13*run+.05*sprint)*(LEG/.9)*amp*Math.sin(PI*u);toe=(u<.35?-(1-u/.35)*(20+18*run):Math.sin(PI*(u-.35)/.65)*8)*DEG*amp;}
     // target relative to the hip joint as the pelvis twist actually moves it, then into the pelvis frame;
     // the ground is asked at the untwisted stride point (sf forward, ss to the right of the hip, body frame): the twist moves it < 2 cm
-    const side=i?1:-1,sf=x*f,ss=x*sdir+side*.012*(1-run),rf=sf-side*d.hipW*sy,rs=ss-side*d.hipW*(cy-1),k=i*6;
-    _GT[k]=rf*cy-rs*sy;_GT[k+1]=rs*cy+rf*sy;_GT[k+2]=lift;_GT[k+3]=toe;_GT[k+5]=stn&&ph>=duty*CFG.anim.reachFrom?1:0;
+    const side=i?1:-1,sf=x*f,ss=x*sdir+side*.012*(1-run),rf=sf-side*d.hipW*sy,rs=ss-side*d.hipW*(cy-1),k=i*7;
+    _GT[k]=rf*cy-rs*sy;_GT[k+1]=rs*cy+rf*sy;_GT[k+2]=lift;_GT[k+3]=toe;_GT[k+5]=stn&&ph>=duty*CFG.anim.reachFrom?1:0;_GT[k+6]=stn||ph>=duty+(1-duty)*.35?1:0;
     _GT[k+4]=opt&&opt.gnd?clamp(opt.gnd(i,sf,ss),-AN.footMaxDrop,AN.footMaxRise):0;}
   // a planted foot that the leg cannot reach (downhill, long running strides) pulls the pelvis down, never more than footMaxDrop;
   // the first reachFrom of the stance (the landing, foot far ahead) is left out, so running does not dip at every step
   let need=0;const RR=LEG*AN.reach;
-  for(let i=0;i<2;i++){const k=i*6;if(!_GT[k+5])continue;const V=hipH0-_GT[k+4],Vm=Math.sqrt(Math.max(0,RR*RR-_GT[k]*_GT[k]-_GT[k+1]*_GT[k+1]));if(V>Vm)need=Math.max(need,V-Vm);}
+  for(let i=0;i<2;i++){const k=i*7;if(!_GT[k+5])continue;const V=hipH0-_GT[k+4],Vm=Math.sqrt(Math.max(0,RR*RR-_GT[k]*_GT[k]-_GT[k+1]*_GT[k+1]));if(V>Vm)need=Math.max(need,V-Vm);}
   // goes down fast (a landing foot must reach the ground at once) and comes back up gently
   const nd=Math.min(need,AN.footMaxDrop);st.drop=damp(st.drop||0,nd,nd>(st.drop||0)?AN.dropDown:AN.dropRate,dt);o[0]-=st.drop*w;const hipH=hipH0-st.drop*w;
   // pass 2: two-bone IK for each leg
-  for(let i=0;i<2;i++){const k=i*6,xf=_GT[k],xs=_GT[k+1],toe=_GT[k+3],V=Math.max(.2*LEG,hipH-_GT[k+2]-_GT[k+4]);
+  for(let i=0;i<2;i++){const k=i*7,xf=_GT[k],xs=_GT[k+1],toe=_GT[k+3],V=Math.max(.2*LEG,hipH-_GT[k+2]-_GT[k+4]);
     let D=Math.sqrt(xf*xf+xs*xs+V*V);D=clamp(D,Math.abs(A-B)+.02,LEG*.997);
     const kap=PI-Math.acos(clamp((A*A+B*B-D*D)/(2*A*B),-1,1));
     const gam=Math.atan2(B*Math.sin(kap),A+B*Math.cos(kap));
@@ -61,7 +61,9 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
     const thx=Math.atan2(xf,V)+Math.atan2(D*Math.sin(gam),D*Math.cos(gam)*Math.cos(thz))-pel;
     const hi=i?24:20,ki=i?27:23,fi=i?29:28;
     o[hi]=lerp(o[hi],thx,w);o[hi+1]=lerp(o[hi+1],0,w);o[hi+2]=lerp(o[hi+2],thz+(i?1:-1)*1.5*DEG,w);
-    o[ki]=lerp(o[ki],-kap,w);o[fi]=lerp(o[fi],kap-thx-pel+toe,w);}
+    o[ki]=lerp(o[ki],-kap,w);o[fi]=lerp(o[fi],kap-thx-pel+toe,w);
+    // toes bend up while the foot pushes off (early swing, foot pointing down); flat otherwise
+    o[41+i]=lerp(o[41+i],!_GT[k+6]&&toe<0?Math.min(-toe*AN.toeGain,AN.toeMax*DEG):0,w);}
   // arms swing against the legs; elbows fold as speed grows
   const arm=(opt&&opt.arm!==undefined?opt.arm:1)*lerp(16,40,run)*DEG*amp*f,armR=opt&&opt.armR!==undefined?opt.armR:1;
   o[9]+=-arm*cL*w;o[13]+=arm*cL*w*armR;o[12]+=lerp(6,62,run)*DEG*w*(opt&&opt.elbow!==undefined?opt.elbow:1);o[16]+=lerp(6,50,run)*DEG*w*armR;

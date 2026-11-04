@@ -222,6 +222,10 @@ function updPlayer(dt){
 let _gx=0,_gz=0,_gy=0,_gyaw=0,_gd=null;
 function _gnd(i,fwd,right){const Fx=-Math.sin(_gyaw),Fz=-Math.cos(_gyaw),o=(i?1:-1)*_gd.hipW+right;return gY(_gx+Fx*fwd-Fz*o,_gz+Fz*fwd+Fx*o)-_gy;}
 const _gopt={arm:1,armR:1,elbow:1,gnd:_gnd};
+// clavicles follow the arms: above clavFrom° of elevation (angle from hanging straight down) the shoulder rises with the arm.
+// For Euler YXZ the hanging arm (0,-1,0) ends with y = -cos(x)·cos(z), so the elevation needs no objects.
+function extrasLayer(p){const A=CFG.anim;for(let s=0;s<2;s++){const x=s?13:9,z=s?15:11,el=Math.acos(clamp(Math.cos(p[x])*Math.cos(p[z]),-1,1))/DEG;
+  p[s?39:37]+=clamp((el-A.clavFrom)*A.clavGain,0,A.clavMax)*DEG;}}
 function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   // root height and facing of this frame first: the feet ask the ground relative to them
   const fo=P.pos.y-gH(P.pos.x,P.pos.z);P.fo=Math.abs(fo-P.fo)>1.2?fo:damp(P.fo,fo,16,dt);
@@ -251,7 +255,7 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   P.aw=damp(P.aw||0,w,w?30:12,dt);
   mixPose(_F,_L,_A,P.aw);
   _F[4]+=P.flinch*.5;_F[7]+=P.flinch*.6;_F[0]-=Math.abs(P.flinch)*.04;
-  R.apply(_F);
+  extrasLayer(_F);R.apply(_F);
   // whole-body lean: into turns, forward when accelerating, back when braking
   const free=!k||MOVE_ACTS.has(k);
   P.roll=damp(P.roll,free?clamp(P.yawRate*hs*M.leanTurn,-M.leanTurnMax,M.leanTurnMax):0,8,dt);
