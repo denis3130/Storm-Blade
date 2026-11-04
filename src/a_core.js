@@ -48,14 +48,14 @@ renderer.toneMapping=THREE.NoToneMapping;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,Q.pr));
-renderer.setSize(innerWidth,innerHeight);
+renderer.setSize(viewW(),viewH());   // game size (r_orient.js): swapped when a phone held upright gets the rotated layout
 const canvas=renderer.domElement;canvas.tabIndex=0;$('game').appendChild(canvas);
 const gl=renderer.getContext();
 const isGL2=renderer.capabilities.isWebGL2;
 let HDR=false;try{HDR=isGL2&&!!(gl.getExtension('EXT_color_buffer_float')||gl.getExtension('EXT_color_buffer_half_float'));}catch(e){}
 const MAXANI=Math.min(8,renderer.capabilities.getMaxAnisotropy()||1);
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.06,560);
+const camera=new THREE.PerspectiveCamera(60,viewW()/viewH(),.06,560);
 camera.rotation.order='YXZ';
 const U={time:{value:0},wind:{value:1},player:{value:V3(0,0,0)},grassFade:{value:40},wet:{value:0},storm:{value:0}};
 
@@ -235,7 +235,7 @@ const Post=(()=>{
 function applyQuality(){
   Q=QP[SET.quality]||QP.medium;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,Q.pr));
-  renderer.setSize(innerWidth,innerHeight);
+  renderer.setSize(viewW(),viewH());
   const want=Q.shadow>0;
   if(sun.castShadow!==want||sun.shadow.mapSize.x!==(Q.shadow||1024)){
     sun.castShadow=want;sun.shadow.mapSize.set(Q.shadow||1024,Q.shadow||1024);
@@ -245,6 +245,6 @@ function applyQuality(){
   U.grassFade.value=Q.grassR*GCH*.92;gPcx=1e9;
   Post.resize();
 }
-function onResize(){camera.aspect=innerWidth/Math.max(1,innerHeight);camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);Post.resize();}
-addEventListener('resize',onResize);
+// called by applyOrient (r_orient.js), which listens to resize and orientationchange
+function onResize(){camera.aspect=viewW()/Math.max(1,viewH());camera.updateProjectionMatrix();renderer.setSize(viewW(),viewH());Post.resize();}
 Post.resize();

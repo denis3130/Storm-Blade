@@ -167,7 +167,7 @@ function banner(t,s,cls){$('bannerTitle').textContent=t;$('bannerSub').textConte
 function toast(h){const d=document.createElement('div');d.className='toast';d.innerHTML=h;$('toasts').appendChild(d);setTimeout(()=>d.remove(),4300);while($('toasts').children.length>3)$('toasts').firstChild.remove();}
 let hintT=0;function hint(h,dur=5){const e=$('hint');e.innerHTML=h;e.classList.add('show');hintT=dur;}
 const _pv=V3();
-function toScreen(p,out){_pv.copy(p).project(camera);if(_pv.z>1||_pv.z<-1)return false;out.x=(_pv.x*.5+.5)*innerWidth;out.y=(-_pv.y*.5+.5)*innerHeight;return true;}
+function toScreen(p,out){_pv.copy(p).project(camera);if(_pv.z>1||_pv.z<-1)return false;out.x=(_pv.x*.5+.5)*viewW();out.y=(-_pv.y*.5+.5)*viewH();return true;}
 const _sp={x:0,y:0};
 const CMP={el:null,items:[]};
 function buildCompass(){const el=$('compass');CMP.el=el;el.innerHTML='';const W=[['N',0],['O',PI/2],['S',PI],['E',-PI/2]];
@@ -193,7 +193,7 @@ function objective(){
 const EBARS=[],HUDC={};
 function updHUD(rdt){
   const hw=Math.min(380,220+(P.maxHp-100)*1.1),sw=Math.min(360,200+(P.maxSt-100)*1.2);
-  if(innerWidth>640){$('hpBar').style.width=hw+'px';$('stBar').style.width=sw+'px';}
+  if(viewW()>640){$('hpBar').style.width=hw+'px';$('stBar').style.width=sw+'px';}
   const hr=clamp(P.hp/P.maxHp,0,1);P.chipT=(P.chipT||0)-rdt;if(P.chipT<=0)P.chip=damp(P.chip,P.hp,4,rdt);if(P.chip<P.hp)P.chip=P.hp;
   $('hpFill').style.transform=`scaleX(${hr})`;$('hpChip').style.transform=`scaleX(${clamp(P.chip/P.maxHp,0,1)})`;
   $('stFill').style.transform=`scaleX(${clamp(P.st/P.maxSt,0,1)})`;
@@ -279,12 +279,13 @@ function pollPad(dt){let gp=null;try{const l=navigator.getGamepads?navigator.get
 /* ---------- touch ---------- */
 const TOUCH={joy:{id:null,ox:0,oy:0,x:0,y:0,t:0},look:{id:null,lx:0,ly:0},sprint:false};
 function initTouch(){const z=$('touchZone'),J=$('joy'),K=$('joyK');
-  z.addEventListener('pointerdown',e=>{if(G.state!=='play')return;audioInit();e.preventDefault();
-    if(e.clientX<innerWidth*.42&&TOUCH.joy.id===null){TOUCH.joy.id=e.pointerId;TOUCH.joy.ox=e.clientX;TOUCH.joy.oy=e.clientY;TOUCH.joy.x=TOUCH.joy.y=0;TOUCH.joy.t=0;J.style.display='block';J.style.left=e.clientX+'px';J.style.top=e.clientY+'px';K.style.transform='';}
-    else if(TOUCH.look.id===null){TOUCH.look.id=e.pointerId;TOUCH.look.lx=e.clientX;TOUCH.look.ly=e.clientY;}
+  // all positions in game space (touchXY), so the stick and the look drag follow what the player sees when the layout is rotated
+  z.addEventListener('pointerdown',e=>{if(G.state!=='play')return;audioInit();e.preventDefault();const p=touchXY(e);
+    if(p.x<viewW()*.42&&TOUCH.joy.id===null){TOUCH.joy.id=e.pointerId;TOUCH.joy.ox=p.x;TOUCH.joy.oy=p.y;TOUCH.joy.x=TOUCH.joy.y=0;TOUCH.joy.t=0;J.style.display='block';J.style.left=p.x+'px';J.style.top=p.y+'px';K.style.transform='';}
+    else if(TOUCH.look.id===null){TOUCH.look.id=e.pointerId;TOUCH.look.lx=p.x;TOUCH.look.ly=p.y;}
     try{z.setPointerCapture(e.pointerId);}catch(_){}});
-  z.addEventListener('pointermove',e=>{const j=TOUCH.joy;if(e.pointerId===j.id){let dx=e.clientX-j.ox,dy=e.clientY-j.oy;const l=Math.hypot(dx,dy),m=52;if(l>m){dx*=m/l;dy*=m/l;}j.x=dx/m;j.y=dy/m;K.style.transform=`translate(${dx}px,${dy}px)`;}
-    else if(e.pointerId===TOUCH.look.id){const L=TOUCH.look;const mx=e.clientX-L.lx,my=e.clientY-L.ly;if(P.lock&&!G.fp){if(Math.abs(mx)>40){IN.lockSwitch=mx>0?-1:1;L.lx=e.clientX;}}else IN.lookX+=mx*.0065;IN.lookY+=my*.005;if(!P.lock||G.fp)L.lx=e.clientX;L.ly=e.clientY;}});
+  z.addEventListener('pointermove',e=>{const j=TOUCH.joy,p=touchXY(e);if(e.pointerId===j.id){let dx=p.x-j.ox,dy=p.y-j.oy;const l=Math.hypot(dx,dy),m=52;if(l>m){dx*=m/l;dy*=m/l;}j.x=dx/m;j.y=dy/m;K.style.transform=`translate(${dx}px,${dy}px)`;}
+    else if(e.pointerId===TOUCH.look.id){const L=TOUCH.look;const mx=p.x-L.lx,my=p.y-L.ly;if(P.lock&&!G.fp){if(Math.abs(mx)>40){IN.lockSwitch=mx>0?-1:1;L.lx=p.x;}}else IN.lookX+=mx*.0065;IN.lookY+=my*.005;if(!P.lock||G.fp)L.lx=p.x;L.ly=p.y;}});
   const end=e=>{if(e.pointerId===TOUCH.joy.id){TOUCH.joy.id=null;TOUCH.joy.x=TOUCH.joy.y=0;J.style.display='none';TOUCH.sprint=false;}if(e.pointerId===TOUCH.look.id)TOUCH.look.id=null;};
   z.addEventListener('pointerup',end);z.addEventListener('pointercancel',end);
   const btn=(id,down,up)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();audioInit();b.classList.add('on');try{b.setPointerCapture(e.pointerId);}catch(_){}down();});
@@ -321,7 +322,7 @@ function fillControls(){const pc=[['Muoversi',['W','A','S','D']],['Visuale','Mou
 function syncSettingsUI(){const seg=(id,v)=>{for(const b of $(id).querySelectorAll('button'))b.classList.toggle('on',b.dataset.v===String(v));};
   seg('sQuality',SET.quality);seg('sView',G.fp?'fp':'tp');seg('sInv',SET.invertY?'1':'0');seg('sNums',SET.nums?'1':'0');seg('sFps',SET.fps?'1':'0');$('sSens').value=SET.sens;$('sMusic').value=SET.music;$('sSfx').value=SET.sfx;}
 function initMenus(){
-  $('mNew').onclick=()=>{sfx('ui');startGame(false);};$('mContinue').onclick=()=>{sfx('ui');startGame(true);};
+  $('mNew').onclick=()=>{sfx('ui');lockLandscape();startGame(false);};$('mContinue').onclick=()=>{sfx('ui');lockLandscape();startGame(true);};
   $('mSettings').onclick=()=>{settingsBack='title';syncSettingsUI();showScreen('settings');};$('mControls').onclick=()=>{settingsBack='title';fillControls();showScreen('controls');};
   $('pResume').onclick=()=>resume();$('pSettings').onclick=()=>{settingsBack='pause';syncSettingsUI();showScreen('settings');};$('pControls').onclick=()=>{settingsBack='pause';fillControls();showScreen('controls');};
   $('pTitle').onclick=()=>{save();showTitle();};
@@ -408,6 +409,7 @@ function tick(rdt,doRender){
   clearPresses();
   if(doRender)Post.render(Q.rays?(1-ST.k)*.9:0);}
 async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('loadTxt').textContent=t;};
+  applyOrient();
   try{L(.04,'Forgiando le texture');await nextFrame();makeTextures();makeMaterials();makeWardMat();
     L(.16,'Modellando la valle');await nextFrame();buildPaths();setupFlats();buildTerrain();buildMountains();
     L(.34,'Riempiendo il lago');await nextFrame();buildWater();initShore();
@@ -422,5 +424,5 @@ async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('l
     L(1,'Pronto');await nextFrame();showTitle();}
   catch(e){console.error('BOOT',e&&e.stack||e);$('loadTxt').textContent='Errore di avvio: '+(e&&e.message);}
   requestAnimationFrame(frame);}
-window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci};
+window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient};
 boot();
