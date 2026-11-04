@@ -39,14 +39,21 @@ const qE=(q,a,i)=>q.setFromEuler(_ce.set(a[i],a[i+1],a[i+2],'YXZ'));
 function clipJoint(o,i,k,run,CW,CR){qE(_cq1,CW.mean,i).invert().premultiply(qE(_cq2,_CS,i));qE(_cq3,CR.mean,i).invert().premultiply(qE(_cq2,_CR,i));
   _cq1.slerp(_cq3,run);_cq2.set(0,0,0,1).slerp(_cq1,k);qE(_cq1,o,i).premultiply(_cq2);_ce.setFromQuaternion(_cq1,'YXZ');o[i]=_ce.x;o[i+1]=_ce.y;o[i+2]=_ce.z;}
 function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
-  o.set(base);const T=U.time.value;o[4]+=Math.sin(T*1.7+st.seed)*1.3*DEG;o[0]+=Math.sin(T*1.7+st.seed)*.004;
+  // the player breathes (below, once w is known); other characters keep the old idle sway of the back
+  o.set(base);const T=U.time.value,breath=!!(opt&&opt.clip);if(!breath){o[4]+=Math.sin(T*1.7+st.seed)*1.3*DEG;o[0]+=Math.sin(T*1.7+st.seed)*.004;}
   const A=d.thigh,B=d.shin,LEG=A+B,v=Math.hypot(vf,vs)/sc;          // rig units
   const vn=v*(.9/LEG),run=sstep(1.9,3.9,vn),sprint=sstep(5.6,7.6,vn);
   const Ls=Math.min(1.9,.72*Math.sqrt(vn/1.4))*(LEG/.9);            // step length (power law fits walk→sprint)
   const duty=lerp(.62,.37,run),E=2*duty*Ls;st.duty=duty;              // stance excursion = distance covered while planted; duty = stance share of the cycle
   const prev=st.ph;if(Ls>1e-4)st.ph=(st.ph+v*dt/(2*Ls))%1;
   let ev=0;if(((prev)%1)>((st.ph)%1))ev|=1;if(((prev+.5)%1)>((st.ph+.5)%1))ev|=2;
-  const w=sstep(.04,.45,vn);st.w=w;if(w<.001){st.drop=0;return 0;}
+  const w=sstep(.04,.45,vn);st.w=w;
+  // standing still: breathing (chest back and forth, clavicles rising, on a body without the Meshy chest the spine) and a slow sideways
+  // sway of the pelvis that the head takes half back; the hips turn back by the sway so the feet stay put. Fades out as w grows
+  if(breath){const bc=CFG.anim,q=1-w,s=Math.sin(TAU*bc.breathHz*T+st.seed),r=Math.sin(TAU*bc.swayHz*T+st.seed*1.7)*bc.swayRoll*DEG*q;
+    o[opt.vchest?34:4]+=s*bc.breathChest*DEG*q;o[37]+=(1+s)*.5*bc.breathClav*DEG*q;o[39]+=(1+s)*.5*bc.breathClav*DEG*q;o[0]+=s*.004;
+    o[3]+=r;o[33]-=r*.5;o[22]-=r;o[26]-=r;}
+  if(w<.001){st.drop=0;return 0;}
   const f=v>1e-4?(vf/sc)/v:1,sdir=v>1e-4?(vs/sc)/v:0,amp=Math.min(1,Ls/(.42*LEG));
   // clips (player only) weigh the forward share of the motion; the computed swings and twists weigh the rest (tw)
   const CW=opt&&opt.clip?animCycle('walk'):null,CR=CW&&animCycle('run'),fw=CR?clamp(f,0,1):0,ck=w*fw*CFG.anim.clipGain,tw=1-fw*Math.min(1,CFG.anim.clipGain);

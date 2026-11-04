@@ -6,7 +6,8 @@ const CFG={
   anim:{reach:.985, footMaxDrop:.15, footMaxRise:.25, dropDown:45, dropRate:14, reachFrom:.15,   // feet on the terrain: leg share before the pelvis drops; terrain offset limits (m); pelvis drop down / back up (1/s); stance share before the drop counts
     clavFrom:60, clavGain:.3, clavMax:22, toeGain:.9, toeMax:35,   // clavicles rise with the arm above clavFrom° (gain, max °); toes bend at push-off (gain of the foot angle, max °)
     blend:.08,   // seconds over which a new move blends in from the pose it interrupts
-    clipGain:1},   // walk/run clips on the upper body (0 = the computed gait of before)
+    clipGain:1,   // walk/run clips on the upper body (0 = the computed gait of before)
+    breathHz:.28, breathChest:1.2, breathClav:.8, swayHz:.07, swayRoll:1.2},   // standing still: breaths per second, chest ±°, clavicle rise °; pelvis sway per second, ±°
   move:{
     walk:1.9, jog:5.4, sprint:8.1,       // free movement (analog: walk below 60% stick)
     lock:4.3, lockBack:3.3,              // locked-on strafe / backpedal
