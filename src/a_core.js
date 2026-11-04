@@ -123,15 +123,21 @@ void main(){
   c=mix(c,uHorizon*0.82,clamp(-y*3.0,0.0,1.0));
   float sd=max(dot(d,uSunDir),0.0);float clear=1.0-uStorm*0.9;
   c+=uSunCol*(pow(sd,7.0)*0.32+pow(sd,48.0)*0.9)*clear;
-  c+=uSunCol*smoothstep(0.99945,0.99975,sd)*${DEMO?'1.2':'14.0'}*clear;
+  ${DEMO?'':'c+=uSunCol*smoothstep(0.99945,0.99975,sd)*14.0*clear;'}
   ${clouds?`if(y>-0.02){
     vec2 cp=d.xz/(max(y,0.0)+0.11)*1.15+vec2(uTime*0.010,uTime*0.004)*(1.0+uStorm*4.0);
-    float n=fbm(cp*1.1)*0.75+fbm(cp*3.1+vec2(uTime*0.02,0.0))*0.25;
-    float cov=mix(${DEMO?DEMO.cloud.toFixed(2):'0.36'},0.12,uStorm);
-    float cl=smoothstep(cov-0.12,cov+0.42,n)${DEMO?'*(1.0-0.75*smoothstep(0.86,0.985,sd))':''};
+    ${DEMO?`vec2 wq=vec2(fbm(cp*0.55+3.0),fbm(cp*0.55-5.0));
+    float n=fbm(cp*1.6+wq*2.2)*0.7+fbm(cp*4.4+wq*1.3+vec2(uTime*0.02,0.0))*0.3;
+    float gap=smoothstep(0.93,0.996,sd);
+    float cl=smoothstep(0.26,0.6,n+0.2-gap*0.5);
+    float sh=fbm(cp*1.6+wq*2.2+uSunDir.xz*0.25);
+    vec3 cc=mix(uCloud*0.42,uCloud*1.75,clamp((n-sh)*6.0+0.5,0.0,1.0));
+    cc+=uSunCol*pow(sd,5.0)*0.6*(1.0-cl*0.35)*clear;`:`float n=fbm(cp*1.1)*0.75+fbm(cp*3.1+vec2(uTime*0.02,0.0))*0.25;
+    float cov=mix(0.36,0.12,uStorm);
+    float cl=smoothstep(cov-0.12,cov+0.42,n);
     float sh=fbm(cp*1.1+uSunDir.xz*0.1);
     vec3 cc=mix(uCloud*1.08,uCloud*0.5,clamp((n-sh)*4.0+0.5,0.0,1.0));
-    cc+=uSunCol*pow(sd,6.0)*0.32*clear;
+    cc+=uSunCol*pow(sd,6.0)*0.32*clear;`}
     float fade=smoothstep(${DEMO?'-0.03,0.14':'0.0,0.32'},y);
     c=mix(c,cc,cl*fade*0.9);
   }`:''}

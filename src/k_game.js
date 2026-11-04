@@ -377,7 +377,7 @@ function startGame(cont,hero){audioInit();const fresh=!(cont&&loadSave());if(fre
   G.state='play';showScreen(null);$('hud').hidden=false;$('touch').hidden=!isTouch;setView(SET.fp);resume();
   banner('Valle di Cenere',cont?'Bentornato, viandante':'Distruggi i quattro accampamenti dei goblin');sfx('banner');
   if(!cont){tutorial=0;tutT=4.4;}else tutorial=99;
-  if(fresh){questStart('valle');questStart('selin');}}
+  if(fresh&&!DEMO){questStart('valle');questStart('selin');}}
 let tutorial=99,tutT=0;
 const TUT_PC=['<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> muovi</span><span><kbd>Shift</kbd> corri</span><span>Mouse visuale</span>',
   '<span><kbd>Clic</kbd> combo</span><span><kbd>Q</kbd> colpo pesante, tieni per caricare</span><span><kbd>Tab</kbd> aggancia</span>',
@@ -419,7 +419,7 @@ function tick(rdt,doRender){
   for(const c of CAMPS){const ch=c.chest;if(ch.open&&ch.t<1){ch.t=Math.min(1,ch.t+dt*1.6);ch.lid.rotation.x=-eOut(ch.t)*1.9;ch.light.i=2.4*(1-ch.t);}else if(!ch.open&&ch.light.i>0){ch.light.i=2.4*(.8+.2*Math.sin(G.t*3));}}
   const pu=Post.u;pu.hurt.value=Math.max(0,pu.hurt.value-rdt*1.6);pu.lowhp.value=damp(pu.lowhp.value,P.hp/P.maxHp<.3&&!P.dead&&playing?1:0,3,rdt);pu.storm.value=ST.k*(P.inWard?.35:1);
   pu.flash.value=Math.max(0,pu.flash.value-rdt*2)+ST.flash*.18;pu.desat.value=damp(pu.desat.value,P.dead?.85:0,1.5,rdt);pu.ward.value=damp(pu.ward.value,P.inWard&&ST.k>.3?1:0,3,rdt);
-  pu.exposure.value=lerp(DEMO?.86:1.0,.92,ST.k);
+  pu.exposure.value=lerp(DEMO?.93:1.0,.92,ST.k);
   if(pu.lowhp.value>.5&&playing&&!P.dead){P.hbT=(P.hbT||0)-rdt;if(P.hbT<=0){P.hbT=.95;sfx('heart');}}
   renderer.getDrawingBufferSize(_db);PSCALE.value=_db.y/(2*Math.tan(camera.fov*DEG/2));
   dlgTick(rdt);
