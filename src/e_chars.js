@@ -14,7 +14,10 @@ function mixPose(out,a,b,k){for(let j=0;j<NP;j++)out[j]=a[j]+(b[j]-a[j])*k;}
 /* ---------- procedural locomotion: stride-synced phase + 2-bone leg IK, so planted feet never slide ----------
    o: output pose, base: pose to walk from, st: per-character gait state, d: rig dims, sc: rig scale,
    vf/vs: actual local forward / rightward speed (m/s), opt.arm: arm-swing multiplier, opt.armR: sword-arm multiplier,
-   opt.lean: extra forward lean (rad). Returns a bitmask of heel strikes this frame (1 = left, 2 = right). */
+   opt.lean: extra forward lean (rad), opt.gnd(i, fwd, right): ground height (m) under leg i's foot target relative to the root plane,
+   given the target's offsets from that hip in the body frame. Returns a bitmask of heel strikes this frame (1 = left, 2 = right). */
+// per-leg scratch of gaitIK: [xf, xs, lift, toe, ground, planted] for the left leg, then the right
+const _GT=new Float32Array(12);
 function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
   o.set(base);const T=U.time.value;o[4]+=Math.sin(T*1.7+st.seed)*1.3*DEG;o[0]+=Math.sin(T*1.7+st.seed)*.004;
   const A=d.thigh,B=d.shin,LEG=A+B,v=Math.hypot(vf,vs)/sc;          // rig units
@@ -23,7 +26,7 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
   const duty=lerp(.62,.37,run),E=2*duty*Ls;st.duty=duty;              // stance excursion = distance covered while planted; duty = stance share of the cycle
   const prev=st.ph;if(Ls>1e-4)st.ph=(st.ph+v*dt/(2*Ls))%1;
   let ev=0;if(((prev)%1)>((st.ph)%1))ev|=1;if(((prev+.5)%1)>((st.ph+.5)%1))ev|=2;
-  const w=sstep(.04,.45,vn);st.w=w;if(w<.001)return 0;
+  const w=sstep(.04,.45,vn);st.w=w;if(w<.001){st.drop=0;return 0;}
   const f=v>1e-4?(vf/sc)/v:1,sdir=v>1e-4?(vs/sc)/v:0,amp=Math.min(1,Ls/(.42*LEG));
   const phL=st.ph,cL=Math.cos(TAU*phL);
   // pelvis: inverted-pendulum walk (high at mid-stance) → spring run (low at mid-stance), twist with the legs
@@ -33,12 +36,24 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
   o[5]=lerp(o[5],o[5]*.3+lerp(5,9,run)*DEG*.8*amp*cL*f,w);o[6]=lerp(o[6],0,w*.7);
   const lean=(5*run+11*sprint)*DEG*Math.max(0,f)-4*DEG*Math.max(0,-f)+(opt&&opt.lean||0);
   o[4]-=lean*w;o[7]+=lean*.65*w;
-  const hipH=LEG+o[0];const pel=o[1];
-  for(let i=0;i<2;i++){const ph=(st.ph+i*.5)%1;let x,lift=0,toe=0;
-    if(ph<duty){const u=ph/duty;x=E*(.5-u);if(u<.14)toe=(1-u/.14)*(10+8*run)*DEG*amp;}
+  const hipH0=LEG+o[0],pel=o[1],AN=CFG.anim,cy=Math.cos(o[2]),sy=Math.sin(o[2]);
+  // pass 1: each foot's target (stride position, lift, toe) relative to its hip joint, and the ground under it
+  for(let i=0;i<2;i++){const ph=(st.ph+i*.5)%1,stn=ph<duty;let x,lift=0,toe=0;
+    if(stn){const u=ph/duty;x=E*(.5-u);if(u<.14)toe=(1-u/.14)*(10+8*run)*DEG*amp;}
     else{const u=(ph-duty)/(1-duty);x=E*(-.5+(1-Math.cos(PI*u))/2);lift=(.045+.13*run+.05*sprint)*(LEG/.9)*amp*Math.sin(PI*u);toe=(u<.35?-(1-u/.35)*(20+18*run):Math.sin(PI*(u-.35)/.65)*8)*DEG*amp;}
-    // target relative to the hip joint as the pelvis twist actually moves it, then into the pelvis frame
-    const side=i?1:-1,cy=Math.cos(o[2]),sy=Math.sin(o[2]),rf=x*f-side*d.hipW*sy,rs=x*sdir+side*.012*(1-run)-side*d.hipW*(cy-1),xf=rf*cy-rs*sy,xs=rs*cy+rf*sy,V=Math.max(.2*LEG,hipH-lift);
+    // target relative to the hip joint as the pelvis twist actually moves it, then into the pelvis frame;
+    // the ground is asked at the untwisted stride point (sf forward, ss to the right of the hip, body frame): the twist moves it < 2 cm
+    const side=i?1:-1,sf=x*f,ss=x*sdir+side*.012*(1-run),rf=sf-side*d.hipW*sy,rs=ss-side*d.hipW*(cy-1),k=i*6;
+    _GT[k]=rf*cy-rs*sy;_GT[k+1]=rs*cy+rf*sy;_GT[k+2]=lift;_GT[k+3]=toe;_GT[k+5]=stn&&ph>=duty*CFG.anim.reachFrom?1:0;
+    _GT[k+4]=opt&&opt.gnd?clamp(opt.gnd(i,sf,ss),-AN.footMaxDrop,AN.footMaxRise):0;}
+  // a planted foot that the leg cannot reach (downhill, long running strides) pulls the pelvis down, never more than footMaxDrop;
+  // the first reachFrom of the stance (the landing, foot far ahead) is left out, so running does not dip at every step
+  let need=0;const RR=LEG*AN.reach;
+  for(let i=0;i<2;i++){const k=i*6;if(!_GT[k+5])continue;const V=hipH0-_GT[k+4],Vm=Math.sqrt(Math.max(0,RR*RR-_GT[k]*_GT[k]-_GT[k+1]*_GT[k+1]));if(V>Vm)need=Math.max(need,V-Vm);}
+  // goes down fast (a landing foot must reach the ground at once) and comes back up gently
+  const nd=Math.min(need,AN.footMaxDrop);st.drop=damp(st.drop||0,nd,nd>(st.drop||0)?AN.dropDown:AN.dropRate,dt);o[0]-=st.drop*w;const hipH=hipH0-st.drop*w;
+  // pass 2: two-bone IK for each leg
+  for(let i=0;i<2;i++){const k=i*6,xf=_GT[k],xs=_GT[k+1],toe=_GT[k+3],V=Math.max(.2*LEG,hipH-_GT[k+2]-_GT[k+4]);
     let D=Math.sqrt(xf*xf+xs*xs+V*V);D=clamp(D,Math.abs(A-B)+.02,LEG*.997);
     const kap=PI-Math.acos(clamp((A*A+B*B-D*D)/(2*A*B),-1,1));
     const gam=Math.atan2(B*Math.sin(kap),A+B*Math.cos(kap));

@@ -60,3 +60,19 @@ T.test('Meshy feet planted when walking', () => { meshyOn(); const s = slidePct(
 T.test('hero switch keeps Meshy leg measures', () => { meshyOn(); S.setHero('f'); S.setHero('m');   // meshyAttach sets the stored model up again
   T.ok(S.MESHY.on, 'Meshy hero back on'); T.ok(S.MESHY.legD, 'no leg measures'); T.near(S.MESHY.legD.thigh, .391, .005, 'thigh');
   const s = slidePct(meshyFoot, 'walk'); T.ok(s < 2, 'slide ' + s.toFixed(2) + '% after the switch'); });
+const heroFoot = i => S.PL.rig.P[i ? 'ftR' : 'ftL'];
+// ankle height above the ground under it, minus its height above the root plane after 1 s standing still: {min, max} over mid-stance
+function heights(ankleOf, mode) { S.tp(0, 30); S.CAM.yaw = 0; S.P.yaw = 0; move('stop'); T.sim(60);
+  const rest = [0, 1].map(i => wpos(ankleOf(i)).y - S.PL.rig.root.position.y); let min = 9, max = -9;
+  stance(mode, 180, (i, mid) => { if (!mid) return; const p = wpos(ankleOf(i)), h = p.y - S.gY(p.x, p.z) - rest[i]; min = Math.min(min, h); max = Math.max(max, h); });
+  return {min: +min.toFixed(3), max: +max.toFixed(3)}; }
+T.test('feet follow the slope', () => { for (const hero of ['m', 'f']) for (const mode of ['walk', 'jog']) {
+  meshyOn(hero); const h = heights(hero === 'm' ? meshyFoot : heroFoot, mode);
+  T.ok(h.min >= -.01 && h.max <= .03, hero + ' ' + mode + ' ' + JSON.stringify(h)); } });
+T.test('Meshy feet planted when jogging', () => { meshyOn(); const s = slidePct(meshyFoot, 'jog'); T.ok(s < 2, 'slide ' + s.toFixed(2) + '%'); });
+T.test('heroine feet planted', () => { for (const m of ['walk', 'jog']) { meshyOn('f'); const s = slidePct(heroFoot, m); T.ok(s < 2, m + ' slide ' + s.toFixed(2) + '%'); } });
+T.test('floor edge keeps the pelvis sane', () => { meshyOn(); const f = S.FLOORS[0], r = Math.sqrt(f.r2);
+  S.tp(f.x + r + .5, f.z); S.P.yaw = S.CAM.yaw = Math.PI / 2; T.sim(30); move('jog'); let worst = 0;
+  try { for (let k = 0; k < 120; k++) { T.sim(1); worst = Math.max(worst, S.P.gait.drop);
+    T.ok(S.lastPose().every(Number.isFinite), 'non-numeric pose value at frame ' + k); } } finally { move('stop'); }
+  T.ok(worst <= S.CFG.anim.footMaxDrop + 1e-6, 'pelvis dropped ' + worst); });

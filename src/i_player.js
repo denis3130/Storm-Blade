@@ -218,14 +218,23 @@ function updPlayer(dt){
   P.inWard=false;for(const s of SHRINES){if(Math.hypot(P.pos.x-s.x,P.pos.z-s.z)<5.2){P.inWard=true;P.nearShrine=s;break;}}
   animPlayer(dt);bladeHits();
 }
+// ground under a foot for gaitIK: body position and facing of this frame (set in animPlayer), measures of the legs in use
+let _gx=0,_gz=0,_gy=0,_gyaw=0,_gd=null;
+function _gnd(i,fwd,right){const Fx=-Math.sin(_gyaw),Fz=-Math.cos(_gyaw),o=(i?1:-1)*_gd.hipW+right;return gY(_gx+Fx*fwd-Fz*o,_gz+Fz*fwd+Fx*o)-_gy;}
+const _gopt={arm:1,armR:1,elbow:1,gnd:_gnd};
 function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
+  // root height and facing of this frame first: the feet ask the ground relative to them
+  const fo=P.pos.y-gH(P.pos.x,P.pos.z);P.fo=Math.abs(fo-P.fo)>1.2?fo:damp(P.fo,fo,16,dt);
+  let ry=P.yaw+P.spinYaw;if(a&&a.rollYaw!==undefined&&(k==='dodge'))ry=a.rollYaw;
+  const legs=MESHY.on&&MESHY.legD?MESHY.legD:PL.rig.d;_gx=P.pos.x;_gz=P.pos.z;_gy=P.pos.y-fo+P.fo;_gyaw=ry;_gd=legs;
   const hs=Math.hypot(P.av.x,P.av.z);
   fwdV(P.yaw,_v1);const vf=P.av.x*_v1.x+P.av.z*_v1.z,vs=P.av.x*-_v1.z+P.av.z*_v1.x;
   mixPose(_A,HP.idle,HP.guard,P.combatK);
   // turning on the spot: small shuffle steps instead of feet skating round
   let gs=vs;if(hs<.7&&Math.abs(P.yawRate)>1.1&&(!k||MOVE_ACTS.has(k)))gs+=clamp(P.yawRate*.24,-1.1,1.1);
   // the Meshy model has shorter legs than the rig that drives it: plan the steps for the legs that are seen
-  const ev=gaitIK(_L,_A,P.gait,MESHY.on&&MESHY.legD?MESHY.legD:PL.rig.d,1,vf,gs,dt,{arm:1-P.combatK*.35,armR:1-P.combatK*.72,elbow:1-P.combatK*.55});
+  _gopt.arm=1-P.combatK*.35;_gopt.armR=1-P.combatK*.72;_gopt.elbow=1-P.combatK*.55;
+  const ev=gaitIK(_L,_A,P.gait,legs,1,vf,gs,dt,_gopt);
   if(ev&&(!k||MOVE_ACTS.has(k))&&hs>.35){
     if(P.wade>.05){splash(P.pos,5+(P.sprinting?4:0),.8+P.wade);sfx('splash',P.pos,hs>3?1:.6);}
     else{sfx('step',P.pos,P.sprinting?1.5:hs<2.5?.55:1);if(P.sprinting&&Math.random()<.6)dust(P.pos,2,.4);}}
@@ -249,9 +258,7 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   P.pitchL=damp(P.pitchL,free?clamp(-P.accF*M.leanAcc,-M.leanAccMax,M.leanAccMax):0,7,dt);
   R.inner.rotation.set(P.pitchL,0,P.roll);
   // stepping onto a raised floor eases up instead of popping
-  const fo=P.pos.y-gH(P.pos.x,P.pos.z);P.fo=Math.abs(fo-P.fo)>1.2?fo:damp(P.fo,fo,16,dt);
-  let ry=P.yaw+P.spinYaw;if(a&&a.rollYaw!==undefined&&(k==='dodge'))ry=a.rollYaw;
-  R.root.position.set(P.pos.x,P.pos.y-fo+P.fo,P.pos.z);R.root.rotation.y=ry;R.root.updateMatrixWorld(true);meshySync();
+  R.root.position.set(P.pos.x,_gy,P.pos.z);R.root.rotation.y=ry;R.root.updateMatrixWorld(true);meshySync();
   PL.sw.base.getWorldPosition(_v1);PL.sw.tip.getWorldPosition(_v2);if(G.fp)PL.trail.on=false;PL.trail.update(dt,_v1,_v2);PL.trail.mesh.visible=!G.fp;
   if(!G.fp)PL.cape.update(dt,U.wind.value*(.6+U.storm.value*1.4),_v3.set(.8,0,.5));
   const sw=SWORDS[P.sword];if(sw.glow){PL.sw.bm.emissiveIntensity=k==='charge'?1.6+Math.sin(G.t*30)*.4:1;}else{PL.sw.bm.emissive.setRGB(k==='charge'?Math.min(.6,a.t*.6):0,k==='charge'?Math.min(.35,a.t*.35):0,0);}
