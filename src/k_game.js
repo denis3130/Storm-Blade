@@ -28,7 +28,7 @@ function damageEnemy(e,a,D,nx,nz,hp){const C=CFG.combat;const l=Math.hypot(nx,nz
   if(e.type==='goblin'||e.type==='archer'){if(Math.random()<.6)sfx('gobHurt',e.pos);}else if(e.type==='wolf'&&Math.random()<.5)sfx('bite',e.pos);
   if(e.hp<=0)killEnemy(e,D);}
 function killEnemy(e,D){if(e.dead)return;e.dead=true;e.deadT=0;e.atk=null;e.stun=0;e.stag=0;e.down=0;TOK.delete(e);e.fall=Math.random()<.5?1:-1;P.kills++;
-  emberOrbs(e,e.braci);
+  emberOrbs(e,e.braci);storyEvent('kill',{type:e.type,camp:e.camp,boss:!!e.boss});
   sfx(e.type==='goblin'||e.type==='archer'?'gobDie':e.type==='wolf'?'growl':e.type==='troll'?'roar':'wail',e.pos);
   if(P.lock===e)P.lock=autoRelock(e);
   if(e.boss){G.slow=1.6;G.slowS=.22;CAM.trauma=1;Post.u.flash.value=.45;sfx('bossDie');
@@ -52,10 +52,10 @@ function updOrbs(rdt){if(!ORBS.length)return;hudXY($('braciN'),_ot);const tx=_ot
     const x=lerp(lerp(o.x0,o.x0+o.bx,eOut2(u)),tx,k),y=lerp(lerp(o.y0,o.y0+o.by,eOut2(u)),ty,k);o.d.style.opacity=1;o.d.style.transform=`translate(${x}px,${y}px) scale(${1-u*.45})`;
     if(u>=1){o.d.remove();ORBS.splice(i,1);addBraci(o.v);}}}
 function bump(el,cls='bump'){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
-function checkCamp(i){if(P.cleared[i])return;if(E.some(o=>o.camp===i&&!o.dead))return;P.cleared[i]=true;const c=CAMPS[i];c.chest.light.i=2.4;
+function checkCamp(i){if(P.cleared[i])return;if(E.some(o=>o.camp===i&&!o.dead))return;P.cleared[i]=true;storyEvent('camp',{i});const c=CAMPS[i];c.chest.light.i=2.4;
   const n=P.cleared.filter(Boolean).length;banner('Accampamento distrutto',c.name+' · '+n+' di 4');sfx('banner');save();
   setTimeout(()=>toast('Il forziere del capo è <em>aperto</em>'),2600);}
-function openChest(i){const c=CAMPS[i];if(c.chest.open)return;c.chest.open=true;P.chests[i]=true;sfx('chest',c.chest.g.position);
+function openChest(i){const c=CAMPS[i];if(c.chest.open)return;c.chest.open=true;P.chests[i]=true;storyEvent('chest',{i});sfx('chest',c.chest.g.position);
   magic(V3(c.chest.x,c.chest.g.position.y+1,c.chest.z),50,[3,2.2,.8],4,1.2);
   const tier=Math.max(P.sword,i+1);const newSword=tier>P.sword;if(newSword){P.sword=tier;setSword(tier);}
   P.flaskMax=Math.min(CFG.flask.max,P.flaskMax+1);P.flasks=P.flaskMax;addBraci(CFG.prog.chestBraci*(i+1));
@@ -79,6 +79,9 @@ function openLevelUp(){const c=levelCost(P.lvl);if(P.braci<c){openShrineMenu();r
 function pickStat(s){if(levelUp(s))toast('Livello <em>'+P.lvl+'</em>');openShrineMenu();}
 function restAtShrine(s){P.hp=P.maxHp;P.flasks=P.flaskMax;P.st=P.maxSt;P.shrine=s.id;sfx('rest');healFx(P.pos);magic(V3(s.x,s.y+2.3,s.z),40,[.5,1.4,2.6],2.5,1.2);
   if(ST.phase!=='storm'&&ST.phase!=='warn')spawnWorld(true);save();toast('Hai riposato a <em>'+s.name+'</em>. I nemici sono tornati.');
+  // the first rest wakes Selin (read before the event: her dialogue sets the flag); the shrine menu opens when she has spoken
+  const meet=!P.flags.selinMet;storyEvent('rest',{shrine:s.id});
+  if(meet&&dlgStart('selin1',{onEnd:()=>openShrineMenu(s)}))return;
   openShrineMenu(s);}
 /* ---------- braci left where the player fell (last safe ground); touching the pile takes them back, dying first loses them ---------- */
 let PILE=null;
@@ -184,8 +187,11 @@ function updCompass(objP){const W=CMP.el.clientWidth||400,half=W/2;const yaw=CAM
     CMP.obj.n.style.display='block';CMP.obj.n.style.left=x+'px';$('compassDist').textContent=Math.round(d)+' m';$('compassDist').style.display=d>8?'block':'none';}
   else{CMP.obj.n.style.display='none';$('compassDist').style.display='none';}}
 function nearestShrine(){let b=null,bd=1e9;for(const s of SHRINES){const d=Math.hypot(P.pos.x-s.x,P.pos.z-s.z);if(d<bd){bd=d;b=s;}}return[b,bd];}
+// objective box: the storm warning first, otherwise the main quest's hint; the compass keeps its old target until stage 2
 function objective(){
   if((ST.phase==='warn'||ST.phase==='storm')&&!P.inWard){const[s,d]=nearestShrine();return{t:'Raggiungi un santuario: '+s.name,p:s};}
+  const o=campObjective(),mh=mainHint();if(mh)o.t=mh;return o;}
+function campObjective(){
   for(let i=0;i<4;i++)if(P.cleared[i]&&!P.chests[i])return{t:'Apri il forziere: '+CAMPS[i].name,p:{x:CAMPS[i].chest.x,z:CAMPS[i].chest.z}};
   let best=-1;for(let i=0;i<4;i++)if(!P.cleared[i]){best=i;break;}
   if(best<0)return{t:'La valle è libera',p:null};const n=P.cleared.filter(Boolean).length;
@@ -239,9 +245,10 @@ addEventListener('keydown',e=>{if(e.repeat&&!['KeyW','KeyA','KeyS','KeyD'].inclu
     if(e.code==='KeyE')IN.actP=true;if(e.code==='KeyR')IN.flaskP=true;if(e.code==='KeyF')IN.lockP=true;if(e.code==='KeyV')IN.viewP=true;
     if(e.code==='KeyJ'){IN.atk=true;IN.atkP=true;}if(e.code==='KeyK'){IN.blk=true;IN.blkP=true;}if(e.code==='KeyL')IN.dodgeP=true;
     if(e.code==='KeyQ'){IN.hvy=true;IN.hvyP=true;}if(e.code==='KeyC')IN.lockSwitch=1;if(e.code==='KeyX')IN.lockSwitch=-1;
-    if(e.code==='Escape'||e.code==='KeyP')IN.pauseP=true;}
+    if(e.code==='Escape'||e.code==='KeyP')IN.pauseP=true;if(e.code==='KeyN')openJournal('play');}
   else if(e.code==='KeyP'&&G.state==='pause')resume();
   else if(G.state==='dialogue')dlgKey(e);
+  else if(G.state==='journal'&&e.code==='KeyN')closeJournal();
   else menuKey(e);});
 addEventListener('keyup',e=>{KEYS[e.code]=false;if(e.code==='KeyJ')IN.atk=false;if(e.code==='KeyK')IN.blk=false;if(e.code==='KeyQ')IN.hvy=false;});
 addEventListener('blur',()=>{for(const k in KEYS)KEYS[k]=false;IN.atk=IN.blk=IN.hvy=false;if(G.state==='play'&&!isTouch)pause();});
@@ -293,12 +300,14 @@ function initTouch(){const z=$('touchZone'),J=$('joy'),K=$('joyK');
   const btn=(id,down,up)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();audioInit();b.classList.add('on');try{b.setPointerCapture(e.pointerId);}catch(_){}down();});
     const u=()=>{b.classList.remove('on');if(up)up();};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);b.addEventListener('contextmenu',e=>e.preventDefault());};
   btn('tAtk',()=>{IN.atk=true;IN.atkP=true;},()=>{IN.atk=false;});btn('tHvy',()=>{IN.hvy=true;IN.hvyP=true;},()=>{IN.hvy=false;});btn('tBlk',()=>{IN.blk=true;IN.blkP=true;},()=>{IN.blk=false;});btn('tDdg',()=>{IN.dodgeP=true;});
-  btn('tFlk',()=>{IN.flaskP=true;});btn('tLck',()=>{IN.lockP=true;});btn('tAct',()=>{IN.actP=true;});btn('tView',()=>{IN.viewP=true;});btn('tPause',()=>{IN.pauseP=true;});}
+  btn('tFlk',()=>{IN.flaskP=true;});btn('tLck',()=>{IN.lockP=true;});btn('tAct',()=>{IN.actP=true;});btn('tView',()=>{IN.viewP=true;});btn('tPause',()=>{IN.pauseP=true;});
+  btn('tJournal',()=>{if(G.state==='play')openJournal('play');});}
 function updTouchSprint(dt){const j=TOUCH.joy;if(j.id!==null&&Math.hypot(j.x,j.y)>.96){j.t+=dt;if(j.t>.9)TOUCH.sprint=true;}else{j.t=0;TOUCH.sprint=false;}}
 
 /* ============================== menus ============================== */
-const SCREENS=['title','charsel','pause','settings','controls','levelup','shrineMenu','death','victory'];let settingsBack='title';
-function showScreen(id){for(const s of SCREENS)$(s).hidden=s!==id;$('fpCross').hidden=!(G.fp&&G.state==='play');for(const o of document.querySelectorAll('.padf'))o.classList.remove('padf');}
+const SCREENS=['title','charsel','pause','settings','controls','levelup','shrineMenu','journal','death','victory'];let settingsBack='title';
+function showScreen(id){for(const s of SCREENS)$(s).hidden=s!==id;$('hud').classList.toggle('under',!!id);   // toasts and hints wait behind menus
+  $('fpCross').hidden=!(G.fp&&G.state==='play');for(const o of document.querySelectorAll('.padf'))o.classList.remove('padf');}
 /* ---------- menu navigation shared by keyboard (arrows, Esc) and controller (d-pad/stick, A, B); a screen's data-back names its "back" button ---------- */
 function menuScreen(){for(const id of SCREENS){const s=$(id);if(s&&!s.hidden)return s;}return null;}
 function menuButtons(s){return[...s.querySelectorAll('button')].filter(b=>!b.disabled&&!b.hidden&&b.offsetParent!==null);}
@@ -329,7 +338,7 @@ function initMenus(){
   $('csM').onclick=()=>{sfx('ui');startGame(false,'m');};$('csF').onclick=()=>{sfx('ui');startGame(false,'f');};
   $('csBack').onclick=()=>{sfx('ui');showScreen('title');menuFocus($('mNew'));};
   $('mSettings').onclick=()=>{settingsBack='title';syncSettingsUI();showScreen('settings');};$('mControls').onclick=()=>{settingsBack='title';fillControls();showScreen('controls');};
-  $('pResume').onclick=()=>resume();$('pSettings').onclick=()=>{settingsBack='pause';syncSettingsUI();showScreen('settings');};$('pControls').onclick=()=>{settingsBack='pause';fillControls();showScreen('controls');};
+  $('pResume').onclick=()=>resume();$('pJournal').onclick=()=>{sfx('ui');openJournal('pause');};$('jClose').onclick=()=>{sfx('ui');closeJournal();};$('pSettings').onclick=()=>{settingsBack='pause';syncSettingsUI();showScreen('settings');};$('pControls').onclick=()=>{settingsBack='pause';fillControls();showScreen('controls');};
   $('pTitle').onclick=()=>{save();showTitle();};
   $('sBack').onclick=()=>showScreen(settingsBack);$('cBack').onclick=()=>showScreen(settingsBack);
   $('sQuality').onclick=e=>{const v=e.target.dataset&&e.target.dataset.v;if(!v)return;SET.quality=v;saveSettings();applyQuality();syncSettingsUI();};
@@ -359,13 +368,14 @@ function loadSave(){const s=readSave();if(!s)return false;resetPlayer();
   G.playTime=s.time||0;if(s.tips){P.parryTip=s.tips.p;P.stormTip=s.tips.s;}syncDrop();return true;}
 /* ============================== flow ============================== */
 function syncWorldToSave(){CAMPS.forEach((c,i)=>{const ch=c.chest;ch.open=!!P.chests[i];ch.t=ch.open?1:0;ch.lid.rotation.x=ch.open?-1.9:0;ch.light.i=P.cleared[i]&&!ch.open?2.4:0;});}
-function startGame(cont,hero){audioInit();if(!(cont&&loadSave())){resetPlayer();P.hero=hero==='f'?'f':'m';}if(!cont)lsDel(SAVE_K);
+function startGame(cont,hero){audioInit();const fresh=!(cont&&loadSave());if(fresh){resetPlayer();P.hero=hero==='f'?'f':'m';}if(!cont)lsDel(SAVE_K);
   setHero(P.hero);
   recalcStats();P.hp=P.maxHp;P.st=P.maxSt;P.flasks=P.flaskMax;P.dead=false;P.act=null;P.lock=null;P.chip=P.hp;P.heal=0;setSword(P.sword);syncWorldToSave();
   placeAtShrine(P.shrine);spawnWorld();Object.assign(ST,{phase:'calm',t:cont?95:150,k:0});STRIKES.length=0;
   G.state='play';showScreen(null);$('hud').hidden=false;$('touch').hidden=!isTouch;setView(SET.fp);resume();
   banner('Valle di Cenere',cont?'Bentornato, viandante':'Distruggi i quattro accampamenti dei goblin');sfx('banner');
-  if(!cont){tutorial=0;tutT=4.4;}else tutorial=99;}
+  if(!cont){tutorial=0;tutT=4.4;}else tutorial=99;
+  if(fresh){questStart('valle');questStart('selin');}}
 let tutorial=99,tutT=0;
 const TUT_PC=['<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> muovi</span><span><kbd>Shift</kbd> corri</span><span>Mouse visuale</span>',
   '<span><kbd>Clic</kbd> combo</span><span><kbd>Q</kbd> colpo pesante, tieni per caricare</span><span><kbd>Tab</kbd> aggancia</span>',
@@ -432,5 +442,5 @@ async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('l
     L(1,'Pronto');await nextFrame();showTitle();}
   catch(e){console.error('BOOT',e&&e.stack||e);$('loadTxt').textContent='Errore di avvio: '+(e&&e.message);}
   requestAnimationFrame(frame);}
-window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient,HEROINE_D,setHero,gtxt,defineDialogue,dlgStart,dlgNext,dlgChoose,dlgActive,storyAct};
+window.__SB={estudio(type,o,cx,cy,cz,a){const e=spawnEnemy(type,P.pos.x+3,P.pos.z,o||{});e.aggro=false;e.state='idle';e.static=true;if(a){e.atk=EA[type].find(q=>q.k===a.k);e.t=a.t;}e.yaw=yawTo(cx,cz);for(let i=0;i<20;i++)animEnemy(e,1/60,0);camera.position.set(e.pos.x+cx,e.pos.y+cy,e.pos.z+cz);camera.lookAt(e.pos.x,e.pos.y+e.h*.5+(e.fly||0),e.pos.z);camera.updateMatrixWorld();window.__e=e;return e.type;},sim(n,dt=1/60){for(let i=0;i<n;i++)tick(dt,false);return n;},animPlayer,get PL(){return PL;},HT,HP,ET,tp(x,z){P.pos.set(x,gH(x,z),z);PL.cape.reset();CAM.init=false;},studio(k,t,cx,cy,cz){G.state='victory';for(const id of SCREENS)$(id).hidden=true;$('hud').hidden=true;if(k){P.act={k,t,hit:new Set()};}else P.act=null;P.combatK=k==='idle'?0:1;if(k==='idle')P.act=null;P.vel.set(0,0,0);PL.cape.reset();for(let i=0;i<90;i++)animPlayer(1/60);if(P.act)P.act.t=t;animPlayer(0);const y=P.pos.y;camera.position.set(P.pos.x+cx,y+cy,P.pos.z+cz);camera.lookAt(P.pos.x,y+1.0,P.pos.z);camera.updateMatrixWorld();return 'ok';},get P(){return P;},get E(){return E;},FPS,CFG,startEAtk,TOK,PROJ,COLN,collide,moveBody,gY,rayCols,wadeDepth,CG,LAKE,get WATER_Y(){return WATER_Y;},G,ST,CAM,IN,startGame,camera,scene,renderer,Post,THREE,spawnEnemy,startAct,toggleLock,setView,sfx,openLevelUp,setStormPhase,placeAtShrine,SHRINES,CAMPS,KEYS,respawn,playerDie,save,loadSave,resetPlayer,showTitle,showScreen,removeEnemy,MESHY,loadMeshyHero,levelCost,addBraci,spendBraci,levelUp,openShrineMenu,syncDrop,dropBraci,recoverBraci,viewW,viewH,touchXY,applyOrient,HEROINE_D,setHero,gtxt,defineDialogue,dlgStart,dlgNext,dlgChoose,dlgActive,storyAct,defineQuest,questStart,questStep,questIsDone,questAdvance,storyEvent,mainHint,openJournal};
 boot();

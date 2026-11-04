@@ -11,7 +11,7 @@ function dlgStart(id,opt){const d=DLG.defs[id];if(!d||!d.start||G.state!=='play'
   if(E.some(e=>!e.dead&&e.aggro&&Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z)<14))return false;
   DLG.cur={id,d,onEnd:opt&&opt.onEnd};G.state='dialogue';IN.atk=IN.blk=IN.hvy=false;
   $('dialog').hidden=false;$('touch').hidden=true;$('prompt').hidden=true;if(document.pointerLockElement)document.exitPointerLock();
-  dlgShow('start');return true;}
+  dlgShow('start');storyEvent('talk',{who:gtxt(d.start.who||''),id});return true;}
 function dlgShow(key){const c=DLG.cur,n=c.d[key];if(!n){dlgEnd();return;}
   Object.assign(c,{key,n,full:gtxt(n.text||''),shown:0,typing:true});
   $('dlgWho').textContent=gtxt(n.who||'');$('dlgText').textContent='';$('dlgChoices').innerHTML='';$('dlgChoices').hidden=true;$('dlgMore').hidden=true;
@@ -46,8 +46,47 @@ function padDialogue(pr,lx,ly){const B=dlgButtons(),yv=ly<-.5?-1:ly>.5?1:0;
     if(d){let i=B.indexOf(document.activeElement);i=i<0?0:(i+d+B.length)%B.length;menuFocus(B[i]);}
     if(pr(0)){const a=document.activeElement;(B.includes(a)?a:B[0]).click();}}
   else if(pr(0))dlgNext();}
-/* ---------- story actions: 'flag:<name>' sets a flag, 'braci:<n>' gives braci ---------- */
+/* ---------- story actions: 'flag:<name>' sets a flag, 'braci:<n>' gives braci, 'quest:<id>' starts a quest ---------- */
 function storyAct(a){const s=String(a),i=s.indexOf(':'),k=i<0?s:s.slice(0,i),v=i<0?'':s.slice(i+1);
   if(k==='flag'&&v)P.flags[v]=true;
   else if(k==='braci'&&+v>0)addBraci(Math.round(+v));
+  else if(k==='quest'&&QUESTS[v])questStart(v);
   else console.warn('storyAct: unknown action "'+s+'"');}
+/* ---------- quests: steps advance on story events; P.quests[id] = {step, n, done} is saved with the game ---------- */
+const QUESTS={},QORDER=[];
+function defineQuest(q){if(!QUESTS[q.id])QORDER.push(q.id);QUESTS[q.id]=q;}
+function questStart(id){const d=QUESTS[id];if(!d||P.quests[id])return;P.quests[id]={step:0,n:0,done:false};toast('Nuova missione: <em>'+gtxt(d.title)+'</em>');}
+function questStep(id){const q=P.quests[id];return q?(q.done?QUESTS[id].steps.length:q.step):-1;}
+function questIsDone(id){const q=P.quests[id];return!!(q&&q.done);}
+function questAdvance(id){const d=QUESTS[id],q=P.quests[id];if(!d||!q||q.done)return;q.step++;q.n=0;
+  if(q.step>=d.steps.length){q.done=true;toast('Missione completata: <em>'+gtxt(d.title)+'</em>');sfx('level');if(d.done)storyAct(d.done);}
+  save();}
+// an event advances every active quest whose current step listens to it: same type and every other key of `on` equal in data
+function storyEvent(type,data={}){for(const id of QORDER){const d=QUESTS[id],q=P.quests[id];if(!q||q.done)continue;const st=d.steps[q.step],on=st&&st.on;
+    if(!on||on.type!==type)continue;let ok=true;for(const k in on)if(k!=='type'&&on[k]!==data[k]){ok=false;break;}if(!ok)continue;
+    if(st.count){q.n++;if(q.n>=st.count)questAdvance(id);}else questAdvance(id);}}
+function questHint(id){const d=QUESTS[id],q=P.quests[id];if(!d||!q||q.done)return'';const st=d.steps[q.step];return st?gtxt(st.hint).replace('{n}',q.n):'';}
+function mainHint(){for(const id of QORDER)if(QUESTS[id].kind==='main'&&P.quests[id]&&!P.quests[id].done)return questHint(id);return'';}
+/* ---------- journal: active quests first, then the completed ones ---------- */
+let journalBack='play';
+function openJournal(from){journalBack=from==='pause'||G.state==='pause'?'pause':'play';G.state='journal';showScreen('journal');
+  const list=$('jList'),act=[],fin=[];list.innerHTML='';for(const id of QORDER){const q=P.quests[id];if(q)(q.done?fin:act).push(id);}
+  for(const id of act.concat(fin)){const d=QUESTS[id],q=P.quests[id],el=document.createElement('div');el.className='jq'+(q.done?' done':'')+(d.kind==='main'?' main':'');
+    const k=document.createElement('small');k.textContent=(d.kind==='main'?'Principale':'Secondaria')+(q.done?' · completata':'');
+    const t=document.createElement('b');t.textContent=gtxt(d.title);el.append(k,t);
+    if(!q.done){const h=document.createElement('p');h.textContent=questHint(id);el.append(h);}list.appendChild(el);}
+  if(!list.children.length){const e=document.createElement('p');e.className='jempty';e.textContent='Nessuna missione per ora.';list.appendChild(e);}
+  if(document.pointerLockElement)document.exitPointerLock();menuFocus($('jClose'));}
+function closeJournal(){if(G.state!=='journal')return;if(journalBack==='pause'){G.state='pause';showScreen('pause');menuFocus($('pJournal'));}else resume();}
+/* ============================== stage 1 content ============================== */
+defineQuest({id:'valle',title:'La Valle di Cenere',kind:'main',
+  steps:[{hint:"Libera la valle: distruggi un accampamento goblin e apri il forziere del suo capo ({n}/4).",on:{type:'chest'},count:4}]});
+defineQuest({id:'selin',title:'La voce del santuario',kind:'side',
+  steps:[{hint:'Riposa a un santuario: avvicinati al cristallo blu.',on:{type:'rest'}}]});
+defineDialogue('selin1',{
+  start:{who:'Selin',text:"Un'altra fiamma nella tempesta… Sei stanc{o|a}, erede, ma ancora viv{o|a}.",next:'b'},
+  b:{who:'Selin',text:'Le braci dei caduti restano su di te. Qui puoi spenderle per diventare più forte.',next:'c'},
+  c:{who:'Selin',text:'Ma se cadi, resteranno dove sei cadut{o|a}. Torna a prenderle prima di cadere ancora.',
+    choices:[{t:'Chi sei?',next:'who'},{t:'Andrò avanti.',next:'end'}]},
+  who:{who:'Selin',text:'Sono Selin. Ero la voce dei Custodi, quando i Custodi avevano ancora una voce.',next:'end'},
+  end:{who:'Selin',text:"Va', stranier{o|a}. Il diario ricorderà quello che dimentichi.",act:'flag:selinMet'}});

@@ -193,6 +193,16 @@ kbd{font-family:var(--ui);font-weight:700;font-size:13px;min-width:22px;height:2
 #dlgMore{position:absolute;right:14px;bottom:9px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--gold);animation:dlgMore 1s ease-in-out infinite}
 @keyframes dlgMore{50%{transform:translateY(3px);opacity:.55}}
 @media (prefers-reduced-motion:reduce){#dlgMore{animation:none}}
+#hud.under #toasts,#hud.under #hint{visibility:hidden}
+/* ---------- journal ---------- */
+#jList{display:flex;flex-direction:column;gap:10px;max-height:calc(52*var(--vh));overflow-y:auto}
+.jq{border-left:2px solid var(--gold);padding:8px 14px;background:linear-gradient(90deg,rgba(201,168,98,.1),rgba(201,168,98,0))}
+.jq small{display:block;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.jq b{display:block;font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:.06em;color:#f1e6cb;margin:2px 0}
+.jq p{margin:0;font-family:var(--serif);font-style:italic;font-size:17px;color:#dcd3bf;line-height:1.3}
+.jq.done{border-left-color:var(--line);opacity:.6}
+.jq.done b{text-decoration:line-through;text-decoration-color:rgba(236,229,211,.35)}
+.jempty{text-align:center;color:var(--dim);font-style:italic}
 .luCost,.smStats{margin:0;text-align:center;font-size:15px;color:var(--dim)}
 .luCost b,.smStats b{font-family:var(--display);font-weight:600;color:var(--ember-hi)}
 .smStats{display:flex;gap:22px;justify-content:center;letter-spacing:.06em}
@@ -265,6 +275,9 @@ input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
 #app.h460 #dialog .box{padding:8px 14px 10px}
 #app.h460 #dlgText{font-size:17px;min-height:2.5em}
 #app.h460 .dlgC{padding:5px 10px;font-size:15px}
+#app.h460 #jList{max-height:calc(46*var(--vh))}
+#app.h460 .jq b{font-size:17px}
+#app.h460 .jq p{font-size:15px}
 @media (prefers-reduced-motion:reduce){#stormLine.warn{animation:none}.toast{animation:none}#death h2{animation:none}}
 </style>
 
@@ -306,6 +319,7 @@ input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
     <button class="tb" id="tLck" type="button" aria-label="Aggancia bersaglio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></svg></button>
     <button class="tb" id="tAct" type="button" hidden aria-label="Interagisci"><svg viewBox="0 0 24 24"><path d="M12 3v12M6 9l6 6 6-6M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div id="tTop">
+      <button class="tb" id="tJournal" type="button" aria-label="Diario"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.8 4.5 4 4.6v13.6c3.8-.1 6.2.4 8 1.9 1.8-1.5 4.2-2 8-1.9V4.6c-3.8-.1-6.2.4-8 1.9zM12 6.5v13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
       <button class="tb" id="tView" type="button" aria-label="Cambia visuale"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>
       <button class="tb" id="tPause" type="button" aria-label="Pausa"><svg viewBox="0 0 24 24"><path d="M7 5v14M17 5v14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
     </div>
@@ -349,11 +363,21 @@ input[type=range]{width:min(200px,calc(40*var(--vw)));accent-color:var(--gold)}
   </div>
 </section>
 
+<section id="journal" class="screen dim center" data-back="jClose" hidden>
+  <div class="panel" style="width:min(680px,100%)">
+    <div class="rule" style="justify-content:center">Diario</div>
+    <h2>Missioni</h2>
+    <div id="jList"></div>
+    <div class="btns"><button class="btn ghost" type="button" id="jClose">Chiudi</button></div>
+  </div>
+</section>
+
 <section id="pause" class="screen dim center" data-back="pResume" hidden>
   <div class="panel" style="align-items:center">
     <h2>Pausa</h2>
     <div class="menu" style="align-items:center">
       <button type="button" id="pResume">Riprendi</button>
+      <button type="button" id="pJournal">Diario</button>
       <button type="button" id="pSettings">Impostazioni</button>
       <button type="button" id="pControls">Comandi</button>
       <button type="button" id="pTitle">Torna al titolo</button>
