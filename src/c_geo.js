@@ -56,9 +56,9 @@ function windMat(opts,wk=1,fl=0,noFlip=false){
       .replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nfloat camD=length(vViewPosition);if(camD<2.6){float dth=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);if(dth>(camD-0.7)/1.9)discard;}');
   };
   return m;}
-function stoneMat(hex,moss=.65,rough=.92,sc=.36){const S=sc.toFixed(3);
+function stoneMat(hex,moss=.65,rough=.92,sc=.36,tex=null){const S=sc.toFixed(3);
   const m=new THREE.MeshStandardMaterial({color:col(hex),roughness:rough,metalness:0,vertexColors:true});
-  m.onBeforeCompile=sh=>{sh.uniforms.tR={value:TEX.rock};sh.uniforms.tM={value:TEX.moss};sh.uniforms.uWet=U.wet;sh.uniforms.uMoss={value:moss};
+  m.onBeforeCompile=sh=>{sh.uniforms.tR={value:tex||TEX.rock};sh.uniforms.tM={value:TEX.moss};sh.uniforms.uWet=U.wet;sh.uniforms.uMoss={value:moss};
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vSW;\nvarying vec3 vSN;')
       .replace('#include <begin_vertex>',`#include <begin_vertex>
         vec4 sw4=vec4(transformed,1.0);vec3 sn3=objectNormal;

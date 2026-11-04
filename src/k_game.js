@@ -428,7 +428,7 @@ function tick(rdt,doRender){
   MUS.combat=damp(MUS.combat,playing&&E.some(e=>!e.dead&&e.aggro&&!e.boss&&e.dist<26)?1:0,.6,rdt);MUS.boss=damp(MUS.boss,playing&&E.some(e=>!e.dead&&e.aggro&&e.boss&&e.dist<40)?1:0,.5,rdt);
   MUS.storm=damp(MUS.storm,ST.k,.5,rdt);MUS.calm=1-Math.max(MUS.combat,MUS.boss)*.8;
   clearPresses();
-  if(doRender)Post.render(Q.rays?(1-ST.k)*(DEMO?1.4:.9):0);}
+  if(doRender)Post.render(Q.rays?(1-ST.k)*(DEMO?1.1:.9):0);}
 async function boot(){const L=(p,t)=>{$('loadFill').style.width=(p*100)+'%';$('loadTxt').textContent=t;};
   applyOrient();
   try{L(.04,'Forgiando le texture');await nextFrame();makeTextures();makeMaterials();makeWardMat();if(DEMO){makeDemoTextures();U.wet.value=DEMO.wet;}

@@ -41,9 +41,19 @@ Tappe 1-5 fatte sul ramo `demo`; la pagina è pubblicata a parte (vedi `docs/HAN
 - Nella demo niente missioni del gioco, niente tempesta (cielo coperto fisso) e niente Selin.
 - Il ponte è diagonale (dal villaggio alla porta) come nella foto; il ponte e le scale sulla rupe usano la pendenza del
   pavimento, non quella della roccia sotto (`slopeAt` nella demo).
+- Seconda passata "più simile alla foto" (Denis: "migliora ancora la mappa"):
+  - dal falò pochi gradini e poi la strada lastricata; la cascata ha due salti (dalla rupe sulla cengia, poi nella gola);
+    la grotta sta sulla cengia accanto alla cascata.
+  - la terrazza è un pavimento di lastre bagnate (texture con rilievo e riflessi) invece di lastre a scatola;
+    terrazza e scalinata usano blocchi di pietra smussati; sulle pareti ripide ci sono speroni di granito.
+    Costo: circa +65k triangoli (819k nel titolo contro 752k) e +3-5% di tempo di disegno.
+  - a destra della strada il terreno scende subito nella gola, come nella foto: lì non si cammina più (c'era un recinto).
+  - il sole sta nello squarcio di nuvole sopra il palazzo (più a destra), da cui scendono i raggi; montagne più scure.
+  - ogni costruttore della demo ha il suo seme: cambiarne uno non rimescola gli altri.
 
-**Misure** (640×360, qualità media, Chromium software): nella lotta al villaggio la demo disegna 154 chiamate e 588k triangoli
-contro 413 e 1,67M del gioco al primo accampamento; logica per frame 0,37-0,84 ms contro 0,47-0,99 ms (`tests/probes/demo_perf.json`).
+**Misure** (640×360, qualità media, Chromium software): nella lotta al villaggio la demo disegna 150 chiamate e 680k triangoli
+contro 413 e 1,67M del gioco al primo accampamento; logica per frame 0,31-0,69 ms contro 0,47-0,99 ms (`tests/probes/demo_perf.json`).
 
-**Idee per dopo** (non costruite): ramo di pino ed edera sopra l'arco; interno della grotta; scale a zig-zag sotto la grotta;
-più torri e portici nel palazzo; cascata a più salti; una scena d'ingresso per il guardiano del palazzo.
+**Idee per dopo** (non costruite): ramo di pino ed edera sopra l'arco; interno della grotta; più torri, portici e
+decorazioni gotiche nel palazzo; alberi e muschio sulle pareti della rupe; rovine con finestre più alte e sottili;
+una scena d'ingresso per il guardiano del palazzo.

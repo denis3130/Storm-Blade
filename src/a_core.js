@@ -71,7 +71,7 @@ THREE.ShaderChunk.fog_fragment=`#ifdef USE_FOG
   float hfog=exp(-max(vFogWP.y-(${FOG_BASE.toFixed(2)}),0.0)*0.16)*(1.0-exp(-vFogD*0.028))*fogFar;
   fogF=clamp(fogF+hfog*(1.0-fogF),0.0,1.0);
   float sunA=pow(max(dot(normalize(vFogWP-cameraPosition),${gv(SUN_DIR)}),0.0),6.0);
-  gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor*(1.0+sunA*0.95),fogF);
+  gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor*(1.0+sunA*${DEMO?'0.45':'0.95'}),fogF);
 #endif
 `;
 const FOGC=col(DEMO?DEMO.sky.fog:0x6c7783);
@@ -84,7 +84,7 @@ vec3 applyFog(vec3 c,vec3 wp){
   float h=exp(-max(wp.y-(${FOG_BASE.toFixed(2)}),0.0)*0.16)*(1.0-exp(-d*0.028))*uFogH;
   f=clamp(f+h*(1.0-f),0.0,1.0);
   float sunA=pow(max(dot(normalize(wp-cameraPosition),${gv(SUN_DIR)}),0.0),6.0);
-  return mix(c,uFogColor*(1.0+sunA*0.95),f);
+  return mix(c,uFogColor*(1.0+sunA*${DEMO?'0.45':'0.95'}),f);
 }`;
 const FOGU={uFogColor:{value:scene.fog.color},uFogD:{value:.0085},uFogH:{value:.55}};
 
@@ -122,7 +122,7 @@ void main(){
   vec3 c=mix(uHorizon,uZenith,pow(clamp(y,0.0,1.0),0.52));
   c=mix(c,uHorizon*0.82,clamp(-y*3.0,0.0,1.0));
   float sd=max(dot(d,uSunDir),0.0);float clear=1.0-uStorm*0.9;
-  c+=uSunCol*(pow(sd,7.0)*0.32+pow(sd,48.0)*0.9)*clear;
+  c+=uSunCol*(${DEMO?'pow(sd,12.0)*0.16+pow(sd,70.0)*0.55':'pow(sd,7.0)*0.32+pow(sd,48.0)*0.9'})*clear;
   ${DEMO?'':'c+=uSunCol*smoothstep(0.99945,0.99975,sd)*14.0*clear;'}
   ${clouds?`if(y>-0.02){
     vec2 cp=d.xz/(max(y,0.0)+0.11)*1.15+vec2(uTime*0.010,uTime*0.004)*(1.0+uStorm*4.0);

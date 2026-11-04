@@ -69,11 +69,11 @@ function terrainMaterial(){
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D tG;\nuniform sampler2D tD;\nuniform sampler2D tR;\nuniform sampler2D tM;\nuniform float uWet;\nvarying vec4 vSplat;\nvarying vec3 vTW;\nvarying vec3 vTN;')
       .replace('#include <map_fragment>',`
         vec2 tuv=vTW.xz;
-        vec3 cG=mix(texture2D(tG,tuv*0.21).rgb,texture2D(tG,tuv*0.051+0.37).rgb,0.38);${DEMO?'cG=mix(vec3(dot(cG,vec3(0.36,0.42,0.22))),cG,0.42)*vec3(0.8,0.78,0.68);':''}
+        vec3 cG=mix(texture2D(tG,tuv*0.21).rgb,texture2D(tG,tuv*0.051+0.37).rgb,0.38);${DEMO?'cG=mix(vec3(dot(cG,vec3(0.36,0.42,0.22))),cG,0.42)*vec3(0.62,0.62,0.52);':''}
         vec3 cM=texture2D(tM,tuv*0.19).rgb;
         vec3 cD=mix(texture2D(tD,tuv*0.17).rgb,texture2D(tD,tuv*0.043+0.61).rgb,0.3);
         vec3 an=abs(normalize(vTN));an=pow(an,vec3(3.0));an/=(an.x+an.y+an.z);
-        vec3 cR=(texture2D(tR,vTW.zy*0.085).rgb*an.x+texture2D(tR,tuv*0.085).rgb*an.y+texture2D(tR,vTW.xy*0.085).rgb*an.z)*0.86;${DEMO?'cR=mix(vec3(dot(cR,vec3(0.3,0.5,0.2))),cR,0.35)*0.9;':''}
+        vec3 cR=(texture2D(tR,vTW.zy*0.085).rgb*an.x+texture2D(tR,tuv*0.085).rgb*an.y+texture2D(tR,vTW.xy*0.085).rgb*an.z)*0.86;${DEMO?'cR=mix(vec3(dot(cR,vec3(0.3,0.5,0.2))),cR,0.35)*0.7;':''}
         float macro=texture2D(tM,tuv*0.0105).g;
         vec4 w=vSplat*vec4(0.55+cG.g*2.2,0.55+cM.g*2.4,0.35+cD.r*1.9,0.35+cR.r*1.6);
         w=w*w*w*w;

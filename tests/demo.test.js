@@ -25,9 +25,9 @@ T.test('enemies wait in the village and at the palace', () => { T.newGame({hero:
   const spots = [...E.map(e => [e.type + (e.boss ? ' (boss)' : ''), e.pos.x, e.pos.z]), ...S.CAMPS.map(c => ['camp ' + c.name, c.x, c.z]), ...S.CAMPS.map((c, i) => ['chest ' + i, c.chest.x, c.chest.z])];
   for (const [n, x, z] of spots) { const b = inside(x, z); T.ok(!b, n + ' inside a building at ' + x.toFixed(1) + ',' + z.toFixed(1) + (b ? ' (box at ' + b.x.toFixed(1) + ',' + b.z.toFixed(1) + ')' : '')); } });
 T.test('walking down the stairs from the terrace reaches the village', () => { T.newGame({hero: 'm'}); T.clearEnemies(); const P = S.P; S.tp(0, -6); S.CAM.yaw = 0; P.yaw = 0;
-  S.KEYS.KeyW = true; let low = 99; try { for (let f = 0; f < 60 * 9; f++) { T.sim(1); low = Math.min(low, P.pos.y - S.gY(P.pos.x, P.pos.z)); if (P.pos.z < -40) break; } }
+  S.KEYS.KeyW = true; let low = 99; try { for (let f = 0; f < 60 * 12; f++) { T.sim(1); low = Math.min(low, P.pos.y - S.gY(P.pos.x, P.pos.z)); if (P.pos.z < -47) break; } }
   finally { S.KEYS.KeyW = false; }
-  T.ok(P.pos.z < -36, 'stopped at z ' + P.pos.z.toFixed(1) + ' (x ' + P.pos.x.toFixed(1) + ')'); T.near(P.pos.y, 8, 1.5, 'village height'); T.ok(low > -.3, 'sank ' + low.toFixed(2) + ' m into the ground'); });
+  T.ok(P.pos.z < -46, 'stopped at z ' + P.pos.z.toFixed(1) + ' (x ' + P.pos.x.toFixed(1) + ')'); T.near(P.pos.y, 8.5, 1.5, 'village height'); T.ok(low > -.3, 'sank ' + low.toFixed(2) + ' m into the ground'); });
 // walking straight along the bridge from the village end: the player gets through the gate without falling into the gorge
 T.test('crossing the bridge keeps the player on the deck', () => { T.newGame({hero: 'm'}); T.clearEnemies(); const P = S.P;
   const L = Math.hypot(B.bx - B.ax, B.bz - B.az), ux = (B.bx - B.ax) / L, uz = (B.bz - B.az) / L; S.tp(B.ax - ux, B.az - uz);
