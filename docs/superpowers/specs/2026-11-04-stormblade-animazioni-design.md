@@ -1,6 +1,6 @@
 # Stormblade — animazioni del personaggio (clip Meshy nel motore)
 
-Data: 4 novembre 2026 · Stato: in revisione da parte di Denis · Estende la sezione 5.2 di `2026-11-03-stormblade-aaa-design.md`
+Data: 4 novembre 2026 · Stato: approvato da Denis il 4 novembre 2026 · Estende la sezione 5.2 di `2026-11-03-stormblade-aaa-design.md`
 
 ## 1. Obiettivo e criteri di successo
 
@@ -12,7 +12,7 @@ Il lavoro è riuscito quando:
   - per ogni mossa restano uguali i valori di `CFG.moves`: `dur`, `hit`, `cancel`, `dodge`, `lunge`, `iframe`;
   - nella finestra di colpo la lama copre lo stesso arco e la stessa portata di oggi, con una tolleranza del 10%;
 - la durata delle lotte resta entro i limiti della Tappa 1: 1 goblin ≤ 2,64 s, 3 goblin ≤ 5,16 s (20 prove);
-- i piedi restano piantati. Mentre un piede è a terra, la caviglia del modello Meshy si muove a meno del 2% della velocità del corpo (oggi 10,5% camminando e 10,4% correndo) e non scende più di 1 cm sotto la sua altezza da fermo (oggi circa 5 cm). La stessa soglia vale per l'eroina;
+- i piedi restano piantati. Mentre un piede è a terra, la caviglia del modello Meshy si muove a meno del 2% della velocità del corpo (oggi 10,5% camminando e 10,4% correndo) e non scende più di 1 cm sotto la sua altezza da fermo, misurata dal terreno sotto il piede (oggi circa 5 cm, perché il passo non segue la pendenza). La stessa soglia vale per l'eroina;
 - la logica per frame resta entro +0,1 ms da oggi (sonda `perf.json`) e l'animazione non crea oggetti a ogni frame. Resta l'obiettivo dei 60 FPS sul telefono, che può misurare solo Denis;
 - Denis approva il video prima/dopo di ogni tappa.
 
@@ -80,13 +80,14 @@ Questo documento cambia la sezione 5.2 del design principale in un solo punto: i
 
 ### 4.3 Nel gioco
 - **Vettore di pose**: passa da 34 a 43 valori. Si aggiungono il petto (3), le clavicole (2 per lato) e le punte dei piedi (1 per lato). Le pose e le tracce di oggi hanno questi valori a zero, quindi restano identiche.
-- **Scheletro del gioco** (`buildHuman`): nessuna giuntura nuova. Il petto si compone con la rotazione di `spi`; clavicole e punte servono solo al modello Meshy.
+- **Scheletro del gioco** (`buildHuman`): nessuna giuntura nuova con mesh. Petto, clavicole e punte sono giunture virtuali, senza mesh, usate solo dal modello Meshy. Il corpo in codice dell'eroina tiene la schiena in un pezzo solo; braccia e testa conservano comunque la loro direzione nel mondo.
 - **Tracce**: `HT[k]` si costruisce dai dati convertiti quando ci sono (fotogrammi fitti, interpolazione lineare), altrimenti resta la traccia a mano. La funzione `evalTrack` è la stessa.
 - **Camminata e corsa**:
   - `gaitIK` prende dalla clip, alla fase del passo, le rotazioni di bacino, schiena, petto, testa, braccia e clavicole;
   - camminata e corsa si mescolano con lo stesso fattore di velocità di oggi;
   - le gambe restano calcolate con l'IK, così i piedi restano piantati a ogni velocità e in ogni direzione; l'altezza del piede sollevato e la piega della punta seguono la curva della clip;
   - guardia, guardia in movimento (`MOVE_ACTS`) e inclinazione restano sopra, come oggi.
+- **Piedi sul terreno**: in pendenza ogni piede si posa sul terreno sotto di sé, invece che sul piano del corpo. Se un piede a terra non ci arriva, il bacino si abbassa quanto serve, al massimo di 15 cm.
 - **Fusione**: quando una mossa inizia o finisce, il gioco fotografa la posa corrente e la fonde con la nuova in `CFG.anim.blend` secondi (0,08). È solo grafica, ma la lama si muove con la posa: per questo c'è la verifica della lama (§5).
 - **Spostamento della radice**: lo spostamento orizzontale del bacino nelle clip si ignora, perché il corpo lo muove il gioco (affondi, capriola); l'abbassamento verticale diventa il valore `y` della posa.
 
@@ -124,7 +125,7 @@ Questo documento cambia la sezione 5.2 del design principale in un solo punto: i
 
 ## 6. Video per Denis
 - `tools/anim/video.py` registra in una pagina senza schermo l'eroe con il modello Meshy: qualche secondo per ogni mossa cambiata, camera fissa. A sinistra la versione prima della tappa, a destra quella dopo. Il risultato è un MP4 a 720p e 30 fotogrammi al secondo, fatto con ffmpeg e mandato in chat.
-- Il modello Meshy qui si carica con il GLTFLoader di three r128 (licenza MIT), messo nel repository come `three.min.js` e scaricato dal PC di Denis. Se non si riesce, si usa un caricatore minimo scritto per `hero.json`, con la stessa interfaccia `THREE.GLTFLoader().load` che usa `l_meshy.js`, solo nei test e nei video.
+- Il modello Meshy qui si carica con un caricatore minimo scritto per `hero.json` (`tests/vendor/mini_gltf.js`), con la stessa interfaccia `THREE.GLTFLoader().load` che usa `l_meshy.js`, solo nei test e nei video. Il GLTFLoader vero non si può scaricare da qui, e scaricarlo dal PC di Denis richiederebbe di collegargli una cartella.
 - La pagina si apre da un piccolo server locale, perché le texture devono avere la stessa origine della pagina.
 
 ## 7. Tappe
@@ -133,7 +134,7 @@ Ogni tappa finisce con la pagina Claude aggiornata, il video prima/dopo e le mis
 
 | Tappa | Contenuto | Clip |
 |---|---|---|
-| 1. Piedi e scheletro Meshy | gambe Meshy nel passo e altezza delle caviglie; clavicole e punte calcolate; petto nel vettore di pose; fusione tra le mosse; caricatore del modello per test e video; riferimento della lama | nessuna |
+| 1. Piedi e scheletro Meshy | gambe Meshy nel passo e altezza delle caviglie; piedi che seguono il terreno in pendenza; clavicole e punte calcolate; petto nel vettore di pose; fusione tra le mosse; caricatore del modello per test e video; riferimento della lama | nessuna |
 | 2. Camminata, corsa e fermo | convertitore; camminata e corsa dalle clip; respiro da fermo; partenze, frenate e giri sul posto sopra le clip | `hero_walk`, `hero_run` |
 | 3. Attacchi | combo da 4 colpi, colpo pesante e carica, attacco in corsa, rotante, colpo di grazia, guardia | 8 già pagate (da scaricare) e quelle comprate |
 | 4. Schivata e difesa | capriola, passo indietro, parata, blocco, passi di lato e all'indietro | già pagate e comprate |
