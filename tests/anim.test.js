@@ -42,3 +42,21 @@ T.test('chest turns only the upper back', () => { meshyOn(); const B = S.MESHY.B
   posed(S.HP.idle); const q0 = names.map(n => wq(B[n])); posed(S.pose({chest: [0, 20, 0]}, S.HP.idle)); const q1 = names.map(n => wq(B[n]));
   const ang = names.map((n, i) => q0[i].angleTo(q1[i]) / D2R); T.near(ang[0], 20, 2, 'Spine');
   for (let i = 1; i < names.length; i++) T.ok(ang[i] < .1, names[i] + ' moved ' + ang[i].toFixed(3) + '°'); });
+// walking and jogging on the slope south of the start: 'walk' = controller stick (0,-0.4), 'jog' = W key (5.4 m/s)
+const pad = mz => [{connected: true, axes: [0, -mz, 0, 0], buttons: Array.from({length: 17}, () => ({pressed: false}))}];
+function move(mode) { S.KEYS.KeyW = mode === 'jog'; navigator.getGamepads = mode === 'walk' ? () => pad(.4) : () => []; }
+// fn(i, mid) for each leg every frame; mid = the middle half of that leg's stance (phase share 0.25..0.75 of P.gait.duty)
+function stance(mode, frames, fn) { S.tp(0, 30); S.CAM.yaw = 0; S.P.yaw = 0; move(mode); T.sim(60);
+  try { for (let f = 0; f < frames; f++) { T.sim(1); const g = S.P.gait;
+    for (let i = 0; i < 2; i++) { const ph = (g.ph + i / 2) % 1, u = ph / g.duty; fn(i, ph < g.duty && u > .25 && u < .75); } } }
+  finally { move('stop'); } }
+// mean horizontal ankle speed in mid-stance as a share of the body speed (%)
+function slidePct(boneOf, mode) { const prev = [null, null]; let sum = 0, n = 0, body = 0;
+  stance(mode, 180, (i, mid) => { const p = wpos(boneOf(i));
+    if (mid && prev[i]) { sum += Math.hypot(p.x - prev[i].x, p.z - prev[i].z) * 60; body += Math.hypot(S.P.av.x, S.P.av.z); n++; } prev[i] = p; });
+  T.ok(n > 10, 'too few planted frames: ' + n); return 100 * sum / body; }
+const meshyFoot = i => S.MESHY.B[i ? 'RightFoot' : 'LeftFoot'];
+T.test('Meshy feet planted when walking', () => { meshyOn(); const s = slidePct(meshyFoot, 'walk'); T.ok(s < 2, 'slide ' + s.toFixed(2) + '% of body speed'); });
+T.test('hero switch keeps Meshy leg measures', () => { meshyOn(); S.setHero('f'); S.setHero('m');   // meshyAttach sets the stored model up again
+  T.ok(S.MESHY.on, 'Meshy hero back on'); T.ok(S.MESHY.legD, 'no leg measures'); T.near(S.MESHY.legD.thigh, .391, .005, 'thigh');
+  const s = slidePct(meshyFoot, 'walk'); T.ok(s < 2, 'slide ' + s.toFixed(2) + '% after the switch'); });

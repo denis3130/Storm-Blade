@@ -224,7 +224,8 @@ function animPlayer(dt){const R=PL.rig,a=P.act,k=a?a.k:null,M=CFG.move;
   mixPose(_A,HP.idle,HP.guard,P.combatK);
   // turning on the spot: small shuffle steps instead of feet skating round
   let gs=vs;if(hs<.7&&Math.abs(P.yawRate)>1.1&&(!k||MOVE_ACTS.has(k)))gs+=clamp(P.yawRate*.24,-1.1,1.1);
-  const ev=gaitIK(_L,_A,P.gait,PL.rig.d,1,vf,gs,dt,{arm:1-P.combatK*.35,armR:1-P.combatK*.72,elbow:1-P.combatK*.55});
+  // the Meshy model has shorter legs than the rig that drives it: plan the steps for the legs that are seen
+  const ev=gaitIK(_L,_A,P.gait,MESHY.on&&MESHY.legD?MESHY.legD:PL.rig.d,1,vf,gs,dt,{arm:1-P.combatK*.35,armR:1-P.combatK*.72,elbow:1-P.combatK*.55});
   if(ev&&(!k||MOVE_ACTS.has(k))&&hs>.35){
     if(P.wade>.05){splash(P.pos,5+(P.sprinting?4:0),.8+P.wade);sfx('splash',P.pos,hs>3?1:.6);}
     else{sfx('step',P.pos,P.sprinting?1.5:hs<2.5?.55:1);if(P.sprinting&&Math.random()<.6)dust(P.pos,2,.4);}}

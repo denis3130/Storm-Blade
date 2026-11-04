@@ -65,13 +65,16 @@ function setupMeshyHero(gltf){
   for(const r of rows)if(r.cOf){const src=rows.find(o=>o.bone.name===r.cOf);if(src){r.C.copy(src.C);r.CQm0.copy(r.C).multiply(r.Qm0);}}
   rows.forEach((r,i)=>{r.wq=new THREE.Quaternion();r.pq=new THREE.Quaternion();r.pr=rows.slice(0,i).find(o=>o.bone===r.bone.parent)||null;});
   const hipOff=P_.pel.worldToLocal(wp(B.Hips,new THREE.Vector3()));
+  // the model's own leg measures (bone lengths, metres): the gait solves its leg IK for these, so the Meshy feet stay planted
+  const legD=B.LeftUpLeg&&B.LeftLeg&&B.LeftFoot&&B.RightUpLeg?(()=>{const a=wp(B.LeftUpLeg,new THREE.Vector3()),k=wp(B.LeftLeg,new THREE.Vector3()),f=wp(B.LeftFoot,new THREE.Vector3()),r=wp(B.RightUpLeg,new THREE.Vector3());
+    return{thigh:a.distanceTo(k),shin:k.distanceTo(f),hipW:a.distanceTo(r)/2};})():null;
   // attachment proxies: children of the meshy hands whose world rotation equals the procedural wrist's
   const proxy=(row)=>{const g=new THREE.Group();g.quaternion.copy(row.CQm0).invert().multiply(row.Qp0i.clone().invert());
     const s=new THREE.Vector3();row.bone.getWorldScale(s);g.scale.setScalar(1/s.x);row.bone.add(g);return g;};
   const rowOf=n=>rows.find(r=>r.bone.name===n);
   R.root.position.copy(sp);R.root.rotation.set(0,sr,0);R.inner.rotation.copy(si);R.root.updateMatrixWorld(true);
   for(const m of R.meshes)m.visible=false;
-  Object.assign(MESHY,{on:true,holder,arm,armQ:new THREE.Quaternion(),B,rows,hipOff,skin,proxR:proxy(rowOf('RightHand')),proxL:proxy(rowOf('LeftHand'))});
+  Object.assign(MESHY,{on:true,holder,arm,armQ:new THREE.Quaternion(),B,rows,hipOff,legD,skin,proxR:proxy(rowOf('RightHand')),proxL:proxy(rowOf('LeftHand'))});
   meshySync();return true;}
 // after animPlayer: copy the procedural pose onto the meshy skeleton, move attachments, keep the cape hidden
 // runs every frame, so it makes no objects: the per-row quaternions were made in setupMeshyHero

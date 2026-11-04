@@ -20,7 +20,7 @@ function gaitIK(o,base,st,d,sc,vf,vs,dt,opt){
   const A=d.thigh,B=d.shin,LEG=A+B,v=Math.hypot(vf,vs)/sc;          // rig units
   const vn=v*(.9/LEG),run=sstep(1.9,3.9,vn),sprint=sstep(5.6,7.6,vn);
   const Ls=Math.min(1.9,.72*Math.sqrt(vn/1.4))*(LEG/.9);            // step length (power law fits walk→sprint)
-  const duty=lerp(.62,.37,run),E=2*duty*Ls;                           // stance excursion = distance covered while planted
+  const duty=lerp(.62,.37,run),E=2*duty*Ls;st.duty=duty;              // stance excursion = distance covered while planted; duty = stance share of the cycle
   const prev=st.ph;if(Ls>1e-4)st.ph=(st.ph+v*dt/(2*Ls))%1;
   let ev=0;if(((prev)%1)>((st.ph)%1))ev|=1;if(((prev+.5)%1)>((st.ph+.5)%1))ev|=2;
   const w=sstep(.04,.45,vn);st.w=w;if(w<.001)return 0;
