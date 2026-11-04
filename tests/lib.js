@@ -15,8 +15,13 @@ window.T = (() => {
       for (const p of S.PROJ) S.scene.remove(p.mesh); S.PROJ.length = 0; S.TOK.clear(); },
     sim(n) { __SB.sim(n); },
     key(code, down = true) { window.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', {code, bubbles: true})); },
+    // deterministic Math.random (mulberry32): a failing run can be replayed with the same seed (run.py --seed N)
+    seed(s) { let a = s >>> 0; Math.random = () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; },
+    SEED: 1,
     // synchronous on purpose: no await between tests, so the real-time frame loop never runs in between
     async run() {
+      this.seed(this.SEED);
       const out = [];
       for (const t of tests) {
         try { t.fn(); out.push({name: t.name, ok: true}); }

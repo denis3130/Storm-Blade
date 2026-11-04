@@ -61,6 +61,7 @@ async def main(a):
         await pg.wait_for_function("window.__SB && __SB.G && __SB.G.state==='title'", timeout=60000)
         await pg.add_script_tag(content=open(os.path.join(SB, 'tests', 'lib.js')).read())
         await pg.add_script_tag(content=open(a.file).read())
+        await pg.evaluate('T.SEED=%d' % a.seed)
         res = await pg.evaluate('T.run()')
         await pg.wait_for_timeout(300)
         await b.close()
@@ -73,7 +74,7 @@ async def main(a):
             print('FAIL %s: %s' % (r['name'], r.get('msg', '')))
     for e in errors:
         print(e)
-    print('%d passed, %d failed, %d errors (%s)' % (len(res) - bad, bad, len(errors), os.path.basename(a.file)))
+    print('%d passed, %d failed, %d errors (%s, seed %d)' % (len(res) - bad, bad, len(errors), os.path.basename(a.file), a.seed))
     return 1 if bad or errors or not res else 0
 
 
@@ -83,4 +84,5 @@ if __name__ == '__main__':
     ap.add_argument('--viewport', default='640x360')
     ap.add_argument('--touch', action='store_true')
     ap.add_argument('--mobile', action='store_true')
+    ap.add_argument('--seed', type=int, default=1, help='seed for Math.random during the tests (replay a failure)')
     sys.exit(asyncio.run(main(ap.parse_args())))

@@ -36,15 +36,10 @@ Fino a oggi Stormblade è stato sviluppato in una conversazione dell'app Claude.
 - **Task 3 → 4**: il Task 3 deve esporre `syncDrop()`, che ricrea o nasconde la mesh del mucchio di braci partendo da `P.drop`. `loadSave` e `resetPlayer` la chiamano.
 - **Task 9**: le sonde di misura della v5 sono in `tests/probes/` (ramo `tappa1-basi`), con i risultati di riferimento. Limiti: 1 goblin ≤ 2,64 s, 3 goblin ≤ 5,16 s (20 prove); logica per frame entro +0,1 ms dalla v5.
 
-## Problema noto da sistemare per primo nella Tappa 1
-- `tests/regression.test.js` è fallito **una volta su circa 10 esecuzioni**, sullo stesso codice che nelle altre passa (3/3). Il nome del test fallito non è stato registrato.
-- Causa probabile: il caso.
-  - `death then respawn` conta sui fulmini casuali per uccidere il giocatore entro 120 frame.
-  - `every enemy attack fires` conta sulle scelte casuali dei nemici entro 900 frame.
-- Correzione suggerita, con TDD:
-  1. Rendi i test deterministici sostituendo `Math.random` con un generatore con seme (per esempio mulberry32) in `tests/lib.js`, prima di eseguire i test di un file.
-  2. Se serve, rendi più robusti i due test (per esempio infliggi il colpo direttamente invece di aspettare un fulmine).
-  3. Verifica con 10 esecuzioni di fila.
+## Test intermittente — risolto il 4 novembre (ramo `tappa1-basi`)
+- Il test che falliva a volte era `every enemy attack fires`. Con il giocatore fermo, il lupo (che colpisce e scappa) attacca quasi solo con il balzo da 3-6 m e non arriva a distanza di morso: col seme 17 non morde mai in 60 s. Il test ora fa nascere il lupo a 1,6 m, dentro la distanza del morso.
+- I test usano un `Math.random` con seme: è deterministico, e il seme predefinito è 1. Un fallimento si ripete con `python3 tests/run.py <file> --seed N`.
+- Verifica: regressione verde con i semi da 1 a 10; i due scenari casuali verdi su 25 semi.
 
 ## Idee tenute per dopo (non costruirle finché Denis non lo chiede)
 - Parte 2 della storia (capitoli 2 e 3, poteri dei frammenti, boss finale, due finali).

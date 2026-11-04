@@ -2,7 +2,8 @@
 T.test('every enemy attack fires', () => {
   T.newGame(); T.clearEnemies(); const S = __SB, P = S.P; P.hp = P.maxHp = 9999;
   const foes = [S.spawnEnemy('troll', P.pos.x + 5, P.pos.z, {boss: true, tier: 1, name: 'T'}), S.spawnEnemy('archer', P.pos.x - 12, P.pos.z, {}),
-    S.spawnEnemy('wolf', P.pos.x, P.pos.z + 6, {}), S.spawnEnemy('spirit', P.pos.x, P.pos.z - 8, {})];
+    // the wolf starts inside bite range: from farther away a hit-and-run wolf facing a still player only pounces (seed 17 never bites in 60 s)
+    S.spawnEnemy('wolf', P.pos.x, P.pos.z + 1.6, {}), S.spawnEnemy('spirit', P.pos.x, P.pos.z - 8, {})];
   for (const e of foes) { e.aggro = true; e.alertT = 0; e.state = 'combat'; }
   const seen = new Set(); for (let i = 0; i < 900; i++) { T.sim(1); for (const e of foes) if (e.atk) seen.add(e.type + ':' + e.atk.k); }
   for (const k of ['troll:slam', 'archer:shoot', 'wolf:bite', 'spirit:orb']) T.ok(seen.has(k), 'missing ' + k);
