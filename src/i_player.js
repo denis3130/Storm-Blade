@@ -81,7 +81,7 @@ function setHero(h){h=h==='f'?'f':'m';P.hero=h;if(PL&&PL.hero===h)return;
   createPlayer(h);if(h==='m')meshyAttach();setSword(P.sword||0);setView(G.fp);resetBlend();}
 // no blend carried across a respawn, a teleport or a new body: the pose starts clean (and the action weight at its target)
 function resetBlend(){P.blendT=0;if(PL)PL.lastAct=P.act;P.aw=P.act?1:0;}
-function setSword(t){if(PL.sw&&PL.sw.g.parent)PL.sw.g.parent.remove(PL.sw.g);PL.sw=buildSword(t);PL.sw.g.position.set(0,-.072,-.004);(MESHY.on?MESHY.proxR:PL.rig.P.wrR).add(PL.sw.g);
+function setSword(t){if(PL.sw&&PL.sw.g.parent)PL.sw.g.parent.remove(PL.sw.g);PL.sw=buildSword(t);PL.sw.g.position.set(0,-.072,-.004);if(MESHY.on&&MESHY.gripOff)PL.sw.g.position.add(MESHY.gripOff);(MESHY.on?MESHY.proxR:PL.rig.P.wrR).add(PL.sw.g);
   const gl=SWORDS[t].glow;PL.trail.u.uC.value.copy(gl?new THREE.Color(gl[0],gl[1],gl[2]).multiplyScalar(.8):new THREE.Color(1.9,1.75,1.45));$('swordName').textContent=SWORDS[t].name;}
 function setView(fp){G.fp=fp;PL.rig.P.head.scale.setScalar(fp?.001:1);PL.cape.mesh.visible=!fp;$('fpCross').hidden=!fp||G.state!=='play';camera.near=fp?.05:.08;camera.updateProjectionMatrix();}
 function useSt(n){P.st=Math.max(-12,P.st-n);P.stDelay=CFG.st.delay;}
