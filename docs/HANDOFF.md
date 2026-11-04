@@ -23,7 +23,7 @@
   in `src/x_demo.js`; nel gioco `src/w_main.js` mette `DEMO=null` e tutto resta com'era.
 - Test: `python3 tests/run.py tests/demo.test.js --page demo_w.html` (6 test: partenza dal falò, percorso fino al palazzo,
   nemici fuori dalle case, scalinata, ponte, forzieri).
-- Pagina pubblicata a parte (non è la pagina "Stormblade"): DEMO_URL. Si pubblica `demo.html` con gli stessi file
+- Pagina pubblicata a parte (non è la pagina "Stormblade"): https://claude.ai/artifact/ECT2HeYfzVfyXPUE1JuTY6 ("Stormblade Demo", versione 1). Si pubblica `demo.html` con gli stessi file
   del modello Meshy della pagina del gioco.
 
 ## Ordine consigliato (lo decide Denis)

@@ -24,6 +24,8 @@ Rispondi sempre a Denis **in italiano**, con messaggi brevi e chiari (spesso usa
   - Lancia `bash mk.sh`, poi pubblica `index.html` con lo strumento Artifact su quell'URL, insieme ai file del modello: `assets/meshy/hero/hero.json` e `hero_tex0.jpg`, `hero_tex1.jpg`, `hero_tex2.jpg`.
   - Le pagine Claude non servono i `.glb`: il gioco carica `hero.json`, generato con `python3 assets/meshy/glb2json.py <in.glb> <out.json>`.
   - GLTFLoader (r128) arriva da jsdelivr con una versione esatta, vedi `build.py`.
+- **La demo "La Valle delle Lanterne"** (ramo `demo`) ha una pagina sua, "Stormblade Demo": https://claude.ai/artifact/ECT2HeYfzVfyXPUE1JuTY6.
+  Si pubblica `demo.html` con gli stessi quattro file del modello Meshy.
 - Prima di pubblicare: tutti i test verdi e nessun errore nella console.
 - GitHub Pages da `main` (https://denis3130.github.io/Storm-Blade/) resta disponibile come copia; il lavoro di una tappa si unisce a `main` solo a tappa finita e revisionata.
 
